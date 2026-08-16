@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report
+from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
@@ -768,6 +768,33 @@ NEWS_DETAIL_HTML = """
     <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
     <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ news.content }}</p>
+    {% for block in news.blocks %}
+        {% if block.block_type == 'text' %}
+            {% if block.layout == 'side' %}
+                <div class="flex flex-col md:flex-row gap-4 my-4">
+                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{{ block.text_content }}</p></div>
+                </div>
+            {% else %}
+                <p class="text-lg my-4" style="white-space: pre-line;">{{ block.text_content }}</p>
+            {% endif %}
+        {% elif block.block_type == 'image' %}
+            {% if block.layout == 'side' %}
+                <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
+                    <div class="flex-1">
+                        {% if block.image_url %}
+                            <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="my-4">
+                    {% if block.image_url %}
+                        <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
         <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
@@ -1148,6 +1175,9 @@ ADMIN_HTML = """
                 <textarea name="content" placeholder="Məzmun" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <input type="text" name="category" placeholder="Kateqoriya (Anime, Manga, Webtoon, Oyun, Ümumi)" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-700 text-white">
+                <div id="blocksContainer"></div>
+                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
+                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>		
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
                 <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Əlavə et</button>
             </form>
@@ -1241,9 +1271,101 @@ EDIT_NEWS_HTML = """
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Yadda saxla</button>
+
+        <!-- Dinamik Bloklar -->
+        <h2 class="text-xl font-bold mt-6 mb-3">Əlavə Bloklar (mətn/şəkil)</h2>
+        <div id="blocksContainer"></div>
+        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
+        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>
+
+        <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">Yadda saxla</button>
     </form>
 </div>
+
+<script>
+    let blockIndex = 0;
+
+    function addTextBlock() {
+        const container = document.getElementById('blocksContainer');
+        const div = document.createElement('div');
+        div.className = 'bg-gray-700 p-3 rounded mt-3';
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold">Mətn Bloku</span>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            </div>
+            <input type="hidden" name="block_type" value="text">
+            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin"></textarea>
+            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                <option value="stack">Alt-alta</option>
+                <option value="side">Yan-yana</option>
+            </select>
+        `;
+        container.appendChild(div);
+        blockIndex++;
+    }
+
+    function addImageBlock() {
+        const container = document.getElementById('blocksContainer');
+        const div = document.createElement('div');
+        div.className = 'bg-gray-700 p-3 rounded mt-3';
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold">Şəkil Bloku</span>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            </div>
+            <input type="hidden" name="block_type" value="image">
+            <input type="text" name="block_image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-800 text-white">
+            <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
+            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                <option value="stack">Alt-alta</option>
+                <option value="side">Yan-yana</option>
+            </select>
+        `;
+        container.appendChild(div);
+        blockIndex++;
+    }
+
+    // Mövcud blokları yüklə (əgər varsa)
+    window.onload = function() {
+        {% for block in news.blocks %}
+            {% if block.block_type == 'text' %}
+                const textDiv{{ block.id }} = document.createElement('div');
+                textDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
+                textDiv{{ block.id }}.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold">Mətn Bloku</span>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+                    </div>
+                    <input type="hidden" name="block_type" value="text">
+                    <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin">{{ block.text_content }}</textarea>
+                    <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
+                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                    </select>
+                `;
+                document.getElementById('blocksContainer').appendChild(textDiv{{ block.id }});
+            {% else %}
+                const imgDiv{{ block.id }} = document.createElement('div');
+                imgDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
+                imgDiv{{ block.id }}.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold">Şəkil Bloku</span>
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+                    </div>
+                    <input type="hidden" name="block_type" value="image">
+                    <input type="text" name="block_image_url" placeholder="Şəkil URL" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
+                    <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
+                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                    </select>
+                `;
+                document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
+            {% endif %}
+        {% endfor %}
+    };
+</script>
 {% endblock %}
 """
 
@@ -1969,13 +2091,42 @@ def add_news():
         filename = process_image(image_file, 800, 500)
         if filename:
             image_url = filename
-        else:
-            flash('Şəkil formatı dəstəklənmir, URL istifadə ediləcək')
     if title and content:
         if not image_url:
             image_url = get_image_url(title)
         news = News(title=title, content=content, category=category, image_url=image_url, author_id=current_user.id)
         db.session.add(news)
+        db.session.commit()
+
+        # Blokları əlavə et
+        block_types = request.form.getlist('block_type')
+        block_texts = request.form.getlist('block_text')
+        block_image_urls = request.form.getlist('block_image_url')
+        block_image_files = request.files.getlist('block_image_file')
+        block_layouts = request.form.getlist('block_layout')
+
+        for i in range(len(block_types)):
+            btype = block_types[i]
+            text_content = block_texts[i] if i < len(block_texts) else ''
+            image_url_block = block_image_urls[i] if i < len(block_image_urls) else ''
+            layout = block_layouts[i] if i < len(block_layouts) else 'stack'
+            if btype == 'image':
+                if i < len(block_image_files):
+                    file = block_image_files[i]
+                    if file and file.filename != '':
+                        fname = process_image(file, 800, 500)
+                        if fname:
+                            image_url_block = fname
+            if btype in ['text', 'image']:
+                block = NewsBlock(
+                    news_id=news.id,
+                    block_type=btype,
+                    text_content=text_content,
+                    image_url=image_url_block,
+                    layout=layout,
+                    order=i
+                )
+                db.session.add(block)
         db.session.commit()
     return redirect(url_for('admin'))
 @app.route('/admin/ban-user/<int:user_id>')
@@ -2063,6 +2214,40 @@ def edit_news(news_id):
             filename = process_image(image_file, 800, 500)
             if filename:
                 news.image_url = filename
+
+        # Mövcud blokları sil
+        NewsBlock.query.filter_by(news_id=news.id).delete()
+        db.session.commit()
+
+        # Yeni blokları əlavə et
+        block_types = request.form.getlist('block_type')
+        block_texts = request.form.getlist('block_text')
+        block_image_urls = request.form.getlist('block_image_url')
+        block_image_files = request.files.getlist('block_image_file')
+        block_layouts = request.form.getlist('block_layout')
+
+        for i in range(len(block_types)):
+            btype = block_types[i]
+            text_content = block_texts[i] if i < len(block_texts) else ''
+            image_url = block_image_urls[i] if i < len(block_image_urls) else ''
+            layout = block_layouts[i] if i < len(block_layouts) else 'stack'
+            if btype == 'image':
+                if i < len(block_image_files):
+                    file = block_image_files[i]
+                    if file and file.filename != '':
+                        fname = process_image(file, 800, 500)
+                        if fname:
+                            image_url = fname
+            if btype in ['text', 'image']:
+                block = NewsBlock(
+                    news_id=news.id,
+                    block_type=btype,
+                    text_content=text_content,
+                    image_url=image_url,
+                    layout=layout,
+                    order=i
+                )
+                db.session.add(block)
         db.session.commit()
         flash('Xəbər yeniləndi')
         return redirect(url_for('admin'))
