@@ -925,13 +925,6 @@ PROFILE_HTML = """
         {% if not claimed_today %}
         <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">Günlük ödülü al</button></form>
         {% else %}
-        <h2 class="text-xl font-bold mt-6 mb-3">Şifrəni dəyiş</h2>
-        <form action="/profile/change-password" method="POST" class="space-y-3">
-            <input type="password" name="current_password" placeholder="Hazırkı şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="new_password" placeholder="Yeni şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="confirm_password" placeholder="Yeni şifrəni təkrar yaz" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Şifrəni yenilə</button>
-        </form>
         <p class="text-green-400 mt-2">Bu gün ödülü almısınız.</p>
         {% endif %}
         <h2 class="text-xl font-bold mt-6 mb-3">Profil şəklini dəyiş</h2>
@@ -958,6 +951,13 @@ PROFILE_HTML = """
                 <input type="text" name="discord_link" value="{{ current_user.discord_link or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
             </div>
             <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Yadda saxla</button>
+        </form>
+        <h2 class="text-xl font-bold mt-6 mb-3">Şifrəni dəyiş</h2>
+        <form action="/profile/change-password" method="POST" class="space-y-3">
+            <input type="password" name="current_password" placeholder="Hazırkı şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="new_password" placeholder="Yeni şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="confirm_password" placeholder="Yeni şifrəni təkrar yaz" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Şifrəni yenilə</button>
         </form>
     </div>
 
@@ -1430,11 +1430,11 @@ templates = {
     'admin.html': ADMIN_HTML,
     'edit_news.html': EDIT_NEWS_HTML,
     'edit_manga.html': EDIT_MANGA_HTML,
-    'about.html': ABOUT_HTML,
     'search.html': SEARCH_HTML,
     'notifications.html': NOTIFICATIONS_HTML,
     'quests.html': QUESTS_HTML,
     'achievements.html': ACHIEVEMENTS_HTML,
+    'about.html': ABOUT_HTML,
 }
 
 app.jinja_loader = DictLoader(templates)
@@ -1526,6 +1526,10 @@ def search():
         if type_filter:
             manga_results = [m for m in manga_results if m.type == type_filter]
     return render_template('search.html', q=q, news_results=news_results, manga_results=manga_results)
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 @app.route('/community')
 def community():
