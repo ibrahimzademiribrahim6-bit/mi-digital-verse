@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+requests
+python-dotenv
+Flask-Talisman
+Flask-Limiter
+Pillow

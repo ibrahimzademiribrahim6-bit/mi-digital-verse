@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lightning Degree News | AniVerse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            neonPink: '#ff3ea5',
+            neonPurple: '#9b5cff',
+            neonCyan: '#00e5ff',
+            darkBg: '#0f0c1d',
+            cardBg: '#1a152e',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: radial-gradient(circle at 80% 10%, #2a1b3d 0%, #0f0c1d 100%);
+    }
+    .neon-border {
+      border: 2px solid rgba(255, 62, 165, 0.5);
+      box-shadow: 0 0 20px rgba(255, 62, 165, 0.2);
+    }
+    .article-text {
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body class="text-gray-100 font-sans">
+
+  <!-- Navigation -->
+  <nav class="bg-darkBg/90 border-b-2 border-neonPink/50 backdrop-blur-md fixed w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="index.html" class="text-3xl font-black tracking-widest"><span class="text-neonPink">Ani</span><span class="text-neonCyan">Verse</span></a>
+      <div class="hidden md:flex space-x-8 text-lg font-medium">
+        <a href="index.html" class="hover:text-neonPink transition">Home</a>
+        <a href="lightning_degree.html" class="text-neonCyan">Lightning Degree</a>
+        <a href="boss.html" class="hover:text-neonPink transition">Boss</a>
+        <a href="anime_news.html" class="hover:text-neonPink transition">Anime News</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Article Content -->
+  <article class="pt-28 pb-20 px-6 max-w-4xl mx-auto">
+    <div class="neon-border rounded-3xl bg-cardBg p-8 md:p-12">
+      <div class="flex items-center gap-4 mb-6">
+        <span class="bg-neonPurple text-white px-4 py-1 rounded-full text-sm font-bold">MANHWA</span>
+        <span class="text-neonCyan text-sm">Updated 2h ago</span>
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black mb-6 text-neonPink">Lightning Degree: The Awakening Arc</h1>
+      
+      <div class="h-96 bg-gradient-to-br from-neonPurple to-neonPink rounded-2xl flex items-center justify-center mb-8">
+        <span class="text-9xl">⚡</span>
+      </div>
+
+      <div class="article-text text-lg space-y-6">
+        <p class="text-purple-100/80">The martial arts world is shaken as <strong class="text-neonCyan">Lightning Degree</strong> enters its most explosive arc yet. The protagonist, Kang Woojin, has finally mastered the fifth level of the Thunder God Technique, unlocking powers previously thought mythical.</p>
+        <p class="text-purple-100/80">Fans are thrilled with the recent chapters showing intense training sequences and a complex new villain: <em class="text-neonPink">The Storm Emperor</em>, whose dark lightning threatens to consume the entire Murim world.</p>
+        <p class="text-purple-100/80">The latest chapter (Chapter 203) featured an awe-inspiring battle sequence, with fan-favorite characters joining forces. The artwork has reached cinematic quality, and many predict this will be the manhwa's defining season.</p>
+        <p class="text-purple-100/80">Release schedule remains steady every Tuesday and Saturday on major platforms.</p>
+      </div>
+
+      <div class="mt-10 border-t-2 border-neonPurple/30 pt-6 text-center">
+        <a href="index.html" class="text-neonCyan hover:text-neonPink font-bold">← Back to AniVerse</a>
+      </div>
+    </div>
+
+    <!-- MI Digital Banner -->
+    <div class="mt-12 bg-gradient-to-r from-neonPurple via-neonPink to-neonCyan rounded-3xl p-1 neon-border">
+      <div class="bg-darkBg/95 rounded-3xl p-8 text-center">
+        <h3 class="text-3xl font-black text-neonCyan">MI DIGITAL</h3>
+        <p class="text-white text-xl"> Empowering the digital world </p>
+        <a href="https://midigital.az" target="_blank" class="inline-block mt-4 bg-neonPink text-white px-10 py-3 rounded-full font-bold">Visit</a>
+      </div>
+    </div>
+  </article>
+
+  <footer class="border-t-2 border-neonPurple/40 bg-darkBg/80 py-8 text-center">
+    <p class="text-gray-400">© 2025 AniVerse | Lightning Degree Article</p>
+  </footer>
+
+</body>
+</html>

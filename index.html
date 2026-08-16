@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Digital Verse - Home | Anime & Manhwa Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;600;700;800&display=swap');
+        
+        * { transition: background-color 0.3s ease, color 0.2s ease, border-color 0.3s ease; }
+        
+        .font-display { font-family: 'Orbitron', sans-serif; }
+        body { font-family: 'Inter', sans-serif; }
+        
+        .bg-grid-pattern {
+            background-image: linear-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(168, 85, 247, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        .neon-glow { text-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(236, 72, 153, 0.3); }
+        .neon-border { box-shadow: 0 0 15px rgba(168, 85, 247, 0.3), inset 0 0 15px rgba(168, 85, 247, 0.1); }
+        
+        .card-hover { transform: translateY(-5px); box-shadow: 0 10px 40px rgba(168, 85, 247, 0.15); }
+        
+        html.dark .bg-primary { background-color: #0a0a1a; }
+        html.dark .bg-secondary { background-color: #13132a; }
+        html.dark .bg-card { background-color: #1a1a35; }
+        html:not(.dark) .bg-primary { background-color: #f8fafc; }
+        html:not(.dark) .bg-secondary { background-color: #eff6ff; }
+        html:not(.dark) .bg-card { background-color: #ffffff; }
+
+        .dropdown-menu { display: none; }
+        .dropdown-menu.show { display: block; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+        }
+        .modal-overlay.active { display: flex; }
+        
+        .toast { animation: slideUp 0.3s ease; }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #1a1a35; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 5px; }
+    </style>
+</head>
+<body class="bg-primary text-gray-800 dark:text-gray-200 transition-colors duration-300 bg-grid-pattern">
+    <!-- Navigation -->
+    <nav class="bg-card/90 dark:bg-card/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-purple-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-bolt text-purple-500 text-2xl animate-pulse"></i>
+                    <span class="font-display text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-400 bg-clip-text text-transparent neon-glow">
+                        Mi Digital Verse
+                    </span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="index.html" class="text-purple-500 hover:text-pink-500 font-semibold border-b-2 border-purple-500 pb-1 transition-all">Home</a>
+                    <a href="news.html" class="hover:text-pink-500 font-medium transition-colors">News</a>
+                    <a href="manhwa.html" class="hover:text-pink-500 font-medium transition-colors">Manhwa Hub</a>
+                    <a href="community.html" class="hover:text-pink-500 font-medium transition-colors">Community</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-purple-500/20 transition-all">
+                        <i class="fas fa-moon text-xl text-purple-500 dark:text-amber-400"></i>
+                    </button>
+                    <button id="mobile-menu-btn" class="md:hidden p-2 text-purple-500">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <button id="auth-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 md:px-6 py-2 rounded-full hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm md:text-base">
+                        Sign In / Join
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-card dark:bg-card border-t border-purple-500/20">
+            <div class="px-4 py-3 space-y-3">
+                <a href="index.html" class="block py-2 text-purple-500">Home</a>
+                <a href="news.html" class="block py-2 hover:text-pink-500">News</a>
+                <a href="manhwa.html" class="block py-2 hover:text-pink-500">Manhwa Hub</a>
+                <a href="community.html" class="block py-2 hover:text-pink-500">Community</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative overflow-hidden bg-gradient-to-br from-purple-900 via-blue-900 to-pink-900 text-white">
+        <div class="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <p class="text-cyan-400 font-bold text-sm md:text-base uppercase tracking-widest">Welcome to the Digital Realm</p>
+                    <h1 class="font-display text-4xl md:text-6xl font-bold leading-tight">
+                        Discover Your Next 
+                        <span class="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                            Digital Obsession
+                        </span>
+                    </h1>
+                    <p class="text-gray-300 text-lg leading-relaxed max-w-xl">
+                        Dive into the world of Manhwa, Anime, and everything in between. From action-packed adventures to emotional journeys - your digital universe starts here.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="manhwa.html" class="bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-3 rounded-full font-bold hover:shadow-2xl hover:shadow-purple-500/50 transition-all">
+                            <i class="fas fa-book-open mr-2"></i>Read Now
+                        </a>
+                        <a href="news.html" class="border-2 border-white/30 px-8 py-3 rounded-full font-bold hover:bg-white/10 transition-all">
+                            Browse News <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="relative hidden lg:block">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"></div>
+                    <div class="relative bg-card/80 neon-border rounded-2xl p-6 backdrop-blur-md">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="font-display text-purple-500 font-semibold">🔥 Trending Now</span>
+                            <button class="text-sm text-cyan-400 hover:text-pink-500">View All</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-secondary rounded-xl hover:bg-purple-500/20 cursor-pointer transition">
+                                <div class="w-12 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded animate-pulse"></div>
+                                <div>
+                                    <p class="font-semibold">Lightning Degree</p>
+                                    <p class="text-sm text-gray-400">Action · Drama</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-secondary rounded-xl hover:bg-purple-500/20 cursor-pointer transition">
+                                <div class="w-12 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded animate-pulse"></div>
+                                <div>
+                                    <p class="font-semibold">I Used to Be a Boss</p>
+                                    <p class="text-sm text-gray-400">Fantasy · Comedy</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-secondary rounded-xl hover:bg-purple-500/20 cursor-pointer transition">
+                                <div class="w-12 h-16 bg-gradient-to-br from-pink-500 to-red-500 rounded animate-pulse"></div>
+                                <div>
+                                    <p class="font-semibold">Solo Leveling</p>
+                                    <p class="text-sm text-gray-400">Action · Fantasy</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Trending Grid -->
+    <section class="py-16 bg-secondary/50 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="font-display text-2xl md:text-3xl font-bold">
+                    <span class="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">Trending Manhwa</span>
+                </h2>
+                <a href="manhwa.html" class="text-purple-500 hover:text-pink-500 font-semibold">
+                    View All <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div class="bg-card rounded-xl overflow-hidden hover:card-hover transition-all cursor-pointer group">
+                    <div class="h-48 bg-gradient-to-br from-purple-600 to-pink-600 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition"></div>
+                        <span class="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">🔥 Hot</span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg group-hover:text-purple-500 transition">Lightning Degree</h3>
+                        <p class="text-sm text-gray-400 mt-1">Action · Drama · Supernatural</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-yellow-500"><i class="fas fa-star"></i> 9.8</span>
+                            <button class="text-purple-500 hover:text-pink-500 text-sm font-semibold">Read Now →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 2 -->
+                <div class="bg-card rounded-xl overflow-hidden hover:card-hover transition-all cursor-pointer group">
+                    <div class="h-48 bg-gradient-to-br from-cyan-500 to-blue-600 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition"></div>
+                        <span class="absolute top-3 left-3 bg-cyan-400 text-black px-3 py-1 rounded-full text-sm font-bold">NEW</span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg group-hover:text-purple-500 transition">I Used to Be a Boss</h3>
+                        <p class="text-sm text-gray-400 mt-1">Fantasy · Comedy · Slice of Life</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-yellow-500"><i class="fas fa-star"></i> 9.5</span>
+                            <button class="text-purple-500 hover:text-pink-500 text-sm font-semibold">Read Now →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 3 -->
+                <div class="bg-card rounded-xl overflow-hidden hover:card-hover transition-all cursor-pointer group">
+                    <div class="h-48 bg-gradient-to-br from-pink-500 to-red-500 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition"></div>
+                        <span class="absolute top-3 left-3 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">★ Must Read</span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg group-hover:text-purple-500 transition">Solo Leveling</h3>
+                        <p class="text-sm text-gray-400 mt-1">Action · Fantasy · Adventure</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-yellow-500"><i class="fas fa-star"></i> 9.9</span>
+                            <button class="text-purple-500 hover:text-pink-500 text-sm font-semibold">Read Now →</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card 4 -->
+                <div class="bg-card rounded-xl overflow-hidden hover:card-hover transition-all cursor-pointer group">
+                    <div class="h-48 bg-gradient-to-br from-emerald-500 to-teal-600 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition"></div>
+                        <span class="absolute top-3 left-3 bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-bold">TOP 10</span>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg group-hover:text-purple-500 transition">The Beginning After The End</h3>
+                        <p class="text-sm text-gray-400 mt-1">Fantasy · Action · Romance</p>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-yellow-500"><i class="fas fa-star"></i> 9.7</span>
+                            <button class="text-purple-500 hover:text-pink-500 text-sm font-semibold">Read Now →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Promotional Banner -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-500 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/30"></div>
+                <div class="relative z-10 text-center text-white">
+                    <h2 class="font-display text-3xl md:text-4xl font-bold mb-4">Join Mi Digital Verse Premium</h2>
+                    <p class="text-lg mb-8 max-w-2xl mx-auto">Unlock exclusive content, early chapter access, and a community of passionate readers.</p>
+                    <div class="flex justify-center">
+                        <button class="bg-white text-purple-600 px-8 py-3 rounded-full font-bold hover:bg-purple-100 transition shadow-2xl">
+                            Start Free Trial <i class="fas fa-crown ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter -->
+    <section class="py-16 bg-secondary/50">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="font-display text-3xl font-bold mb-4">Stay Updated</h2>
+            <p class="text-gray-400 mb-8">Get the latest news, chapter releases, and exclusive offers directly to your inbox.</p>
+            <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 justify-center">
+                <input type="email" id="newsletter-email" placeholder="your@email.com" required
+                    class="bg-card border border-purple-500/30 rounded-full px-6 py-3 flex-1 max-w-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                <button type="submit" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-full font-bold hover:shadow-lg transition">
+                    Subscribe <i class="fas fa-paper-plane ml-2"></i>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-card dark:bg-card border-t border-purple-500/20 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-bolt text-purple-500 text-2xl"></i>
+                        <span class="font-display text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                            Mi Digital Verse
+                        </span>
+                    </div>
+                    <p class="text-gray-400">Your premier destination for anime, manhwa, and digital entertainment content.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Quick Links</h4>
+                    <ul class="space-2 text-gray-400">
+                        <li><a href="index.html" class="hover:text-purple-500 transition">Home</a></li>
+                        <li><a href="news.html" class="hover:text-purple-500 transition">News</a></li>
+                        <li><a href="manhwa.html" class="hover:text-purple-500 transition">Manhwa</a></li>
+                        <li><a href="community.html" class="hover:text-purple-500 transition">Community</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">Follow Us</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-purple-500 transition"><i class="fab fa-discord text-2xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-pink-500 transition"><i class="fab fa-twitter text-2xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-cyan-500 transition"><i class="fab fa-instagram text-2xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-blue-500 transition"><i class="fab fa-youtube text-2xl"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2024 Mi Digital Verse. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay">
+        <div class="bg-card dark:bg-card rounded-2xl p-8 max-w-md w-full mx-4 neon-border relative">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-pink-500 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <i class="fas fa-bolt text-purple-500 text-4xl mb-2"></i>
+                <h2 class="font-display text-2xl font-bold">Welcome to Mi Digital Verse</h2>
+            </div>
+            
+            <div class="flex mb-6">
+                <button id="login-tab" class="flex-1 py-3 font-bold border-b-2 border-purple-500 text-purple-500">Login</button>
+                <button id="signup-tab" class="flex-1 py-3 font-bold border-b-2 border-gray-600 text-gray-400">Sign Up</button>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm mb-2">Email</label>
+                    <input type="email" required class="w-full bg-secondary rounded-lg px-4 py-3 border border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2">Password</label>
+                    <input type="password" required class="w-full bg-secondary rounded-lg px-4 py-3 border border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transition">
+                    Login
+                </button>
+            </form>
+            
+            <form id="signup-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm mb-2">Username</label>
+                    <input type="text" required class="w-full bg-secondary rounded-lg px-4 py-3 border border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2">Email</label>
+                    <input type="email" required class="w-full bg-secondary rounded-lg px-4 py-3 border border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2">Password</label>
+                    <input type="password" required class="w-full bg-secondary rounded-lg px-4 py-3 border border-transparent focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-3 rounded-lg font-bold hover:shadow-lg transition">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const icon = themeToggle.querySelector('i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+            icon.classList.toggle('text-purple-500');
+            icon.classList.toggle('text-amber-400');
+        });
+
+        // Mobile Menu
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Auth Modal
+        const authBtn = document.getElementById('auth-btn');
+        const authModal = document.getElementById('auth-modal');
+        const closeModal = document.getElementById('close-modal');
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        
+        authBtn.addEventListener('click', () => {
+            authModal.classList.add('active');
+        });
+        
+        closeModal.addEventListener('click', () => {
+            authModal.classList.remove('active');
+        });
+        
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) authModal.classList.remove('active');
+        });
+        
+        loginTab.addEventListener('click', () => {
+            loginTab.className = 'flex-1 py-3 font-bold border-b-2 border-purple-500 text-purple-500';
+            signupTab.className = 'flex-1 py-3 font-bold border-b-2 border-gray-600 text-gray-400';
+            loginForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+        });
+        
+        signupTab.addEventListener('click', () => {
+            signupTab.className = 'flex-1 py-3 font-bold border-b-2 border-purple-500 text-purple-500';
+            loginTab.className = 'flex-1 py-3 font-bold border-b-2 border-gray-600 text-gray-400';
+            signupForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        // Newsletter Form
+        document.getElementById('newsletter-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email').value;
+            alert(`Thanks for subscribing! We'll keep ${email} updated!`);
+            e.target.reset();
+        });
+
+        // Form submissions
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Login successful! Welcome back!');
+            authModal.classList.remove('active');
+        });
+        
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Account created! Welcome to Mi Digital Verse!');
+            authModal.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
