@@ -189,6 +189,14 @@ class Report(db.Model):
 
     reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports')
 
+class NewsLike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='news_likes')
+    news = db.relationship('News', backref='news_likes')
 
 class NewsBlock(db.Model):
     id = db.Column(db.Integer, primary_key=True)

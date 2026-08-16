@@ -1744,7 +1744,13 @@ def create_room():
         db.session.commit()
         update_quest_progress(current_user, 'room_create', 1)
         check_achievements(current_user)
-        add_notification(current_user, f"Siz '{room.name}' adlı müzakirə otağı yaratdınız.")
+        # Bildiriş: yalnız xəbər sahibinə (əgər xəbərə bağlıdırsa)
+        if room.news_id:
+            news = News.query.get(room.news_id)
+            if news and news.author_id and news.author_id != current_user.id:
+                author = User.query.get(news.author_id)
+                if author:
+                    add_notification(author, f"{current_user.username} '{news.title}' xəbəri üçün müzakirə otağı yaratdı.")
         return redirect(url_for('community'))
 
 @app.route('/room/<int:room_id>')
@@ -1766,7 +1772,12 @@ def add_post(room_id):
     add_xp(current_user, 5)
     update_quest_progress(current_user, 'post', 1)
     check_achievements(current_user)
-    add_notification(current_user, f"Siz '{post.room.name}' otağında yeni mesaj yazdınız.")
+        # Yalnız otaq sahibinə bildiriş göndər (özü deyilsə)
+    room = Room.query.get(room_id)
+    if room and room.creator_id != current_user.id:
+        room_owner = User.query.get(room.creator_id)
+        if room_owner:
+            add_notification(room_owner, f"{current_user.username} '{room.name}' otağında yeni mesaj yazdı.")
     return redirect(url_for('room', room_id=room_id))
 @app.route('/report/submit', methods=['POST'])
 @login_required
@@ -1820,13 +1831,31 @@ def report_room(room_id):
 @login_required
 def like_news(news_id):
     news = News.query.get_or_404(news_id)
-    news.likes += 1
-    db.session.commit()
-    current_user.likes_count += 1
-    add_xp(current_user, 1)
-    update_quest_progress(current_user, 'like', 1)
-    check_achievements(current_user)
-    add_notification(current_user, f"Siz '{news.title}' xəbərini bəyəndiniz.")
+    existing_like = NewsLike.query.filter_by(user_id=current_user.id, news_id=news.id).first()
+    if existing_like:
+        # Bəyənməni geri al
+        db.session.delete(existing_like)
+        news.likes = max(0, news.likes - 1)
+        db.session.commit()
+        flash('Bəyənmə geri alındı.')
+    else:
+        # Yeni bəyənmə
+        like = NewsLike(user_id=current_user.id, news_id=news.id)
+        db.session.add(like)
+        news.likes += 1
+        db.session.commit()
+        # XP və görəvlər
+        add_xp(current_user, 1)
+        update_quest_progress(current_user, 'like', 1)
+        check_achievements(current_user)
+        # Bildiriş: yalnız xəbər sahibinə (əgər admin deyilsə və xəbərin müəllifi varsa)
+        if news.author_id and news.author_id != current_user.id:
+            author = User.query.get(news.author_id)
+            if author:
+                add_notification(author, f"{current_user.username} sizin '{news.title}' xəbərinizi bəyəndi.")
+        else:
+            # Öz xəbərini bəyənəndə bildiriş getməsin
+            pass
     return redirect(url_for('news_detail', news_id=news.id))
 
 # ---------- AUTH ----------
@@ -2372,17 +2401,44 @@ def delete_post(post_id):
 @admin_required
 def delete_room(room_id):
     room = Room.query.get_or_404(room_id)
+    # Otaqdakı şərhləri sil
+    Post.query.filter_by(room_id=room.id).delete()
     db.session.delete(room)
     db.session.commit()
-    flash('Otaq silindi.')
+    flash('Otaq və şərhləri silindi.')
     return redirect(url_for('admin'))
+
+@app.route('/admin/delete-post/<int:post_id>')
 @login_required
 @admin_required
-def delete_news(news_id):
-    news = News.query.get_or_404(news_id)
-    db.session.delete(news)
+def delete_post(post_id):
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
     db.session.commit()
+    flash('Şərh silindi.')
     return redirect(url_for('admin'))
+
+@app.route('/admin/clear-all-posts')
+@login_required
+@admin_required
+def clear_all_posts():
+    Post.query.delete()
+    db.session.commit()
+    flash('Bütün şərhlər silindi.')
+    return redirect(url_for('admin'))
+
+    <h2 class="text-2xl font-bold mt-8 mb-3">Otaqlar</h2>
+    <div class="space-y-2">
+        {% for room in all_rooms %}
+        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
+            <span>{{ room.name }}</span>
+            <a href="/admin/delete-room/{{ room.id }}" class="text-red-400">Sil</a>
+        </div>
+        {% endfor %}
+    </div>
+    <a href="/admin/clear-all-posts" class="px-4 py-2 bg-red-500 text-white rounded mt-4 inline-block">Bütün şərhləri sil</a>
+
+
 
 @app.route('/admin/delete-manga/<int:manga_id>')
 @login_required
