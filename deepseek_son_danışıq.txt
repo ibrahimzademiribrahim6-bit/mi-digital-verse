@@ -1,4 +1,0 @@
-hələ kod yazma. gəl bu ünvanları dəqiqləşdirək. ünvan ilə bağlı hələki heç bir kod yazmamışam, dəyişiklik etməmişəm (bu mərhələyə başladğımızdan bəri)
-ümümilikdə hər qrupdan necə ünvar var? əfsanəvinin sayı çox azdır, onu 7 edək, bənövşəyi 12 olsun, digərləridə çox ola bilər. Ünvanlar həmdə əlavə bonuslar versin, msələn ağ rənglilər hər görəv üçün +5 artışlıq bonus, eləsidə olsun hər şərh üçün +5%, yaşıl da bunun iki qatı, mavi də 20%, bənövşəyidə 35% və əfsanəvilərdə isə 50% artış olsun.
-birdə bura ünvan adlarını və qrup üzrə və ümümi saylarını da qeyd et zəhmətdi. 
-bu sistem necədir? əlavələrin və ya abartı hissələr varsa de zəhmətdi
