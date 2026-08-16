@@ -925,6 +925,13 @@ PROFILE_HTML = """
         {% if not claimed_today %}
         <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">Günlük ödülü al</button></form>
         {% else %}
+        <h2 class="text-xl font-bold mt-6 mb-3">Şifrəni dəyiş</h2>
+        <form action="/profile/change-password" method="POST" class="space-y-3">
+            <input type="password" name="current_password" placeholder="Hazırkı şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="new_password" placeholder="Yeni şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="confirm_password" placeholder="Yeni şifrəni təkrar yaz" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Şifrəni yenilə</button>
+        </form>
         <p class="text-green-400 mt-2">Bu gün ödülü almısınız.</p>
         {% endif %}
         <h2 class="text-xl font-bold mt-6 mb-3">Profil şəklini dəyiş</h2>
@@ -1745,6 +1752,23 @@ def profile():
                            earned_achievements=earned_achievements,
                            earned_titles=earned_titles)
 @app.route('/profile/update-bio', methods=['POST'])
+@app.route('/profile/change-password', methods=['POST'])
+@login_required
+def change_password():
+    current_password = request.form.get('current_password', '')
+    new_password = request.form.get('new_password', '')
+    confirm_password = request.form.get('confirm_password', '')
+    if not check_password_hash(current_user.password_hash, current_password):
+        flash('Hazırkı şifrə yanlışdır')
+    elif new_password != confirm_password:
+        flash('Yeni şifrələr uyğun gəlmir')
+    elif not is_strong_password(new_password):
+        flash('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır')
+    else:
+        current_user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        flash('Şifrə yeniləndi')
+    return redirect(url_for('profile'))
 @login_required
 def update_bio():
     current_user.bio = request.form.get('bio', '').strip()
