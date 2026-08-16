@@ -66,7 +66,7 @@ class News(db.Model):
 
     author = db.relationship('User', backref='news_authored')
     rooms = db.relationship('Room', backref='news', lazy=True)
-    blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan"))
+    blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan")
 
 
 class Manga(db.Model):
@@ -181,7 +181,7 @@ class UserQuest(db.Model):
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    target_type = db.Column(db.String(20), nullable=False)  # 'post', 'room'
+    target_type = db.Column(db.String(20), nullable=False)  # 'post', 'room', 'news'
     target_id = db.Column(db.Integer, nullable=False)
     reason = db.Column(db.String(200), default='')
     handled = db.Column(db.Boolean, default=False)
@@ -189,11 +189,12 @@ class Report(db.Model):
 
     reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports')
 
+
 class NewsBlock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
     block_type = db.Column(db.String(20), nullable=False)  # 'text' və ya 'image'
     text_content = db.Column(db.Text, default='')
     image_url = db.Column(db.String(500), default='')
-    layout = db.Column(db.String(20), default='stack')  # 'stack' (alt-alta) və ya 'side' (yan-yana)
-    order = db.Column(db.Integer, default=0)  # sıralama üçün
+    layout = db.Column(db.String(20), default='stack')  # 'stack' və ya 'side'
+    order = db.Column(db.Integer, default=0)
