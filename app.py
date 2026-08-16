@@ -18,7 +18,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report
-from content_generator import generate_news_content, generate_manga_content, get_image_url
+from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news
 
 load_dotenv()
 
@@ -1130,6 +1130,9 @@ ADMIN_HTML = """
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Admin Panel</h1>
+    <div class="mb-6">
+        <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">Son xəbərləri avtomatik çək</a>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-gray-800 p-4 rounded">
             <h2 class="text-xl font-bold mb-3">Yeni Xəbər Əlavə Et</h2>
@@ -1888,6 +1891,36 @@ def admin():
             link = '#'
         report_details.append({'report': report, 'snippet': content_snippet, 'link': link})
     return render_template('admin.html', all_news=all_news, all_manga=all_manga, all_users=all_users, report_details=report_details)
+
+@app.route('/admin/fetch-news')
+@login_required
+@admin_required
+def fetch_news():
+    articles = fetch_and_generate_news()
+    count = 0
+    for art in articles:
+        title = art.get('title', 'Xəbər')
+        content = art.get('content', '')
+        category = art.get('category', 'Ümumi')
+        source_url = art.get('source_url', '')
+        image_keywords = art.get('image_search_keywords', title)
+        image_url = art.get('image_url', '')
+        if not image_url:
+            image_url = get_image_url(image_keywords)
+        if title and content:
+            news = News(
+                title=title,
+                content=content,
+                category=category,
+                image_url=image_url,
+                author_id=current_user.id
+            )
+            db.session.add(news)
+            count += 1
+    db.session.commit()
+    flash(f"{count} xəbər uğurla əlavə edildi.")
+    return redirect(url_for('admin'))
+
 @app.route('/admin/add-news', methods=['POST'])
 @login_required
 @admin_required

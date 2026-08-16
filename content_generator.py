@@ -121,3 +121,48 @@ def generate_manga_content():
     except Exception as e:
         print(f"DeepSeek manqa xətası: {e}")
         return []
+def fetch_and_generate_news():
+    """
+    Serper ilə son anime/manqa xəbərlərini tapıb,
+    DeepSeek-ə keyfiyyətli, jurnalist üslubunda məqalələr yazdırır.
+    """
+    query = "latest anime manga manhwa news"
+    raw = serper_search(query, search_type="search", num=6)
+
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    prompt = f"""
+    Sənə aşağıda real axtarış nəticələri verilib. Hər nəticə üçün dəqiq, peşəkar xəbər məqaləsi yaz.
+    Tələblər:
+    - Başlıq maraqlı və dəqiq olsun.
+    - Məzmun 5-10 cümlə arasında olsun (xəbərin əhəmiyyətinə görə). Süni uzatma, boş sözlər olmasın.
+    - Jurnalist üslubunda, təbii və neytral yaz.
+    - Yalnız verilən mənbə məlumatlarından istifadə et, heç nə uydurma.
+    - Kateqoriyanı müəyyən et: Anime, Manga, Webtoon/Manhua, Oyun, Ümumi.
+    - Hər məqalə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et (məsələn: "Naruto new season poster").
+    - Əgər axtarış nəticəsində URL varsa, onu da daxil et.
+    Axtarış nəticələri:
+    {json.dumps(raw, ensure_ascii=False)}
+    Cavab yalnız JSON formatında olsun:
+    {{"news": [{{"title": "...", "content": "...", "category": "...", "source_url": "...", "image_search_keywords": "..."}}]}}
+    """
+    data = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.4,
+        "max_tokens": 2000
+    }
+    try:
+        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=90)
+        resp.raise_for_status()
+        text = resp.json()['choices'][0]['message']['content']
+        start = text.find('{')
+        end = text.rfind('}') + 1
+        if start != -1 and end > start:
+            return json.loads(text[start:end]).get('news', [])
+        return []
+    except Exception as e:
+        print(f"fetch_and_generate_news xətası: {e}")
+        return []
