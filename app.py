@@ -454,7 +454,7 @@ def update_user_title(user):
                 db.session.commit()
 
 def get_earned_titles(user):
-    return [ut.title for ut in user.user_titles]
+    return user.user_titles
 
 # ---------- HTML ŞABLONLARI (əvvəlki kimi, lakin profilə ünvan idarəsi əlavə olundu) ----------
 BASE_HTML = """

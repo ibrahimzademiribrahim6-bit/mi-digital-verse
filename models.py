@@ -115,8 +115,14 @@ class Title(db.Model):
     hidden = db.Column(db.Boolean, default=False)
     condition_type = db.Column(db.String(50), default='xp')
     condition_value = db.Column(db.Integer, default=0)
+    required_xp = db.Column(db.Integer, default=0)
     unique_legendary = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 'required_xp' not in kwargs and self.condition_value:
+            self.required_xp = self.condition_value
 
 
 class UserTitle(db.Model):
