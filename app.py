@@ -1752,6 +1752,16 @@ def profile():
                            earned_achievements=earned_achievements,
                            earned_titles=earned_titles)
 @app.route('/profile/update-bio', methods=['POST'])
+@login_required
+def update_bio():
+    current_user.bio = request.form.get('bio', '').strip()
+    current_user.twitter_link = request.form.get('twitter_link', '').strip()
+    current_user.instagram_link = request.form.get('instagram_link', '').strip()
+    current_user.discord_link = request.form.get('discord_link', '').strip()
+    db.session.commit()
+    flash('Profil yeniləndi')
+    return redirect(url_for('profile'))
+
 @app.route('/profile/change-password', methods=['POST'])
 @login_required
 def change_password():
