@@ -32,10 +32,24 @@ def serper_search(query, search_type="search", num=5):
         return []
 
 def get_image_url(title):
-    """Başlığa uyğun ilk şəkil linkini qaytar (əgər tapılmasa boş qaytar)."""
-    images = serper_search(title + " anime manhwa", search_type="images", num=1)
-    if images:
-        return images[0].get("link", "")
+    """
+    Başlığa uyğun ilk uyğun şəkil linkini qaytarır.
+    Əgər tapılmasa, bir neçə açar söz kombinasiyası sınayır.
+    """
+    keywords_list = [
+        title,
+        title + " anime",
+        title + " manhwa",
+        title + " manga",
+        title + " poster",
+        title + " cover"
+    ]
+    for query in keywords_list:
+        images = serper_search(query, search_type="images", num=1)
+        if images:
+            link = images[0].get("link", "")
+            if link:
+                return link
     return ""
 
 def generate_news_content():
@@ -121,6 +135,7 @@ def generate_manga_content():
     except Exception as e:
         print(f"DeepSeek manqa xətası: {e}")
         return []
+
 def fetch_and_generate_news():
     """
     Etibarlı anime/manqa xəbər saytlarından güncəl xəbərləri tapıb,
@@ -161,7 +176,6 @@ def fetch_and_generate_news():
     seen = set()
     for item in raw:
         link = item.get('link', '')
-        # Domeni yoxla
         if any(domain in link for domain in allowed_domains):
             if link not in seen:
                 seen.add(link)
@@ -212,40 +226,48 @@ def fetch_and_generate_news():
     except Exception as e:
         print(f"fetch_and_generate_news xətası: {e}")
         return []
+
 def generate_listicle(topic):
     """
-    İstifadəçinin verdiyi mövzuya uyğun orijinal siyahı məqaləsi yaradır.
-    topic: məs. "best 10 isekai anime 2026"
+    Mövzuya uyğun Azərbaycanca siyahı məqaləsi yaradır.
+    Axtarışlar ingilis + uyğun orijinal dildə aparılır.
     """
     from datetime import datetime
     current_date = datetime.now().strftime("%Y-%m-%d")
 
-    # Mövzuya uyğun etibarlı axtarış
-    query = f"{topic} best list rankings"
-    raw = serper_search(query, search_type="search", num=8)
+    # Mövzuya uyğun dili müəyyənləşdir
+    topic_lower = topic.lower()
+    if 'manhua' in topic_lower or 'çin' in topic_lower or 'china' in topic_lower:
+        extra_lang = 'zh'
+        extra_query = '最佳十部国产漫画 2026'
+    elif 'manhwa' in topic_lower or 'kore' in topic_lower:
+        extra_lang = 'ko'
+        extra_query = '최고의 만화 2026'
+    elif 'anime' in topic_lower or 'manga' in topic_lower:
+        extra_lang = 'ja'
+        extra_query = '2026年 アニメ ランキング'
+    else:
+        extra_lang = 'en'
+        extra_query = topic
 
-    # Etibarlı mənbələrə üstünlük ver
-    allowed_domains = [
-        "animenewsnetwork.com",
-        "crunchyroll.com",
-        "myanimelist.net",
-        "animecorner.me",
-        "mangamogura.com",
-        "otakukart.com",
-        "animehunch.com",
-        "screenrant.com",
-        "cbr.com",
-        "ign.com",
+    queries = [
+        f"{topic} best list rankings",
+        f"{topic} top 10 2026",
+        extra_query
     ]
-    filtered = []
-    seen = set()
-    for item in raw:
+
+    all_raw = []
+    for q in queries:
+        raw_part = serper_search(q, search_type="search", num=4)
+        all_raw.extend(raw_part)
+
+    # Unikallaşdır
+    unique = {}
+    for item in all_raw:
         link = item.get('link', '')
-        if any(domain in link for domain in allowed_domains):
-            if link not in seen:
-                seen.add(link)
-                filtered.append(item)
-    raw = filtered[:5]
+        if link and link not in unique:
+            unique[link] = item
+    raw = list(unique.values())[:8]
 
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -253,12 +275,12 @@ def generate_listicle(topic):
     }
 
     prompt = f"""
-    Sən peşəkar anime/manqa/webtoon redaktorusan. Oxucular üçün faydalı, orijinal siyahı məqaləsi yaz.
+    Sən peşəkar anime/manqa/webtoon redaktorusan. Məqaləni **Azərbaycan dilində** yaz.
     Mövzu: "{topic}"
     Bugünkü tarix: {current_date}
 
     Tələblər:
-    - Başlıq cəlbedici, dəqiq olsun. Tərkibində mövzu və "2026" keçsin.
+    - Başlıq Azərbaycanca olsun, amma orijinal adları ingilis/orijinal dildə saxla.
     - Məqalə 8-10 maddədən ibarət olsun.
     - Hər maddə üçün:
       a) Sıra nömrəsi
@@ -268,7 +290,7 @@ def generate_listicle(topic):
     - Giriş hissəsində mövzunun niyə önəmli olduğunu 2-3 cümlə ilə izah et.
     - Nəticədə oxucuya ümumi tövsiyə ver, 2-3 cümlə.
     - Heç bir saytdan köçürmə, məlumatları çoxsaylı mənbədən toplayıb öz sözlərinlə yaz.
-    - Adları ingilis dilində, mötərizədə orijinal adı ilə ver.
+    - Süni, boş ifadələr işlətmə. Hər cümlə məlumat versin.
     - Hər maddə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et.
     - Məqalə mətni düz mətn formatında olsun, hər maddə ayrı sətirdə başlasın.
 
