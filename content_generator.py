@@ -123,52 +123,83 @@ def generate_manga_content():
         return []
 def fetch_and_generate_news():
     """
-    Serper ilə 2026-cı ilin son anime/manqa xəbərlərini tapıb,
-    DeepSeek-ə jurnalist üslubunda, daha uzun məqalələr yazdırır.
+    Etibarlı anime/manqa xəbər saytlarından güncəl xəbərləri tapıb,
+    DeepSeek-ə daha canlı, jurnalist üslubunda məqalələr yazdırır.
     """
     from datetime import datetime
+    current_year = datetime.now().strftime("%Y")
     current_date = datetime.now().strftime("%Y-%m-%d")
-    query = f"latest anime manga manhwa news {datetime.now().strftime('%Y')}"
 
-    raw = serper_search(query, search_type="search", num=8)
+    # Etibarlı xəbər mənbələri
+    sites = [
+        "animenewsnetwork.com",
+        "crunchyroll.com/news",
+        "myanimelist.net/news",
+        "animecorner.me",
+        "mangamogura.com",
+        "animegeek.com",
+        "otakukart.com",
+        "animehunch.com",
+    ]
+    site_query = " OR ".join([f"site:{s}" for s in sites])
+    query = f"({site_query}) anime OR manga OR manhwa news {current_year}"
 
-    # Nəticələri unikallaşdır
-    unique = []
+    raw = serper_search(query, search_type="search", num=10)
+
+    # Yalnız etibarlı saytlardan nəticələri götür
+    allowed_domains = [
+        "animenewsnetwork.com",
+        "crunchyroll.com",
+        "myanimelist.net",
+        "animecorner.me",
+        "mangamogura.com",
+        "animegeek.com",
+        "otakukart.com",
+        "animehunch.com",
+    ]
+    filtered = []
     seen = set()
     for item in raw:
         link = item.get('link', '')
-        if link and link not in seen:
-            seen.add(link)
-            unique.append(item)
-    raw = unique[:6]
+        # Domeni yoxla
+        if any(domain in link for domain in allowed_domains):
+            if link not in seen:
+                seen.add(link)
+                filtered.append(item)
+
+    raw = filtered[:5]
 
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
     }
+
     prompt = f"""
-    Sənə aşağıda real axtarış nəticələri verilib. Hər nəticə üçün dəqiq, peşəkar xəbər məqaləsi yaz.
+    Sən təcrübəli anime/manqa jurnalistisən. Aşağıda real axtarış nəticələri verilib.
     Bugünkü tarix: {current_date}.
+    Hər nəticə üçün **canlı, enerjili, oxucunu yormayan** xəbər məqaləsi yaz.
     Tələblər:
-    - Başlıq maraqlı, dəqiq və aktual olsun.
-    - Məzmun 8-12 cümlə arasında olsun (xəbərin əhəmiyyətinə görə). Qısa yazma, amma süni uzatma və boş sözlər də etmə.
-    - Jurnalist üslubunda, təbii və neytral yaz.
-    - Yalnız verilən mənbə məlumatlarından istifadə et, heç nə uydurma.
-    - Mümkün olduqca tarix, studiya, platforma, mövsüm, yayım tarixi kimi dəqiq detalları daxil et.
+    - Başlıq maraqlı, dəqiq, qısa (10 sözdən çox olmasın).
+    - Məzmun 8-12 cümlə olsun. İlk cümlə xəbərin əsas məğzini versin.
+    - "Həftəlik xülasə", "Reddit istifadəçiləri", "YouTube videosu" kimi zəif mənbə ifadələrini işlətmə. Əgər mənbə zəifdirsə, yalnız faktları çıxar.
+    - Tarix, studiya, platforma, mövsüm kimi dəqiq məlumatları daxil et.
+    - Neytral, peşəkar, amma insan kimi yaz. Süni və quru olmasın.
     - Kateqoriyanı müəyyən et: Anime, Manga, Webtoon/Manhua, Oyun, Ümumi.
-    - Hər məqalə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et.
+    - Şəkil axtarmaq üçün 3-4 açar söz təklif et.
     - Əgər axtarış nəticəsində URL varsa, onu da daxil et.
     Axtarış nəticələri:
     {json.dumps(raw, ensure_ascii=False)}
     Cavab yalnız JSON formatında olsun:
     {{"news": [{{"title": "...", "content": "...", "category": "...", "source_url": "...", "image_search_keywords": "..."}}]}}
     """
+
     data = {
         "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.6,
-        "max_tokens": 3000
+        "temperature": 0.7,
+        "max_tokens": 3500
     }
+
     try:
         resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=120)
         resp.raise_for_status()
