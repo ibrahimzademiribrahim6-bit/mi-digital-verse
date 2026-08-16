@@ -212,3 +212,89 @@ def fetch_and_generate_news():
     except Exception as e:
         print(f"fetch_and_generate_news xətası: {e}")
         return []
+def generate_listicle(topic):
+    """
+    İstifadəçinin verdiyi mövzuya uyğun orijinal siyahı məqaləsi yaradır.
+    topic: məs. "best 10 isekai anime 2026"
+    """
+    from datetime import datetime
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
+    # Mövzuya uyğun etibarlı axtarış
+    query = f"{topic} best list rankings"
+    raw = serper_search(query, search_type="search", num=8)
+
+    # Etibarlı mənbələrə üstünlük ver
+    allowed_domains = [
+        "animenewsnetwork.com",
+        "crunchyroll.com",
+        "myanimelist.net",
+        "animecorner.me",
+        "mangamogura.com",
+        "otakukart.com",
+        "animehunch.com",
+        "screenrant.com",
+        "cbr.com",
+        "ign.com",
+    ]
+    filtered = []
+    seen = set()
+    for item in raw:
+        link = item.get('link', '')
+        if any(domain in link for domain in allowed_domains):
+            if link not in seen:
+                seen.add(link)
+                filtered.append(item)
+    raw = filtered[:5]
+
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    prompt = f"""
+    Sən peşəkar anime/manqa/webtoon redaktorusan. Oxucular üçün faydalı, orijinal siyahı məqaləsi yaz.
+    Mövzu: "{topic}"
+    Bugünkü tarix: {current_date}
+
+    Tələblər:
+    - Başlıq cəlbedici, dəqiq olsun. Tərkibində mövzu və "2026" keçsin.
+    - Məqalə 8-10 maddədən ibarət olsun.
+    - Hər maddə üçün:
+      a) Sıra nömrəsi
+      b) Orijinal adı (ingilis + mötərizədə yapon/koreya/çin adı)
+      c) Qısa hekayə (2-3 cümlə, konkret, süni olmayan)
+      d) Niyə populyardır (1-2 cümlə)
+    - Giriş hissəsində mövzunun niyə önəmli olduğunu 2-3 cümlə ilə izah et.
+    - Nəticədə oxucuya ümumi tövsiyə ver, 2-3 cümlə.
+    - Heç bir saytdan köçürmə, məlumatları çoxsaylı mənbədən toplayıb öz sözlərinlə yaz.
+    - Adları ingilis dilində, mötərizədə orijinal adı ilə ver.
+    - Hər maddə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et.
+    - Məqalə mətni düz mətn formatında olsun, hər maddə ayrı sətirdə başlasın.
+
+    Axtarış nəticələri (yalnız mənbə kimi):
+    {json.dumps(raw, ensure_ascii=False)}
+
+    Cavab JSON formatında olsun:
+    {{"title": "...", "content": "...", "category": "Anime", "image_search_keywords": "..."}}
+    """
+
+    data = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 4000
+    }
+
+    try:
+        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=120)
+        resp.raise_for_status()
+        text = resp.json()['choices'][0]['message']['content']
+        start = text.find('{')
+        end = text.rfind('}') + 1
+        if start != -1 and end > start:
+            return json.loads(text[start:end])
+        return None
+    except Exception as e:
+        print(f"generate_listicle xətası: {e}")
+        return None

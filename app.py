@@ -18,7 +18,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report
-from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news
+from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
 
@@ -767,7 +767,7 @@ NEWS_DETAIL_HTML = """
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
-    <p class="text-lg leading-relaxed">{{ news.content }}</p>
+    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ news.content }}</p>
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
         <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
@@ -1131,6 +1131,13 @@ ADMIN_HTML = """
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Admin Panel</h1>
     <div class="mb-6">
+    <div class="mb-6 bg-gray-800 p-4 rounded">
+        <h2 class="text-xl font-bold mb-3">Siyahı Məqaləsi Yarat</h2>
+        <form action="/admin/generate-listicle" method="POST" class="space-y-3">
+            <input type="text" name="topic" placeholder="Məsələn: best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">Siyahı yarat</button>
+        </form>
+    </div>
         <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">Son xəbərləri avtomatik çək</a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1919,6 +1926,34 @@ def fetch_news():
             count += 1
     db.session.commit()
     flash(f"{count} xəbər uğurla əlavə edildi.")
+    return redirect(url_for('admin'))
+@app.route('/admin/generate-listicle', methods=['POST'])
+@login_required
+@admin_required
+def admin_generate_listicle():
+    topic = request.form.get('topic', '').strip()
+    if not topic:
+        flash('Mövzu daxil edin')
+        return redirect(url_for('admin'))
+    article = generate_listicle(topic)
+    if article:
+        title = article.get('title', topic)
+        content = article.get('content', '')
+        category = article.get('category', 'Ümumi')
+        image_keywords = article.get('image_search_keywords', title)
+        image_url = get_image_url(image_keywords)
+        news = News(
+            title=title,
+            content=content,
+            category=category,
+            image_url=image_url,
+            author_id=current_user.id
+        )
+        db.session.add(news)
+        db.session.commit()
+        flash('Siyahı məqaləsi yaradıldı.')
+    else:
+        flash('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.')
     return redirect(url_for('admin'))
 
 @app.route('/admin/add-news', methods=['POST'])
