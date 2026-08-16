@@ -885,6 +885,9 @@ COMMUNITY_HTML = """
         {% for room in rooms %}
         <a href="/room/{{ room.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
             <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin/delete-room/{{ room.id }}" class="text-red-400 text-xs">Otağı sil</a>
+            {% endif %}
 <button onclick="openReportModal('room', {{ room.id }})" class="text-xs text-gray-500 hover:text-red-400">Şikayət et</button>
             <p class="text-sm text-gray-400">Yaradıcı: {{ room.creator.username }}</p>
             {% if room.news %}<p class="text-xs text-gray-500">Xəbər: {{ room.news.title }}</p>{% endif %}
@@ -914,6 +917,9 @@ ROOM_HTML = """
         {% for post in posts %}
         <div class="bg-gray-800 rounded p-3">
             <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs">Şərhi sil</a>
+            {% endif %}
 <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">Şikayət et</button>
             {% if post.is_spoiler %}
             <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
