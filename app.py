@@ -2427,19 +2427,6 @@ def clear_all_posts():
     flash('Bütün şərhlər silindi.')
     return redirect(url_for('admin'))
 
-    <h2 class="text-2xl font-bold mt-8 mb-3">Otaqlar</h2>
-    <div class="space-y-2">
-        {% for room in all_rooms %}
-        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
-            <span>{{ room.name }}</span>
-            <a href="/admin/delete-room/{{ room.id }}" class="text-red-400">Sil</a>
-        </div>
-        {% endfor %}
-    </div>
-    <a href="/admin/clear-all-posts" class="px-4 py-2 bg-red-500 text-white rounded mt-4 inline-block">Bütün şərhləri sil</a>
-
-
-
 @app.route('/admin/delete-manga/<int:manga_id>')
 @login_required
 @admin_required
