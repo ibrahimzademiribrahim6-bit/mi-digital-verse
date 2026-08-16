@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock
+from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
@@ -33,7 +33,7 @@ db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-Talisman(app, content_security_policy=None)
+Talisman(app, content_security_policy=None, force_https=False)
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -1216,7 +1216,6 @@ ADMIN_HTML = """
         {% endfor %}
     </div>
     <h2 class="text-2xl font-bold mt-8 mb-3">Mövcud Manqa/Anime</h2>
-    V
 
     <h2 class="text-2xl font-bold mt-8 mb-3">Şikayətlər</h2>
     <div class="space-y-2">
@@ -1779,6 +1778,7 @@ def add_post(room_id):
         if room_owner:
             add_notification(room_owner, f"{current_user.username} '{room.name}' otağında yeni mesaj yazdı.")
     return redirect(url_for('room', room_id=room_id))
+
 @app.route('/report/submit', methods=['POST'])
 @login_required
 def report_submit():
@@ -1793,6 +1793,7 @@ def report_submit():
     db.session.commit()
     flash('Şikayət göndərildi.')
     return redirect(request.referrer or url_for('index'))
+
 @app.route('/report/post/<int:post_id>', methods=['POST'])
 @login_required
 def report_post(post_id):
@@ -1814,18 +1815,6 @@ def report_room(room_id):
     db.session.commit()
     flash('Şikayət göndərildi.')
     return redirect(request.referrer or url_for('index'))
-    content = request.form.get('content', '').strip()
-    is_spoiler = request.form.get('is_spoiler') == '1'
-    if not content:
-        return redirect(url_for('room', room_id=room_id))
-    post = Post(room_id=room_id, user_id=current_user.id, content=content, is_spoiler=is_spoiler)
-    db.session.add(post)
-    db.session.commit()
-    add_xp(current_user, 5)
-    update_quest_progress(current_user, 'post', 1)
-    check_achievements(current_user)
-    add_notification(current_user, f"Siz '{post.room.name}' otağında yeni mesaj yazdınız.")
-    return redirect(url_for('room', room_id=room_id))
 
 @app.route('/like-news/<int:news_id>', methods=['POST'])
 @login_required
@@ -2268,6 +2257,16 @@ def handle_report(report_id):
     flash("Şikayət həll edildi.")
     return redirect(url_for('admin'))
 
+@app.route('/admin/delete-report/<int:report_id>')
+@login_required
+@admin_required
+def delete_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    db.session.delete(report)
+    db.session.commit()
+    flash("Şikayət silindi.")
+    return redirect(url_for('admin'))
+
 @app.route('/admin/edit-news/<int:news_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -2406,16 +2405,6 @@ def delete_room(room_id):
     db.session.delete(room)
     db.session.commit()
     flash('Otaq və şərhləri silindi.')
-    return redirect(url_for('admin'))
-
-@app.route('/admin/delete-post/<int:post_id>')
-@login_required
-@admin_required
-def delete_post(post_id):
-    post = Post.query.get_or_404(post_id)
-    db.session.delete(post)
-    db.session.commit()
-    flash('Şərh silindi.')
     return redirect(url_for('admin'))
 
 @app.route('/admin/clear-all-posts')
