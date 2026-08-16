@@ -287,6 +287,7 @@ def generate_listicle(topic):
       b) Orijinal adı (ingilis + mötərizədə yapon/koreya/çin adı)
       c) Qısa hekayə (2-3 cümlə, konkret, süni olmayan)
       d) Niyə populyardır (1-2 cümlə)
+      e) **Ulduz (*) işarəsi və Markdown formatı istifadə etmə.**
     - Giriş hissəsində mövzunun niyə önəmli olduğunu 2-3 cümlə ilə izah et.
     - Nəticədə oxucuya ümumi tövsiyə ver, 2-3 cümlə.
     - Heç bir saytdan köçürmə, məlumatları çoxsaylı mənbədən toplayıb öz sözlərinlə yaz.
@@ -315,7 +316,11 @@ def generate_listicle(topic):
         start = text.find('{')
         end = text.rfind('}') + 1
         if start != -1 and end > start:
-            return json.loads(text[start:end])
+            result = json.loads(text[start:end])
+            # Ulduz işarələrini məzmundan təmizlə
+            if 'content' in result:
+                result['content'] = result['content'].replace('**', '')
+            return result
         return None
     except Exception as e:
         print(f"generate_listicle xətası: {e}")
