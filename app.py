@@ -2118,20 +2118,17 @@ def add_manga():
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-news/<int:news_id>')
-@app.route('/admin/delete-report/<int:report_id>')
-@app.route('/user/<int:user_id>')
 @login_required
 @admin_required
-def user_profile(user_id):
-    user = User.query.get_or_404(user_id)
-    return render_template('user_profile.html', profile_user=user)
-@login_required
-@admin_required
-def delete_report(report_id):
-    report = Report.query.get_or_404(report_id)
-    db.session.delete(report)
+def delete_news(news_id):
+    news = News.query.get_or_404(news_id)
+    # Bu xəbərə bağlı otaqların news_id-sini NULL et
+    Room.query.filter_by(news_id=news.id).update({'news_id': None})
+    # Xəbərə bağlı hesabatları sil (varsa)
+    Report.query.filter_by(target_type='news', target_id=news.id).delete()
+    db.session.delete(news)
     db.session.commit()
-    flash('Şikayət silindi.')
+    flash('Xəbər silindi.')
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-post/<int:post_id>')
