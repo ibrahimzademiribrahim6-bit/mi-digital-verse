@@ -1256,6 +1256,46 @@ ADMIN_HTML = """
         {% endfor %}
     </div>
 </div>
+<script>
+    function addTextBlock() {
+        const container = document.getElementById('blocksContainer');
+        const div = document.createElement('div');
+        div.className = 'bg-gray-700 p-3 rounded mt-3';
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold">Mətn Bloku</span>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            </div>
+            <input type="hidden" name="block_type" value="text">
+            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin"></textarea>
+            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                <option value="stack">Alt-alta</option>
+                <option value="side">Yan-yana</option>
+            </select>
+        `;
+        container.appendChild(div);
+    }
+
+    function addImageBlock() {
+        const container = document.getElementById('blocksContainer');
+        const div = document.createElement('div');
+        div.className = 'bg-gray-700 p-3 rounded mt-3';
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold">Şəkil Bloku</span>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            </div>
+            <input type="hidden" name="block_type" value="image">
+            <input type="text" name="block_image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-800 text-white">
+            <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
+            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+                <option value="stack">Alt-alta</option>
+                <option value="side">Yan-yana</option>
+            </select>
+        `;
+        container.appendChild(div);
+    }
+</script>
 {% endblock %}
 """
 
