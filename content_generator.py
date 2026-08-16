@@ -123,11 +123,24 @@ def generate_manga_content():
         return []
 def fetch_and_generate_news():
     """
-    Serper ilə son anime/manqa xəbərlərini tapıb,
-    DeepSeek-ə keyfiyyətli, jurnalist üslubunda məqalələr yazdırır.
+    Serper ilə 2026-cı ilin son anime/manqa xəbərlərini tapıb,
+    DeepSeek-ə jurnalist üslubunda, daha uzun məqalələr yazdırır.
     """
-    query = "latest anime manga manhwa news"
-    raw = serper_search(query, search_type="search", num=6)
+    from datetime import datetime
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    query = f"latest anime manga manhwa news {datetime.now().strftime('%Y')}"
+
+    raw = serper_search(query, search_type="search", num=8)
+
+    # Nəticələri unikallaşdır
+    unique = []
+    seen = set()
+    for item in raw:
+        link = item.get('link', '')
+        if link and link not in seen:
+            seen.add(link)
+            unique.append(item)
+    raw = unique[:6]
 
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -135,13 +148,15 @@ def fetch_and_generate_news():
     }
     prompt = f"""
     Sənə aşağıda real axtarış nəticələri verilib. Hər nəticə üçün dəqiq, peşəkar xəbər məqaləsi yaz.
+    Bugünkü tarix: {current_date}.
     Tələblər:
-    - Başlıq maraqlı və dəqiq olsun.
-    - Məzmun 5-10 cümlə arasında olsun (xəbərin əhəmiyyətinə görə). Süni uzatma, boş sözlər olmasın.
+    - Başlıq maraqlı, dəqiq və aktual olsun.
+    - Məzmun 8-12 cümlə arasında olsun (xəbərin əhəmiyyətinə görə). Qısa yazma, amma süni uzatma və boş sözlər də etmə.
     - Jurnalist üslubunda, təbii və neytral yaz.
     - Yalnız verilən mənbə məlumatlarından istifadə et, heç nə uydurma.
+    - Mümkün olduqca tarix, studiya, platforma, mövsüm, yayım tarixi kimi dəqiq detalları daxil et.
     - Kateqoriyanı müəyyən et: Anime, Manga, Webtoon/Manhua, Oyun, Ümumi.
-    - Hər məqalə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et (məsələn: "Naruto new season poster").
+    - Hər məqalə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et.
     - Əgər axtarış nəticəsində URL varsa, onu da daxil et.
     Axtarış nəticələri:
     {json.dumps(raw, ensure_ascii=False)}
@@ -151,11 +166,11 @@ def fetch_and_generate_news():
     data = {
         "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.4,
-        "max_tokens": 2000
+        "temperature": 0.6,
+        "max_tokens": 3000
     }
     try:
-        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=90)
+        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=120)
         resp.raise_for_status()
         text = resp.json()['choices'][0]['message']['content']
         start = text.find('{')
