@@ -1779,15 +1779,7 @@ def change_password():
         db.session.commit()
         flash('Şifrə yeniləndi')
     return redirect(url_for('profile'))
-@login_required
-def update_bio():
-    current_user.bio = request.form.get('bio', '').strip()
-    current_user.twitter_link = request.form.get('twitter_link', '').strip()
-    current_user.instagram_link = request.form.get('instagram_link', '').strip()
-    current_user.discord_link = request.form.get('discord_link', '').strip()
-    db.session.commit()
-    flash('Profil yeniləndi')
-    return redirect(url_for('profile'))
+
 @app.route('/profile/set-active-title/<int:title_id>', methods=['POST'])
 @login_required
 def set_active_title(title_id):
