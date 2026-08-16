@@ -1263,7 +1263,17 @@ ABOUT_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Haqqımızda</h1>
-    <p class="text-lg">Mi Digital Verse, anime, manhwa, manhua və manga həvəskarları üçün yaradılmış müasir rəqəmsal məkandır. Biz ən son xəbərləri, dərin analizləri və cəmiyyətin müzakirələrini bir araya gətiririk. Məqsədimiz pərəstişkarlara zəngin məzmun və interaktiv platforma təqdim etməkdir.</p>
+<p class="text-lg leading-relaxed mb-4">
+    Mi Digital Verse, anime, manhwa, manhua və manga həvəskarları üçün yaradılmış müasir rəqəmsal məkandır.
+    Məqsədimiz pərəstişkarlara ən son xəbərləri, keyfiyyətli analizləri və interaktiv icma təcrübəsini bir araya gətirməkdir.
+</p>
+<p class="text-lg leading-relaxed mb-4">
+    Biz inanırıq ki, hər bir pərəstişkarın səsi burada eşidilməlidir. Ona görə də saytımızda müzakirə otaqları, nailiyyətlər və ünvan sistemi qurmuşuq.
+    Gələcəkdə daha çox funksiya və məzmun əlavə edərək böyüməyə davam edəcəyik.
+</p>
+<p class="text-lg leading-relaxed">
+    Mi Digital Verse ailəsinə qoşulun və rəqəmsal dünyada öz yerinizi alın!
+</p>
 </div>
 {% endblock %}
 """
