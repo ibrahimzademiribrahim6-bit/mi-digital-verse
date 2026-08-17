@@ -762,6 +762,19 @@ function closeReportModal() {
     if (langToggle) langToggle.addEventListener('click', toggleLanguage);
     const langToggleMobile = document.getElementById('langToggleMobile');
     if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
+
+    // Flash mesajlarını 5 saniyə sonra yox et
+    setTimeout(function() {
+        var flashItems = document.querySelectorAll('#flash-container .flash-item, #flash-container div');
+        flashItems.forEach(function(item) {
+            item.style.transition = 'opacity 0.5s ease';
+            item.style.opacity = '0';
+            setTimeout(function() {
+                item.style.display = 'none';
+            }, 500);
+        });
+    }, 5000);
+
 </script>
 </body>
 </html>
