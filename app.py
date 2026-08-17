@@ -32,6 +32,7 @@ app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+login_manager.login_message = 'Zəhmət olmasa giriş edin.'
 @login_manager.unauthorized_handler
 def unauthorized():
     flash('Zəhmət olmasa giriş edin.')
@@ -609,11 +610,11 @@ BASE_HTML = """
     </div>
 
     <main class="flex-grow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3">{{ message }}</div>
+                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
@@ -693,6 +694,17 @@ function openReportModal(type, id) {
 function closeReportModal() {
     document.getElementById('reportModal').classList.add('hidden');
 }
+    // Flash mesajlarını 5 saniyə sonra yoxa çıxar
+    setTimeout(function() {
+        var flashContainer = document.getElementById('flash-container');
+        if (flashContainer) {
+            flashContainer.style.transition = 'opacity 0.5s';
+            flashContainer.style.opacity = '0';
+            setTimeout(function() {
+                flashContainer.style.display = 'none';
+            }, 500);
+        }
+    }, 5000);
     function showLogin() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
