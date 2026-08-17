@@ -609,6 +609,15 @@ BASE_HTML = """
     </div>
 
     <main class="flex-grow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 <!-- Report Modal -->
 <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
