@@ -7,7 +7,7 @@ db = SQLAlchemy()
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)  # email artıq məcburi deyil
     password_hash = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     points = db.Column(db.Integer, default=0)
@@ -59,6 +59,7 @@ class News(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(50), default='Ümumi')
     image_url = db.Column(db.String(500), default='')
+    status = db.Column(db.String(20), default='draft')  # 'draft' və ya 'published'
     views = db.Column(db.Integer, default=0)
     likes = db.Column(db.Integer, default=0)
     published_at = db.Column(db.DateTime, default=datetime.utcnow)

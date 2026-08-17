@@ -641,7 +641,7 @@ BASE_HTML = """
             </form>
             <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
                 <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="email" name="email" placeholder="Email" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="email" name="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
                 <button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">Qeydiyyatdan keç</button>
             </form>
@@ -1296,6 +1296,20 @@ ADMIN_HTML = """
             </form>
         </div>
     </div>
+    <h2 class="text-2xl font-bold mt-8 mb-3">Qaralamalar</h2>
+    <div class="space-y-2">
+        {% for draft in draft_news %}
+        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
+            <span>{{ draft.title }}</span>
+            <div>
+                <a href="/admin/publish-news/{{ draft.id }}" class="text-green-400 mr-3">Yayımla</a>
+                <a href="/admin/edit-news/{{ draft.id }}" class="text-cyan-400 mr-3">Redaktə et</a>
+                <a href="/admin/delete-news/{{ draft.id }}" class="text-red-400">Sil</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
     <h2 class="text-2xl font-bold mt-8 mb-3">Mövcud Xəbərlər</h2>
     <div class="space-y-2">
         {% for news in all_news %}
@@ -1717,14 +1731,14 @@ def inject_unread_notifications():
 # ---------- ROUTELAR ----------
 @app.route('/')
 def index():
-    latest_news = News.query.order_by(News.published_at.desc()).limit(5).all()
-    most_read = News.query.order_by(News.views.desc()).limit(5).all()
+    latest_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).limit(5).all()
+    most_read = News.query.filter_by(status='published').order_by(News.views.desc()).limit(5).all()
     featured = Manga.query.order_by(Manga.rating.desc()).limit(4).all()
     return render_template('index.html', latest_news=latest_news, most_read=most_read, featured=featured)
 
 @app.route('/news')
 def news_list():
-    all_news = News.query.order_by(News.published_at.desc()).all()
+    all_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).all()
     return render_template('news_list.html', all_news=all_news)
 
 @app.route('/news/<int:news_id>')
@@ -1742,7 +1756,7 @@ def news_detail(news_id):
 
 @app.route('/category/<string:cat>')
 def category(cat):
-    all_news = News.query.filter(News.category.ilike(f'%{cat}%')).order_by(News.published_at.desc()).all()
+    all_news = News.query.filter(News.status == 'published', News.category.ilike(f'%{cat}%')).order_by(News.published_at.desc()).all()
     return render_template('news_list.html', all_news=all_news)
 
 @app.route('/manga')
@@ -1785,7 +1799,7 @@ def search():
     news_results = []
     manga_results = []
     if q:
-        news_results = News.query.filter(News.title.contains(q) | News.content.contains(q)).all()
+        news_results = News.query.filter(News.status == 'published', News.title.contains(q) | News.content.contains(q)).all()
         manga_results = Manga.query.filter(Manga.title.contains(q) | Manga.description.contains(q)).all()
         if type_filter:
             manga_results = [m for m in manga_results if m.type == type_filter]
@@ -1947,19 +1961,19 @@ def register():
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        if not username or not email or not password:
-            flash('Bütün sahələr doldurulmalıdır')
+        if not username or not password:
+            flash('İstifadəçi adı və şifrə məcburidir')
             return redirect(url_for('register'))
         if not is_strong_password(password):
             flash('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır')
             return redirect(url_for('register'))
-        if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
             flash('Email formatı düzgün deyil')
             return redirect(url_for('register'))
         if User.query.filter_by(username=username).first():
             flash('Bu istifadəçi adı artıq mövcuddur')
             return redirect(url_for('register'))
-        if User.query.filter_by(email=email).first():
+        if email and User.query.filter_by(email=email).first():
             flash('Bu email artıq qeydiyyatdan keçib')
             return redirect(url_for('register'))
         user = User(username=username, email=email, password_hash=generate_password_hash(password))
@@ -2152,7 +2166,8 @@ def mark_all_read():
 @login_required
 @admin_required
 def admin():
-    all_news = News.query.all()
+all_news = News.query.filter_by(status='published').all()
+draft_news = News.query.filter_by(status='draft').all()
     all_manga = Manga.query.all()
     all_users = User.query.all()
     reports = Report.query.filter_by(handled=False).all()
@@ -2193,7 +2208,8 @@ def fetch_news():
                 content=content,
                 category=category,
                 image_url=image_url,
-                author_id=current_user.id
+                author_id=current_user.id,
+                status='draft'
             )
             db.session.add(news)
             count += 1
@@ -2221,6 +2237,7 @@ def admin_generate_listicle():
             category=category,
             image_url=image_url,
             author_id=current_user.id
+            status='draft'
         )
         db.session.add(news)
         db.session.commit()
@@ -2463,6 +2480,16 @@ def add_manga():
         db.session.commit()
     return redirect(url_for('admin'))
 
+@app.route('/admin/publish-news/<int:news_id>')
+@login_required
+@admin_required
+def publish_news(news_id):
+    news = News.query.get_or_404(news_id)
+    news.status = 'published'
+    db.session.commit()
+    flash('Məqalə yayımlandı.')
+    return redirect(url_for('admin'))
+
 @app.route('/admin/delete-news/<int:news_id>')
 @login_required
 @admin_required
@@ -2543,6 +2570,12 @@ def delete_manga(manga_id):
 def init_db():
     with app.app_context():
         db.create_all()
+        try:
+            db.session.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
+            db.session.commit()
+        except:
+            db.session.rollback()
+
         if not User.query.filter_by(username='admin').first():
             admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
