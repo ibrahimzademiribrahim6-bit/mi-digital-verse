@@ -924,8 +924,9 @@ COMMUNITY_HTML = """
             </div>
         </div>
         {% endfor %}
+"""
 
-ROOM_HTML = """
+ROOM_HTML = """"
 {% extends "base.html" %}
 {% block title %}{{ room.name }} - Mi Digital Verse{% endblock %}
 {% block content %}
