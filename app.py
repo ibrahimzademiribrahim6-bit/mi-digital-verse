@@ -478,35 +478,74 @@ BASE_HTML = """
         .card-glow:hover { box-shadow: 0 0 20px rgba(0,240,255,0.5); transform: translateY(-5px); transition: all 0.3s; }
         .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
         .spoiler.revealed { background: transparent; color: inherit; }
-        html.light body { background: #f9fafb; color: #111; }
-                html.light .bg-gray-800 {
-            background-color: #1f2937; /* Tünd boz – düymələr və kartlar üçün */
+
+        /* ===== IŞIQLI REJIM (LIGHT MODE) ===== */
+        html.light body {
+            background: #f4f6f9;
+            color: #111827;
+        }
+        html.light .bg-gray-900 {
+            background-color: #ffffff;
+            border-color: #e5e7eb;
+            color: #111827;
+        }
+        html.light .bg-gray-800 {
+            background-color: #1f2937; /* Tünd boz - düymələr və kartlar */
             color: #ffffff;
             border: 1px solid #374151;
         }
         html.light .bg-gray-700 {
-            background-color: #e5e7eb; /* Açıq boz – inputlar üçün */
-            color: #111;
+            background-color: #e5e7eb; /* Açıq boz - inputlar */
+            color: #111827;
         }
-        html.light .bg-gray-900 {
-            background-color: #ffffff; /* Navbar və footer ağ */
-            border-color: #e5e7eb;
-        }
-        html.light .bg-gray-700 { background-color: #e5e7eb; color: #111; }
-        html.light .bg-gray-900 { background-color: #ffffff; border-color: #e5e7eb; }
         html.light .text-gray-300 { color: #374151; }
         html.light .text-gray-400 { color: #4b5563; }
+        html.light .text-gray-500 { color: #6b7280; }
         html.light .text-cyan-300 { color: #0e7490; }
         html.light .text-cyan-400 { color: #0891b2; }
         html.light .text-purple-400 { color: #9333ea; }
         html.light .text-purple-500 { color: #7e22ce; }
         html.light .text-yellow-400 { color: #ca8a04; }
-        html.light input, html.light textarea, html.light select { background-color: #fff; color: #111; border: 1px solid #d1d5db; }
-        html.light nav, html.light footer { background-color: #ffffff; border-color: #e5e7eb; }
-        .hero-section { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); }
-        html.light .hero-section { background: linear-gradient(135deg, #e0f2fe, #bae6fd, #7dd3fc); }
-        html.light .hero-section h1 { color: #0c4a6e; text-shadow: 0 0 5px #7dd3fc; }
-        html.light .hero-section p { color: #1e293b; }
+        html.light .text-red-400 { color: #dc2626; }
+        html.light .text-red-500 { color: #b91c1c; }
+        html.light input,
+        html.light textarea,
+        html.light select {
+            background-color: #ffffff;
+            color: #111827;
+            border: 1px solid #d1d5db;
+        }
+        html.light nav, html.light footer {
+            background-color: #ffffff;
+            border-color: #e5e7eb;
+        }
+        html.light .hero-section {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd, #7dd3fc);
+        }
+        html.light .hero-section h1 {
+            color: #0c4a6e;
+            text-shadow: 0 0 5px #7dd3fc;
+        }
+        html.light .hero-section p {
+            color: #1e293b;
+        }
+        /* Mobil menyu və düymələr üçün */
+        html.light #mobileMenu {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        html.light #mobileMenu a,
+        html.light #mobileMenu button {
+            color: #111827;
+        }
+        html.light #themeToggle,
+        html.light #themeToggleMobile,
+        html.light #langToggle,
+        html.light #langToggleMobile,
+        html.light #mobileMenuBtn {
+            background-color: #1f2937;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
