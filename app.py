@@ -2185,7 +2185,7 @@ def admin():
             content_snippet = ''
             link = '#'
         report_details.append({'report': report, 'snippet': content_snippet, 'link': link})
-    return render_template('admin.html', all_news=all_news, all_manga=all_manga, all_users=all_users, report_details=report_details)
+    return render_template('admin.html', all_news=all_news, draft_news=draft_news, all_manga=all_manga, all_users=all_users, report_details=report_details)
 
 @app.route('/admin/fetch-news')
 @login_required
