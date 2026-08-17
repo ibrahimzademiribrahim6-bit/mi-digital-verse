@@ -2166,8 +2166,8 @@ def mark_all_read():
 @login_required
 @admin_required
 def admin():
-all_news = News.query.filter_by(status='published').all()
-draft_news = News.query.filter_by(status='draft').all()
+    all_news = News.query.filter_by(status='published').all()
+    draft_news = News.query.filter_by(status='draft').all()
     all_manga = Manga.query.all()
     all_users = User.query.all()
     reports = Report.query.filter_by(handled=False).all()
@@ -2214,8 +2214,9 @@ def fetch_news():
             db.session.add(news)
             count += 1
     db.session.commit()
-    flash(f"{count} xəbər uğurla əlavə edildi.")
+    flash(f"{count} xəbər qaralama olaraq əlavə edildi.")
     return redirect(url_for('admin'))
+
 @app.route('/admin/generate-listicle', methods=['POST'])
 @login_required
 @admin_required
@@ -2236,12 +2237,12 @@ def admin_generate_listicle():
             content=content,
             category=category,
             image_url=image_url,
-            author_id=current_user.id
+            author_id=current_user.id,
             status='draft'
         )
         db.session.add(news)
         db.session.commit()
-        flash('Siyahı məqaləsi yaradıldı.')
+        flash('Siyahı məqaləsi qaralama olaraq yaradıldı.')
     else:
         flash('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.')
     return redirect(url_for('admin'))
