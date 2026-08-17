@@ -474,7 +474,19 @@ BASE_HTML = """
         .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
         .spoiler.revealed { background: transparent; color: inherit; }
         html.light body { background: #f9fafb; color: #111; }
-        html.light .bg-gray-800 { background-color: #ffffff; border: 1px solid #e5e7eb; }
+                html.light .bg-gray-800 {
+            background-color: #1f2937; /* Tünd boz – düymələr və kartlar üçün */
+            color: #ffffff;
+            border: 1px solid #374151;
+        }
+        html.light .bg-gray-700 {
+            background-color: #e5e7eb; /* Açıq boz – inputlar üçün */
+            color: #111;
+        }
+        html.light .bg-gray-900 {
+            background-color: #ffffff; /* Navbar və footer ağ */
+            border-color: #e5e7eb;
+        }
         html.light .bg-gray-700 { background-color: #e5e7eb; color: #111; }
         html.light .bg-gray-900 { background-color: #ffffff; border-color: #e5e7eb; }
         html.light .text-gray-300 { color: #374151; }
@@ -696,16 +708,20 @@ function closeReportModal() {
             const key = el.getAttribute('data-i18n');
             if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
         });
-        const langBtn = document.getElementById('langToggle');
+                const langBtn = document.getElementById('langToggle');
         if (langBtn) langBtn.textContent = lang === 'az' ? 'EN' : 'AZ';
+        const langBtnMobile = document.getElementById('langToggleMobile');
+        if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
         currentLang = lang;
         localStorage.setItem('lang', lang);
     }
     function toggleLanguage() {
         applyLanguage(currentLang === 'az' ? 'en' : 'az');
     }
-    document.getElementById('langToggle').addEventListener('click', toggleLanguage);
-    document.getElementById('langToggleMobile').addEventListener('click', toggleLanguage);
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) langToggle.addEventListener('click', toggleLanguage);
+    const langToggleMobile = document.getElementById('langToggleMobile');
+    if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
 </script>
 </body>
 </html>
@@ -2068,7 +2084,7 @@ def upload_avatar():
     return redirect(url_for('profile'))
 
 # ---------- NOTIFICATIONS ----------
-@app.route('/notifications')
+@app.route('/notifications', methods=['GET', 'POST'])
 @login_required
 def notifications():
     notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
