@@ -464,213 +464,1316 @@ def get_earned_titles(user):
 # ---------- HTML ŞABLONLARI (əvvəlki kimi, lakin profilə ünvan idarəsi əlavə olundu) ----------
 BASE_HTML = """
 <!DOCTYPE html>
-<html lang="az" class="dark">
+<html lang="az" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mi Digital Verse{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background: #0f0f1a; color: #e0e0e0; }
-        .font-display { font-family: 'Orbitron', sans-serif; }
-        .neon-text { text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff; }
-        .card-glow:hover { box-shadow: 0 0 20px rgba(0,240,255,0.5); transform: translateY(-5px); transition: all 0.3s; }
-        .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
-        .spoiler.revealed { background: transparent; color: inherit; }
 
-        /* ===== IŞIQLI REJIM (LIGHT MODE) ===== */
-        html.light body {
-            background: #f4f6f9;
-            color: #111827;
-        }
-        html.light .bg-gray-900 {
-            background-color: #ffffff;
-            border-color: #e5e7eb;
-            color: #111827;
-        }
-        html.light .bg-gray-800 {
-            background-color: #1f2937; /* Tünd boz - düymələr və kartlar */
-            color: #ffffff;
-            border: 1px solid #374151;
-        }
-        html.light .bg-gray-700 {
-            background-color: #e5e7eb; /* Açıq boz - inputlar */
-            color: #111827;
-        }
-        html.light .text-gray-300 { color: #374151; }
-        html.light .text-gray-400 { color: #4b5563; }
-        html.light .text-gray-500 { color: #6b7280; }
-        html.light .text-cyan-300 { color: #0e7490; }
-        html.light .text-cyan-400 { color: #0891b2; }
-        html.light .text-purple-400 { color: #9333ea; }
-        html.light .text-purple-500 { color: #7e22ce; }
-        html.light .text-yellow-400 { color: #ca8a04; }
-        html.light .text-red-400 { color: #dc2626; }
-        html.light .text-red-500 { color: #b91c1c; }
-        html.light input,
-        html.light textarea,
-        html.light select {
-            background-color: #ffffff;
-            color: #111827;
-            border: 1px solid #d1d5db;
-        }
-        html.light nav, html.light footer {
-            background-color: #ffffff;
-            border-color: #e5e7eb;
-        }
-        html.light .hero-section {
-            background: linear-gradient(135deg, #e0f2fe, #bae6fd, #7dd3fc);
-        }
-        html.light .hero-section h1 {
-            color: #0c4a6e;
-            text-shadow: 0 0 5px #7dd3fc;
-        }
-        html.light .hero-section p {
-            color: #1e293b;
-        }
-        /* Mobil menyu və düymələr üçün */
-        html.light #mobileMenu {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        html.light #mobileMenu a,
-        html.light #mobileMenu button {
-            color: #111827;
-        }
-        html.light #themeToggle,
-        html.light #themeToggleMobile,
-        html.light #langToggle,
-        html.light #langToggleMobile,
-        html.light #mobileMenuBtn {
-            background-color: #1f2937;
-            color: #ffffff;
-        }
+    <!-- Google Fonts: Orbitron (display) + Inter (body) + JetBrains Mono (numbers/data) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKEN SYSTEM
+       ═══════════════════════════════════════════════════════ */
+    :root {
+        /* --- DARK THEME TOKENS (default) --- */
+        --void:          #080B14;
+        --void-2:        #0E1425;
+        --void-3:        #141D35;
+        --surface:       #111827;
+        --surface-2:     #1A2540;
+        --surface-3:     #1E2D4A;
+        --border:        rgba(0, 212, 255, 0.12);
+        --border-hover:  rgba(0, 212, 255, 0.35);
+
+        --pulse:         #00D4FF;
+        --pulse-dim:     rgba(0, 212, 255, 0.15);
+        --pulse-glow:    0 0 20px rgba(0, 212, 255, 0.4);
+        --pulse-dark:    #0099C8;
+
+        --ember:         #FF4D6D;
+        --ember-dim:     rgba(255, 77, 109, 0.15);
+        --ember-glow:    0 0 20px rgba(255, 77, 109, 0.4);
+
+        --gold:          #FFD166;
+        --gold-dim:      rgba(255, 209, 102, 0.15);
+        --violet:        #A855F7;
+        --violet-dim:    rgba(168, 85, 247, 0.15);
+        --green:         #22D3A5;
+        --green-dim:     rgba(34, 211, 165, 0.15);
+
+        --ink:           #F0F4FF;
+        --ink-2:         #A8B8D8;
+        --ink-3:         #6B7FA3;
+        --ink-muted:     #3D4F6E;
+
+        --radius-sm:     6px;
+        --radius-md:     12px;
+        --radius-lg:     20px;
+        --radius-xl:     28px;
+
+        --font-display:  'Orbitron', sans-serif;
+        --font-body:     'Inter', sans-serif;
+        --font-mono:     'JetBrains Mono', monospace;
+
+        --nav-height:    64px;
+        --transition:    all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --glass:         rgba(14, 20, 37, 0.75);
+        --glass-border:  rgba(0, 212, 255, 0.1);
+    }
+
+    /* --- LIGHT THEME TOKENS --- */
+    [data-theme="light"] {
+        --void:          #EEF4FF;
+        --void-2:        #E4ECFC;
+        --void-3:        #D8E6FF;
+        --surface:       #FFFFFF;
+        --surface-2:     #F0F6FF;
+        --surface-3:     #E8F0FE;
+        --border:        rgba(0, 110, 180, 0.14);
+        --border-hover:  rgba(0, 110, 180, 0.4);
+
+        --pulse:         #0077AA;
+        --pulse-dim:     rgba(0, 119, 170, 0.12);
+        --pulse-glow:    0 0 20px rgba(0, 119, 170, 0.25);
+        --pulse-dark:    #005580;
+
+        --ember:         #E8274A;
+        --ember-dim:     rgba(232, 39, 74, 0.1);
+        --ember-glow:    0 0 20px rgba(232, 39, 74, 0.25);
+
+        --gold:          #B45309;
+        --gold-dim:      rgba(180, 83, 9, 0.1);
+        --violet:        #7C3AED;
+        --violet-dim:    rgba(124, 58, 237, 0.1);
+        --green:         #059669;
+        --green-dim:     rgba(5, 150, 105, 0.1);
+
+        --ink:           #0D1B2A;
+        --ink-2:         #2C3E58;
+        --ink-3:         #4A607A;
+        --ink-muted:     #8BA0B8;
+
+        --glass:         rgba(255, 255, 255, 0.82);
+        --glass-border:  rgba(0, 110, 180, 0.12);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       GLOBAL RESET & BASE
+       ═══════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        font-family: var(--font-body);
+        background: var(--void);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Animated gradient mesh background */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0, 212, 255, 0.06) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 80% 80%, rgba(168, 85, 247, 0.05) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 30% at 60% 20%, rgba(255, 77, 109, 0.04) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    [data-theme="light"] body::before {
+        background:
+            radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0, 119, 170, 0.07) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 80% 80%, rgba(124, 58, 237, 0.05) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 30% at 60% 20%, rgba(232, 39, 74, 0.04) 0%, transparent 70%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+
+    /* ═══════════════════════════════════════════════════════
+       TYPOGRAPHY
+       ═══════════════════════════════════════════════════════ */
+    .font-display { font-family: var(--font-display); }
+    .font-mono    { font-family: var(--font-mono); }
+
+    h1, h2, h3 { line-height: 1.2; font-weight: 700; }
+
+    /* Signature element: CRT chromatic-aberration glow on brand name */
+    .brand-logo {
+        font-family: var(--font-display);
+        font-weight: 900;
+        font-size: 1.35rem;
+        color: var(--pulse);
+        letter-spacing: 0.03em;
+        text-shadow:
+            -1px 0 rgba(255, 77, 109, 0.6),
+             1px 0 rgba(0, 212, 255, 0.6),
+             0 0 18px rgba(0, 212, 255, 0.5);
+        transition: var(--transition);
+    }
+    .brand-logo:hover {
+        text-shadow:
+            -2px 0 rgba(255, 77, 109, 0.8),
+             2px 0 rgba(0, 212, 255, 0.8),
+             0 0 30px rgba(0, 212, 255, 0.7);
+    }
+
+    [data-theme="light"] .brand-logo {
+        text-shadow:
+            -1px 0 rgba(232, 39, 74, 0.4),
+             1px 0 rgba(0, 119, 170, 0.4),
+             0 0 12px rgba(0, 119, 170, 0.3);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════ */
+    .nav {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        height: var(--nav-height);
+        background: var(--glass);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid var(--glass-border);
+        transition: var(--transition);
+    }
+
+    .nav-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .nav-link {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--ink-2);
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        position: relative;
+    }
+    .nav-link:hover {
+        color: var(--pulse);
+        background: var(--pulse-dim);
+    }
+    .nav-link.active { color: var(--pulse); }
+
+    /* Dropdown */
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-btn {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--ink-2);
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .nav-dropdown-btn:hover { color: var(--pulse); background: var(--pulse-dim); }
+    .nav-dropdown-btn .chevron {
+        font-size: 0.65rem;
+        transition: transform 0.2s;
+    }
+    .nav-dropdown:hover .chevron { transform: rotate(180deg); }
+
+    .nav-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.5rem;
+        min-width: 160px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        transition: var(--transition);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    .nav-dropdown:hover .nav-dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .nav-dropdown-menu a {
+        display: block;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.85rem;
+        color: var(--ink-2);
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+    }
+    .nav-dropdown-menu a:hover {
+        color: var(--pulse);
+        background: var(--pulse-dim);
+    }
+
+    /* Nav actions */
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .nav-icon-btn {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--ink-2);
+        font-size: 0.9rem;
+        transition: var(--transition);
+        position: relative;
+        text-decoration: none;
+    }
+    .nav-icon-btn:hover {
+        border-color: var(--border-hover);
+        color: var(--pulse);
+        box-shadow: var(--pulse-glow);
+    }
+
+    .nav-notif-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: var(--ember);
+        color: #fff;
+        font-size: 0.6rem;
+        font-family: var(--font-mono);
+        font-weight: 700;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--void);
+    }
+
+    .nav-btn-admin {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-sm);
+        background: var(--gold-dim);
+        border: 1px solid rgba(255, 209, 102, 0.3);
+        color: var(--gold);
+        transition: var(--transition);
+        font-family: var(--font-mono);
+        letter-spacing: 0.05em;
+    }
+    .nav-btn-admin:hover {
+        background: var(--gold);
+        color: #000;
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.5);
+    }
+
+    .nav-btn-logout {
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.35rem 0.75rem;
+        border-radius: var(--radius-sm);
+        background: var(--ember-dim);
+        border: 1px solid rgba(255, 77, 109, 0.2);
+        color: var(--ember);
+        transition: var(--transition);
+    }
+    .nav-btn-logout:hover {
+        background: var(--ember);
+        color: #fff;
+        box-shadow: var(--ember-glow);
+    }
+
+    .nav-btn-login {
+        font-size: 0.85rem;
+        font-weight: 600;
+        padding: 0.45rem 1.1rem;
+        border-radius: var(--radius-sm);
+        background: linear-gradient(135deg, var(--pulse), var(--pulse-dark));
+        color: var(--void);
+        border: none;
+        transition: var(--transition);
+        letter-spacing: 0.02em;
+    }
+    .nav-btn-login:hover {
+        opacity: 0.9;
+        box-shadow: var(--pulse-glow);
+        transform: translateY(-1px);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MOBILE NAV
+       ═══════════════════════════════════════════════════════ */
+    .mobile-menu-btn {
+        display: none;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        color: var(--ink-2);
+        font-size: 1.1rem;
+        transition: var(--transition);
+    }
+    .mobile-menu-btn:hover { border-color: var(--border-hover); color: var(--pulse); }
+
+    .mobile-menu {
+        display: none;
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1rem 1.5rem 1.5rem;
+    }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a,
+    .mobile-menu button {
+        display: block;
+        padding: 0.65rem 0.5rem;
+        color: var(--ink-2);
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border);
+        transition: var(--transition);
+        width: 100%;
+        text-align: left;
+        font-family: var(--font-body);
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu a:hover { color: var(--pulse); padding-left: 1rem; }
+    .mobile-menu-top {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    @media (max-width: 900px) {
+        .nav-links { display: none; }
+        .nav-desktop-actions { display: none; }
+        .mobile-menu-btn { display: flex; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT CONTAINERS
+       ═══════════════════════════════════════════════════════ */
+    .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+    .page-content { padding: 2.5rem 0 4rem; }
+
+    main { flex: 1; }
+
+    /* ═══════════════════════════════════════════════════════
+       CARD SYSTEM (Glassmorphism)
+       ═══════════════════════════════════════════════════════ */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    .card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), var(--pulse-glow);
+    }
+
+    .card-glass {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+    }
+
+    .card-inner { padding: 1.5rem; }
+    .card-inner-sm { padding: 1rem 1.25rem; }
+    .card-inner-lg { padding: 2rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════════════ */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.25rem;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: 1px solid transparent;
+        transition: var(--transition);
+        cursor: pointer;
+        font-family: var(--font-body);
+        letter-spacing: 0.01em;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--pulse), var(--pulse-dark));
+        color: #000;
+        border-color: transparent;
+    }
+    .btn-primary:hover {
+        opacity: 0.9;
+        box-shadow: var(--pulse-glow);
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: var(--surface-2);
+        color: var(--ink-2);
+        border-color: var(--border);
+    }
+    .btn-secondary:hover {
+        border-color: var(--border-hover);
+        color: var(--pulse);
+    }
+    .btn-ghost {
+        background: transparent;
+        color: var(--pulse);
+        border-color: var(--border);
+    }
+    .btn-ghost:hover {
+        background: var(--pulse-dim);
+        border-color: var(--border-hover);
+    }
+    .btn-ember {
+        background: var(--ember-dim);
+        color: var(--ember);
+        border-color: rgba(255, 77, 109, 0.25);
+    }
+    .btn-ember:hover {
+        background: var(--ember);
+        color: #fff;
+        box-shadow: var(--ember-glow);
+    }
+    .btn-violet {
+        background: var(--violet-dim);
+        color: var(--violet);
+        border-color: rgba(168, 85, 247, 0.25);
+    }
+    .btn-violet:hover {
+        background: var(--violet);
+        color: #fff;
+        box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+    }
+    .btn-gold {
+        background: var(--gold-dim);
+        color: var(--gold);
+        border-color: rgba(255, 209, 102, 0.25);
+    }
+    .btn-gold:hover {
+        background: var(--gold);
+        color: #000;
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.4);
+    }
+    .btn-green {
+        background: var(--green-dim);
+        color: var(--green);
+        border-color: rgba(34, 211, 165, 0.25);
+    }
+    .btn-green:hover {
+        background: var(--green);
+        color: #000;
+        box-shadow: 0 0 16px rgba(34, 211, 165, 0.4);
+    }
+    .btn-danger {
+        background: var(--ember-dim);
+        color: var(--ember);
+        border-color: rgba(255, 77, 109, 0.2);
+        padding: 0.3rem 0.7rem;
+        font-size: 0.78rem;
+    }
+    .btn-danger:hover {
+        background: var(--ember);
+        color: #fff;
+    }
+    .btn-sm {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.78rem;
+    }
+    .btn-lg {
+        padding: 0.75rem 1.75rem;
+        font-size: 1rem;
+        border-radius: var(--radius-md);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FORM ELEMENTS
+       ═══════════════════════════════════════════════════════ */
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-label { font-size: 0.8rem; font-weight: 600; color: var(--ink-3); letter-spacing: 0.05em; text-transform: uppercase; }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        padding: 0.6rem 0.9rem;
+        transition: var(--transition);
+        width: 100%;
+        outline: none;
+    }
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+        border-color: var(--pulse);
+        box-shadow: 0 0 0 3px var(--pulse-dim);
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--ink-muted); }
+
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-select option { background: var(--surface-2); }
+
+    /* ═══════════════════════════════════════════════════════
+       FLASH MESSAGES
+       ═══════════════════════════════════════════════════════ */
+    .flash-wrap {
+        position: fixed;
+        top: calc(var(--nav-height) + 12px);
+        right: 1.5rem;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-width: 360px;
+    }
+    .flash {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.1rem;
+        background: var(--surface-2);
+        border: 1px solid var(--pulse);
+        border-radius: var(--radius-md);
+        color: var(--ink);
+        font-size: 0.875rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), var(--pulse-glow);
+        animation: slideInRight 0.3s ease forwards;
+    }
+    .flash::before { content: '◈'; color: var(--pulse); font-size: 1rem; }
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(20px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AUTH MODAL
+       ═══════════════════════════════════════════════════════ */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 11, 20, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        width: 100%;
+        max-width: 420px;
+        position: relative;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+        animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(0.94) translateY(12px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--surface-2);
+        color: var(--ink-3);
+        font-size: 1.1rem;
+        transition: var(--transition);
+        cursor: pointer;
+        border: 1px solid var(--border);
+    }
+    .modal-close:hover { background: var(--ember); color: #fff; border-color: var(--ember); }
+
+    .modal-tabs {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1.5rem;
+        background: var(--surface-2);
+        padding: 0.25rem;
+        border-radius: var(--radius-sm);
+    }
+    .modal-tab {
+        flex: 1;
+        padding: 0.5rem;
+        border-radius: calc(var(--radius-sm) - 2px);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--ink-3);
+        transition: var(--transition);
+        text-align: center;
+        cursor: pointer;
+    }
+    .modal-tab.active {
+        background: var(--surface);
+        color: var(--pulse);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-form { display: flex; flex-direction: column; gap: 0.85rem; }
+    .modal-form.hidden { display: none; }
+
+    /* ═══════════════════════════════════════════════════════
+       REPORT MODAL
+       ═══════════════════════════════════════════════════════ */
+    .report-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 11, 20, 0.85);
+        backdrop-filter: blur(8px);
+        z-index: 500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    .report-modal-overlay.open { display: flex; }
+
+    /* ═══════════════════════════════════════════════════════
+       BADGE / CHIP SYSTEM
+       ═══════════════════════════════════════════════════════ */
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 100px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .chip-pulse  { background: var(--pulse-dim);  color: var(--pulse);  border: 1px solid rgba(0,212,255,0.25); }
+    .chip-ember  { background: var(--ember-dim);  color: var(--ember);  border: 1px solid rgba(255,77,109,0.25); }
+    .chip-violet { background: var(--violet-dim); color: var(--violet); border: 1px solid rgba(168,85,247,0.25); }
+    .chip-gold   { background: var(--gold-dim);   color: var(--gold);   border: 1px solid rgba(255,209,102,0.25); }
+    .chip-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(34,211,165,0.25); }
+
+    /* ═══════════════════════════════════════════════════════
+       XP PROGRESS BAR
+       ═══════════════════════════════════════════════════════ */
+    .xp-bar-track {
+        width: 100%;
+        height: 6px;
+        background: var(--surface-3);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+    .xp-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--pulse), var(--violet));
+        border-radius: 100px;
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .xp-bar-fill::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 20px;
+        background: rgba(255, 255, 255, 0.3);
+        filter: blur(4px);
+        border-radius: 100px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SECTION HEADINGS
+       ═══════════════════════════════════════════════════════ */
+    .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .section-heading h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--ink);
+    }
+    .section-heading-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--border), transparent);
+    }
+    .section-heading-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--pulse);
+        box-shadow: 0 0 8px var(--pulse);
+        flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       NEWS CARD (specific)
+       ═══════════════════════════════════════════════════════ */
+    .news-card {
+        display: block;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: var(--transition);
+        position: relative;
+    }
+    .news-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(135deg, var(--pulse-dim), transparent 50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+    .news-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-4px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), var(--pulse-glow);
+    }
+    .news-card:hover::before { opacity: 1; }
+
+    .news-card-body { padding: 1.25rem; }
+    .news-card-category {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--pulse);
+        margin-bottom: 0.4rem;
+        font-family: var(--font-mono);
+    }
+    .news-card-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .news-card-meta {
+        font-size: 0.75rem;
+        color: var(--ink-3);
+        font-family: var(--font-mono);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .news-card-meta span { display: flex; align-items: center; gap: 0.25rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       MANGA / ANIME CARD
+       ═══════════════════════════════════════════════════════ */
+    .manga-card {
+        display: block;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: var(--transition);
+        position: relative;
+    }
+    .manga-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-6px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), var(--pulse-glow);
+    }
+    .manga-card-img {
+        aspect-ratio: 2/3;
+        object-fit: cover;
+        width: 100%;
+    }
+    .manga-card-body {
+        padding: 0.75rem;
+    }
+    .manga-card-title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 0.25rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .manga-card-sub {
+        font-size: 0.72rem;
+        color: var(--ink-3);
+        font-family: var(--font-mono);
+    }
+    .manga-card-rating {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--gold);
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    /* Overlay badge on manga cover */
+    .manga-card-badge {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SPOILER
+       ═══════════════════════════════════════════════════════ */
+    .spoiler {
+        background: var(--ink-muted);
+        color: var(--ink-muted);
+        border-radius: 4px;
+        padding: 1px 6px;
+        cursor: pointer;
+        user-select: none;
+        transition: var(--transition);
+        filter: blur(3px);
+    }
+    .spoiler.revealed {
+        background: transparent;
+        color: var(--ink);
+        filter: blur(0);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════ */
+    footer {
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 2rem 0;
+        margin-top: auto;
+    }
+    .footer-inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .footer-brand { font-size: 0.85rem; font-family: var(--font-mono); color: var(--ink-3); }
+    .footer-copy  { font-size: 0.78rem; color: var(--ink-muted); }
+
+    /* ═══════════════════════════════════════════════════════
+       GRID UTILITIES
+       ═══════════════════════════════════════════════════════ */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+    .col-span-2 { grid-column: span 2; }
+    @media (max-width: 900px) {
+        .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        .col-span-2 { grid-column: 1; }
+    }
+
+    /* Main layout: sidebar + main */
+    .layout-main-sidebar {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 2rem;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .layout-main-sidebar { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       UTILITY
+       ═══════════════════════════════════════════════════════ */
+    .flex      { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2     { gap: 0.5rem; }
+    .gap-3     { gap: 0.75rem; }
+    .gap-4     { gap: 1rem; }
+    .mb-1 { margin-bottom: 0.25rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 0.75rem; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mt-6 { margin-top: 1.5rem; }
+    .mt-8 { margin-top: 2rem; }
+    .text-pulse  { color: var(--pulse); }
+    .text-ember  { color: var(--ember); }
+    .text-gold   { color: var(--gold); }
+    .text-violet { color: var(--violet); }
+    .text-green  { color: var(--green); }
+    .text-muted  { color: var(--ink-3); }
+    .text-sm { font-size: 0.875rem; }
+    .text-xs { font-size: 0.75rem; }
+    .font-bold { font-weight: 700; }
+    .hidden { display: none !important; }
+    .w-full { width: 100%; }
+    .space-y > * + * { margin-top: 0.75rem; }
+    .space-y-lg > * + * { margin-top: 1.25rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       DIVIDER
+       ═══════════════════════════════════════════════════════ */
+    .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--border), transparent);
+        margin: 1.5rem 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AVATAR
+       ═══════════════════════════════════════════════════════ */
+    .avatar {
+        width: 48px; height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--pulse), var(--violet));
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1.2rem; color: #fff;
+        flex-shrink: 0;
+        border: 2px solid var(--border);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .avatar-lg { width: 96px; height: 96px; font-size: 2rem; }
+    .avatar-sm { width: 32px; height: 32px; font-size: 0.85rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       TITLE COLOR SYSTEM (matches original color names)
+       ═══════════════════════════════════════════════════════ */
+    .title-white  { color: #e0e8ff; }
+    .title-green  { color: #22D3A5; }
+    .title-blue   { color: #60A5FA; }
+    .title-purple { color: #A855F7; }
+    .title-yellow { color: #FFD166; text-shadow: 0 0 10px rgba(255,209,102,0.5); }
+    .title-red    { color: #FF4D6D; text-shadow: 0 0 10px rgba(255,77,109,0.5); }
+
+    /* ═══════════════════════════════════════════════════════
+       QUEST / ACHIEVEMENT ITEMS
+       ═══════════════════════════════════════════════════════ */
+    .quest-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+        transition: var(--transition);
+    }
+    .quest-item:hover { border-color: var(--border-hover); }
+    .quest-item.completed { border-color: rgba(34, 211, 165, 0.35); }
+    .quest-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem; }
+    .quest-item-name { font-weight: 600; font-size: 0.9rem; }
+    .quest-item-xp { font-family: var(--font-mono); font-size: 0.78rem; color: var(--gold); }
+    .quest-item-desc { font-size: 0.8rem; color: var(--ink-3); margin-bottom: 0.6rem; }
+    .quest-complete-badge { color: var(--green); font-size: 0.8rem; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════
+       ROOM / POST ITEMS
+       ═══════════════════════════════════════════════════════ */
+    .room-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: var(--transition);
+    }
+    .room-card:hover { border-color: var(--border-hover); box-shadow: var(--pulse-glow); }
+    .room-card-name { font-weight: 700; font-size: 1rem; color: var(--pulse); }
+    .room-card-name.error { color: var(--ember); }
+
+    .post-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+    }
+    .post-item-meta { font-size: 0.75rem; color: var(--ink-3); font-family: var(--font-mono); margin-bottom: 0.4rem; }
+    .post-item-meta strong { color: var(--pulse); }
+
+    /* ═══════════════════════════════════════════════════════
+       NOTIFICATION ITEMS
+       ═══════════════════════════════════════════════════════ */
+    .notif-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: var(--transition);
+    }
+    .notif-item.unread {
+        border-left: 3px solid var(--pulse);
+        background: linear-gradient(90deg, var(--pulse-dim), var(--surface-2));
+    }
+    .notif-item-msg { font-size: 0.875rem; color: var(--ink-2); }
+    .notif-item-time { font-size: 0.72rem; color: var(--ink-3); font-family: var(--font-mono); white-space: nowrap; }
+
+    /* ═══════════════════════════════════════════════════════
+       ADMIN PANEL ITEMS
+       ═══════════════════════════════════════════════════════ */
+    .admin-list-item {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .admin-list-item + .admin-list-item { margin-top: 0.5rem; }
+    .admin-list-item-title { font-size: 0.875rem; color: var(--ink-2); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ═══════════════════════════════════════════════════════
+       CATEGORY PAGE HERO STRIP
+       ═══════════════════════════════════════════════════════ */
+    .page-hero {
+        background: linear-gradient(135deg, var(--surface-2), var(--surface));
+        border-bottom: 1px solid var(--border);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+    .page-hero h1 {
+        font-family: var(--font-display);
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+        font-weight: 900;
+        color: var(--ink);
+        letter-spacing: 0.02em;
+    }
+    .page-hero h1 span { color: var(--pulse); }
     </style>
 </head>
 <body>
-<div class="min-h-screen flex flex-col">
-    <nav class="bg-gray-900 bg-opacity-90 backdrop-blur sticky top-0 z-50 border-b border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
-                </div>
-                <div class="hidden md:flex space-x-4">
-                    <a href="/" class="text-gray-300 hover:text-cyan-400">Ana Səhifə</a>
-                    <a href="/news" class="text-gray-300 hover:text-cyan-400">Xəbərlər</a>
-                    <div class="relative group">
-                        <button class="text-gray-300 hover:text-cyan-400">Kitabxana ▾</button>
-                        <div class="absolute left-0 top-full pt-2 w-40 bg-gray-800 rounded-lg shadow-lg hidden group-hover:block">
-                            <a href="/category/anime" class="block px-4 py-2 text-sm hover:bg-gray-700">Anime</a>
-                            <a href="/category/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">Manga</a>
-                            <a href="/category/webtoon" class="block px-4 py-2 text-sm hover:bg-gray-700">Webtoon</a>
-                            <a href="/category/manhua" class="block px-4 py-2 text-sm hover:bg-gray-700">Manhua</a>
-                            <a href="/category/game" class="block px-4 py-2 text-sm hover:bg-gray-700">Oyun</a>
-                            <a href="/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">Bütün Kitabxana</a>
-                        </div>
-                    </div>
-                    <a href="/community" class="text-gray-300 hover:text-cyan-400">İcma</a>
-                    <a href="/about" class="text-gray-300 hover:text-cyan-400">Haqqımızda</a>
-                    {% if current_user.is_authenticated %}
-                    <a href="/profile" class="text-gray-300 hover:text-cyan-400">Profil</a>
-                    {% if current_user.is_admin %}
-                    <a href="/admin" class="text-yellow-400 hover:text-yellow-300">Admin</a>
-                    {% endif %}
-                    <a href="/notifications" class="text-gray-300 hover:text-cyan-400 relative">
-                        🔔
-                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
-                    </a>
-                    <a href="/logout" class="text-red-400 hover:text-red-300">Çıxış</a>
-                    {% else %}
-                    <button onclick="openModal()" class="text-cyan-400 hover:text-cyan-300">Giriş / Qeydiyyat</button>
-                    {% endif %}
-                </div>
-                <div class="flex items-center space-x-3">
-                    <!-- Axtarış yalnız masaüstü -->
-                    <a href="/news" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
-                    <!-- Bildiriş zəngi həmişə -->
-                    <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
-                        🔔
-                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
-                    </a>
-                    <!-- Dil və tema yalnız masaüstü -->
-                    <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">AZ</button>
-                    <button id="themeToggle" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
-                    <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
-                    <!-- Mobil menyu düyməsi -->
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white">☰</button>
+
+<!-- ══════════════════════════════════════════════════════
+     NAVIGATION
+     ══════════════════════════════════════════════════════ -->
+<nav class="nav">
+    <div class="nav-inner">
+        <!-- Brand -->
+        <a href="/" class="brand-logo">Mi Digital Verse</a>
+
+        <!-- Desktop Links -->
+        <div class="nav-links">
+            <a href="/" class="nav-link">Ana Səhifə</a>
+            <a href="/news" class="nav-link">Xəbərlər</a>
+
+            <div class="nav-dropdown">
+                <button class="nav-dropdown-btn">
+                    Kitabxana <span class="chevron">▾</span>
+                </button>
+                <div class="nav-dropdown-menu">
+                    <a href="/category/anime">Anime</a>
+                    <a href="/category/manga">Manga</a>
+                    <a href="/category/webtoon">Webtoon</a>
+                    <a href="/category/manhua">Manhua</a>
+                    <a href="/category/game">Oyun</a>
+                    <a href="/manga">Bütün Kitabxana</a>
                 </div>
             </div>
-        </div>
-        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4">
-            <div class="flex justify-between items-center py-2">
-                <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white">AZ</button>
-                <button id="themeToggleMobile" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
-                <button id="themeToggleMobile" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
-            </div>
-            <a href="/" class="block py-2 text-gray-300">Ana Səhifə</a>
-            <a href="/news" class="block py-2 text-gray-300">Xəbərlər</a>
-            <a href="/category/anime" class="block py-2 text-gray-300">Anime</a>
-            <a href="/category/manga" class="block py-2 text-gray-300">Manga</a>
-            <a href="/category/webtoon" class="block py-2 text-gray-300">Webtoon</a>
-            <a href="/category/manhua" class="block py-2 text-gray-300">Manhua</a>
-            <a href="/category/game" class="block py-2 text-gray-300">Oyun</a>
-            <a href="/manga" class="block py-2 text-gray-300">Kitabxana</a>
-            <a href="/community" class="block py-2 text-gray-300">İcma</a>
-            <a href="/about" class="block py-2 text-gray-300">Haqqımızda</a>
+
+            <a href="/community" class="nav-link">İcma</a>
+            <a href="/about" class="nav-link">Haqqımızda</a>
+
             {% if current_user.is_authenticated %}
-            <a href="/profile" class="block py-2 text-gray-300">Profil</a>
-            <a href="/notifications" class="block py-2 text-gray-300">Bildirişlər</a>
-            <a href="/logout" class="block py-2 text-red-400">Çıxış</a>
-            {% else %}
-            <button onclick="openModal()" class="block py-2 text-cyan-400">Giriş / Qeydiyyat</button>
+            <a href="/profile" class="nav-link">Profil</a>
+            {% if current_user.is_admin %}
+            <a href="/admin" class="nav-btn-admin">Admin</a>
+            {% endif %}
             {% endif %}
         </div>
-    </nav>
 
-    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
-            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
-            <div class="flex justify-center mb-4 space-x-4">
-                <button id="loginTabBtn" onclick="showLogin()" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">Giriş</button>
-                <button id="registerTabBtn" onclick="showRegister()" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">Qeydiyyat</button>
-            </div>
-            <form id="loginForm" action="/login" method="POST" class="space-y-3">
-                <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="password" name="password" placeholder="Şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">Daxil ol</button>
-            </form>
-            <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
-                <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="email" name="email" placeholder="Email" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">Qeydiyyatdan keç</button>
-            </form>
-        </div>
-    </div>
+        <!-- Desktop Actions -->
+        <div class="nav-actions nav-desktop-actions">
+            <a href="/news" class="nav-icon-btn" title="Axtar">🔍</a>
 
-    <main class="flex-grow">
-        <div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
-                    {% endfor %}
+            {% if current_user.is_authenticated %}
+            <a href="/notifications" class="nav-icon-btn" title="Bildirişlər">
+                🔔
+                {% if unread_notifications_count > 0 %}
+                <span class="nav-notif-badge">{{ unread_notifications_count }}</span>
                 {% endif %}
-            {% endwith %}
+            </a>
+            <a href="/logout" class="nav-btn-logout">Çıxış</a>
+            {% else %}
+            <button onclick="openModal()" class="nav-btn-login">Giriş / Qeydiyyat</button>
+            {% endif %}
+
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="nav-icon-btn" title="Tema dəyiş">🌙</button>
         </div>
-<!-- Report Modal -->
-<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
-        <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
-        <h3 class="text-xl font-bold mb-4">Şikayət et</h3>
-        <form action="/report/submit" method="POST" class="space-y-3">
+
+        <!-- Mobile menu button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menyu">☰</button>
+    </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-top">
+        <button id="themeToggleMobile" class="nav-icon-btn">🌙</button>
+        {% if current_user.is_authenticated %}
+        <a href="/notifications" class="nav-icon-btn" style="position:relative;">
+            🔔
+            {% if unread_notifications_count > 0 %}
+            <span class="nav-notif-badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+        </a>
+        {% endif %}
+    </div>
+    <a href="/">Ana Səhifə</a>
+    <a href="/news">Xəbərlər</a>
+    <a href="/category/anime">Anime</a>
+    <a href="/category/manga">Manga</a>
+    <a href="/category/webtoon">Webtoon</a>
+    <a href="/category/manhua">Manhua</a>
+    <a href="/category/game">Oyun</a>
+    <a href="/manga">Kitabxana</a>
+    <a href="/community">İcma</a>
+    <a href="/about">Haqqımızda</a>
+    {% if current_user.is_authenticated %}
+    <a href="/profile">Profil</a>
+    {% if current_user.is_admin %}<a href="/admin">Admin</a>{% endif %}
+    <a href="/logout" style="color:var(--ember)">Çıxış</a>
+    {% else %}
+    <button onclick="openModal(); document.getElementById('mobileMenu').classList.remove('open');" style="color:var(--pulse)">Giriş / Qeydiyyat</button>
+    {% endif %}
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     AUTH MODAL
+     ══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+
+        <div class="modal-tabs">
+            <div class="modal-tab active" id="loginTabBtn" onclick="showLogin()">Giriş</div>
+            <div class="modal-tab" id="registerTabBtn" onclick="showRegister()">Qeydiyyat</div>
+        </div>
+
+        <form id="loginForm" action="/login" method="POST" class="modal-form">
+            <div class="form-group">
+                <label class="form-label">İstifadəçi adı</label>
+                <input type="text" name="username" placeholder="istifadeci_adi" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Şifrə</label>
+                <input type="password" name="password" placeholder="••••••••" required class="form-input">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Daxil ol</button>
+        </form>
+
+        <form id="registerForm" action="/register" method="POST" class="modal-form hidden">
+            <div class="form-group">
+                <label class="form-label">İstifadəçi adı</label>
+                <input type="text" name="username" placeholder="istifadeci_adi" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" placeholder="email@nümunə.com" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Şifrə <span class="text-xs text-muted">(ən az 8 simvol)</span></label>
+                <input type="password" name="password" placeholder="••••••••" required class="form-input">
+            </div>
+            <button type="submit" class="btn btn-violet" style="width:100%;justify-content:center;">Qeydiyyatdan keç</button>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     REPORT MODAL
+     ══════════════════════════════════════════════════════ -->
+<div class="report-modal-overlay" id="reportModal">
+    <div class="modal">
+        <button class="modal-close" onclick="closeReportModal()">✕</button>
+        <h3 class="font-bold mb-4" style="font-size:1.1rem;">Şikayət et</h3>
+        <form action="/report/submit" method="POST" class="modal-form">
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
-            <div>
-                <label class="text-sm text-gray-400">Səbəb</label>
-                <select name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required>
+            <div class="form-group">
+                <label class="form-label">Səbəb</label>
+                <select name="reason" class="form-select" required>
                     <option value="">Səbəb seçin</option>
                     <option value="söyüş">Söyüş</option>
                     <option value="spoiler">Spoiler paylaşır</option>
@@ -679,110 +1782,107 @@ BASE_HTML = """
                     <option value="digər">Digər</option>
                 </select>
             </div>
-            <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">Göndər</button>
+            <button type="submit" class="btn btn-ember" style="width:100%;justify-content:center;">Göndər</button>
         </form>
     </div>
 </div>
-        {% block content %}{% endblock %}
-    </main>
 
-    <footer class="bg-gray-900 text-gray-400 py-6 border-t border-gray-700">
-        <div class="max-w-7xl mx-auto text-center">
-            <p>© {{ now.year }} Mi Digital Verse. Bütün hüquqlar qorunur.</p>
-        </div>
-    </footer>
+<!-- ══════════════════════════════════════════════════════
+     FLASH MESSAGES
+     ══════════════════════════════════════════════════════ -->
+<div class="flash-wrap" id="flashWrap">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+            <div class="flash" id="flash-{{ loop.index }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </div>
 
-<script>    const html = document.documentElement;
-    function updateThemeUI() {
-        if (html.classList.contains('light')) {
-            document.getElementById('themeToggle').textContent = '☀️';
-            document.getElementById('themeToggleMobile').textContent = '☀️';
-        } else {
-            document.getElementById('themeToggle').textContent = '🌙';
-            document.getElementById('themeToggleMobile').textContent = '🌙';
-        }
-    }
-    // Həmişə dark rejim
-    html.classList.add('dark');
-    html.classList.remove('light');
-    localStorage.setItem('theme', 'dark');
-    updateThemeUI();
-    function toggleTheme() {
-        // Light mode deaktivdir, həmişə dark qalsın
-        html.classList.add('dark');
-        html.classList.remove('light');
-        localStorage.setItem('theme', 'dark');
-        updateThemeUI();
-    }
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-    document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
-    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-        document.getElementById('mobileMenu').classList.toggle('hidden');
-    });
-    function openModal() { document.getElementById('authModal').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('authModal').classList.add('hidden'); }
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer>
+    <div class="footer-inner">
+        <span class="brand-logo" style="font-size:1rem;">Mi Digital Verse</span>
+        <p class="footer-copy">© {{ now.year }} Mi Digital Verse. Bütün hüquqlar qorunur.</p>
+    </div>
+</footer>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+     ══════════════════════════════════════════════════════ -->
+<script>
+/* ---------- THEME ---------- */
+const html = document.documentElement;
+function setTheme(t) {
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    const icon = t === 'light' ? '☀️' : '🌙';
+    document.getElementById('themeToggle').textContent = icon;
+    document.getElementById('themeToggleMobile').textContent = icon;
+}
+const savedTheme = localStorage.getItem('theme') || 'dark';
+setTheme(savedTheme);
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+document.getElementById('themeToggleMobile').addEventListener('click', () => {
+    setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+/* ---------- MOBILE MENU ---------- */
+document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.toggle('open');
+});
+
+/* ---------- AUTH MODAL ---------- */
+function openModal()   { document.getElementById('authModal').classList.add('open'); }
+function closeModal()  { document.getElementById('authModal').classList.remove('open'); }
+document.getElementById('authModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('loginTabBtn').classList.add('active');
+    document.getElementById('registerTabBtn').classList.remove('active');
+}
+function showRegister() {
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerTabBtn').classList.add('active');
+    document.getElementById('loginTabBtn').classList.remove('active');
+}
+
+/* ---------- REPORT MODAL ---------- */
 function openReportModal(type, id) {
     document.getElementById('reportTargetType').value = type;
     document.getElementById('reportTargetId').value = id;
-    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('reportModal').classList.add('open');
 }
 function closeReportModal() {
-    document.getElementById('reportModal').classList.add('hidden');
+    document.getElementById('reportModal').classList.remove('open');
 }
-    // Flash mesajlarını 5 saniyə sonra yoxa çıxar
-    setTimeout(function() {
-        var flashContainer = document.getElementById('flash-container');
-        if (flashContainer) {
-            flashContainer.style.transition = 'opacity 0.5s';
-            flashContainer.style.opacity = '0';
-            setTimeout(function() {
-                flashContainer.style.display = 'none';
-            }, 500);
-        }
-    }, 5000);
-    function showLogin() {
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginTabBtn').classList.remove('text-gray-400', 'border-transparent');
-        document.getElementById('loginTabBtn').classList.add('text-cyan-400', 'border-cyan-400');
-        document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
-        document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
+document.getElementById('reportModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeReportModal(); });
+
+/* ---------- AUTO-DISMISS FLASH ---------- */
+setTimeout(() => {
+    const wrap = document.getElementById('flashWrap');
+    if (wrap) {
+        wrap.style.transition = 'opacity 0.5s ease';
+        wrap.style.opacity = '0';
+        setTimeout(() => wrap.remove(), 500);
     }
-    function showRegister() {
-        document.getElementById('registerForm').classList.remove('hidden');
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('registerTabBtn').classList.remove('text-gray-400', 'border-transparent');
-        document.getElementById('registerTabBtn').classList.add('text-purple-400', 'border-purple-400');
-        document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
-        document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
-    }
-    // Dil sistemi
-    const translations = {
-        az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
-        en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
-    };
-    let currentLang = localStorage.getItem('lang') || 'az';
-    applyLanguage(currentLang);
-    function applyLanguage(lang) {
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
-        });
-                const langBtn = document.getElementById('langToggle');
-        if (langBtn) langBtn.textContent = lang === 'az' ? 'EN' : 'AZ';
-        const langBtnMobile = document.getElementById('langToggleMobile');
-        if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
-        currentLang = lang;
-        localStorage.setItem('lang', lang);
-    }
-    function toggleLanguage() {
-        applyLanguage(currentLang === 'az' ? 'en' : 'az');
-    }
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) langToggle.addEventListener('click', toggleLanguage);
-    const langToggleMobile = document.getElementById('langToggleMobile');
-    if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
+}, 5000);
+
+/* ---------- REDUCED MOTION ---------- */
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.documentElement.style.setProperty('--transition', 'none');
+}
 </script>
 </body>
 </html>
