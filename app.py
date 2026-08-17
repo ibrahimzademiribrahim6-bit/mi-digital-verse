@@ -531,13 +531,26 @@ BASE_HTML = """
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button id="langToggle" class="p-2 rounded bg-gray-800 text-white">AZ</button>
-                    <button id="themeToggle" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
+                    <!-- Axtarış yalnız masaüstü -->
+                    <a href="/search" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
+                    <!-- Bildiriş zəngi həmişə -->
+                    <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
+                        🔔
+                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
+                    </a>
+                    <!-- Dil və tema yalnız masaüstü -->
+                    <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">AZ</button>
+                    <button id="themeToggle" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
+                    <!-- Mobil menyu düyməsi -->
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white">☰</button>
                 </div>
             </div>
         </div>
         <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4">
+            <div class="flex justify-between items-center py-2">
+                <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white">AZ</button>
+                <button id="themeToggleMobile" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
+            </div>
             <a href="/" class="block py-2 text-gray-300">Ana Səhifə</a>
             <a href="/news" class="block py-2 text-gray-300">Xəbərlər</a>
             <a href="/category/anime" class="block py-2 text-gray-300">Anime</a>
@@ -613,26 +626,35 @@ BASE_HTML = """
     </footer>
 </div>
 
-<script>
-    const html = document.documentElement;
+<script>    const html = document.documentElement;
+    function updateThemeUI() {
+        if (html.classList.contains('light')) {
+            document.getElementById('themeToggle').textContent = '☀️';
+            document.getElementById('themeToggleMobile').textContent = '☀️';
+        } else {
+            document.getElementById('themeToggle').textContent = '🌙';
+            document.getElementById('themeToggleMobile').textContent = '🌙';
+        }
+    }
     if (localStorage.getItem('theme') === 'light') {
         html.classList.remove('dark');
         html.classList.add('light');
-        document.getElementById('themeToggle').textContent = '☀️';
     }
-    document.getElementById('themeToggle').addEventListener('click', () => {
+    updateThemeUI();
+    function toggleTheme() {
         if (html.classList.contains('dark')) {
             html.classList.remove('dark');
             html.classList.add('light');
             localStorage.setItem('theme', 'light');
-            document.getElementById('themeToggle').textContent = '☀️';
         } else {
             html.classList.remove('light');
             html.classList.add('dark');
             localStorage.setItem('theme', 'dark');
-            document.getElementById('themeToggle').textContent = '🌙';
         }
-    });
+        updateThemeUI();
+    }
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
     document.getElementById('mobileMenuBtn').addEventListener('click', () => {
         document.getElementById('mobileMenu').classList.toggle('hidden');
     });
@@ -679,9 +701,11 @@ function closeReportModal() {
         currentLang = lang;
         localStorage.setItem('lang', lang);
     }
-    document.getElementById('langToggle').addEventListener('click', () => {
+    function toggleLanguage() {
         applyLanguage(currentLang === 'az' ? 'en' : 'az');
-    });
+    }
+    document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+    document.getElementById('langToggleMobile').addEventListener('click', toggleLanguage);
 </script>
 </body>
 </html>
@@ -883,20 +907,23 @@ COMMUNITY_HTML = """
     {% endif %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
-        <a href="/room/{{ room.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
+        <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
             <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
-            {% if current_user.is_authenticated and current_user.is_admin %}
-            <a href="/admin/delete-room/{{ room.id }}" class="text-red-400 text-xs">Otağı sil</a>
-            {% endif %}
-<button onclick="openReportModal('room', {{ room.id }})" class="text-xs text-gray-500 hover:text-red-400">Şikayət et</button>
             <p class="text-sm text-gray-400">Yaradıcı: {{ room.creator.username }}</p>
             {% if room.news %}<p class="text-xs text-gray-500">Xəbər: {{ room.news.title }}</p>{% endif %}
-        </a>
+            <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
+                <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">Daxil ol</a>
+                <button onclick="openReportModal('room', {{ room.id }})" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Şikayət et</button>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    {% if room.name == 'Xəta Otağı' %}
+                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('Bütün mesajları silmək istədiyinizə əminsiniz?')">Mesajları təmizlə</a>
+                    {% else %}
+                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('Otağı silmək istədiyinizə əminsiniz?')">Otağı sil</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
-    </div>
-</div>
-{% endblock %}
-"""
 
 ROOM_HTML = """
 {% extends "base.html" %}
@@ -2393,25 +2420,46 @@ def delete_news(news_id):
 @app.route('/admin/delete-post/<int:post_id>')
 @login_required
 @admin_required
-def delete_post(post_id):
+def admin_delete_post(post_id):
     post = Post.query.get_or_404(post_id)
+    user = post.user
+    if user:
+        add_notification(user, f"Sizin '{post.room.name}' otağındakı şərhiniz admin tərəfindən silindi.")
     room_id = post.room_id
     db.session.delete(post)
     db.session.commit()
     flash('Şərh silindi.')
-    return redirect(url_for('admin'))
+    return redirect(request.referrer or url_for('room', room_id=room_id))
+
+@app.route('/admin/clear-room-messages/<int:room_id>')
+@login_required
+@admin_required
+def admin_clear_room_messages(room_id):
+    room = Room.query.get_or_404(room_id)
+    if room.name == 'Xəta Otağı':
+        Post.query.filter_by(room_id=room.id).delete()
+        db.session.commit()
+        flash('Xəta Otağındakı bütün mesajlar silindi.')
+    else:
+        flash('Bu əməliyyat yalnız Xəta Otağı üçün keçərlidir.')
+    return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/delete-room/<int:room_id>')
 @login_required
 @admin_required
-def delete_room(room_id):
+def admin_delete_room(room_id):
     room = Room.query.get_or_404(room_id)
-    # Otaqdakı şərhləri sil
+    if room.name == 'Xəta Otağı':
+        flash('Xəta Otağı silinə bilməz.')
+        return redirect(request.referrer or url_for('community'))
+    creator = room.creator
+    if creator:
+        add_notification(creator, f"Sizin '{room.name}' otağınız admin tərəfindən silindi.")
     Post.query.filter_by(room_id=room.id).delete()
     db.session.delete(room)
     db.session.commit()
-    flash('Otaq və şərhləri silindi.')
-    return redirect(url_for('admin'))
+    flash('Otaq silindi.')
+    return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/clear-all-posts')
 @login_required
