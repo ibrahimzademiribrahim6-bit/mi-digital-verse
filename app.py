@@ -596,7 +596,6 @@ BASE_HTML = """
                     </a>
                     <!-- Dil və tema yalnız masaüstü -->
                     <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">AZ</button>
-                    <button id="themeToggle" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
                     <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
                     <!-- Mobil menyu düyməsi -->
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white">☰</button>
@@ -606,7 +605,6 @@ BASE_HTML = """
         <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4">
             <div class="flex justify-between items-center py-2">
                 <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white">AZ</button>
-                <button id="themeToggleMobile" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
                 <button id="themeToggleMobile" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
             </div>
             <a href="/" class="block py-2 text-gray-300">Ana Səhifə</a>
@@ -693,28 +691,9 @@ BASE_HTML = """
     </footer>
 </div>
 
-<script>    const html = document.documentElement;
-    function updateThemeUI() {
-        if (html.classList.contains('light')) {
-            document.getElementById('themeToggle').textContent = '☀️';
-            document.getElementById('themeToggleMobile').textContent = '☀️';
-        } else {
-            document.getElementById('themeToggle').textContent = '🌙';
-            document.getElementById('themeToggleMobile').textContent = '🌙';
-        }
-    }
-    // Həmişə dark rejim
+<script>        const html = document.documentElement;
     html.classList.add('dark');
     html.classList.remove('light');
-    localStorage.setItem('theme', 'dark');
-    updateThemeUI();
-    function toggleTheme() {
-        // Light mode deaktivdir, həmişə dark qalsın
-        html.classList.add('dark');
-        html.classList.remove('light');
-        localStorage.setItem('theme', 'dark');
-        updateThemeUI();
-    }
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
     document.getElementById('mobileMenuBtn').addEventListener('click', () => {
