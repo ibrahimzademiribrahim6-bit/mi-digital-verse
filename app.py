@@ -532,7 +532,7 @@ BASE_HTML = """
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Axtarış yalnız masaüstü -->
-                    <a href="/search" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
+                    <a href="/news" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
                     <!-- Bildiriş zəngi həmişə -->
                     <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
                         🔔
