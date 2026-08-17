@@ -2572,6 +2572,12 @@ def init_db():
     with app.app_context():
         db.create_all()
         try:
+            db.session.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
+            db.session.commit()
+        except:
+            db.session.rollback()
+
+        try:
             db.session.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
             db.session.commit()
         except:
