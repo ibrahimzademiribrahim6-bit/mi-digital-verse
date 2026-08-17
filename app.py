@@ -32,6 +32,10 @@ app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash('Zəhmət olmasa giriş edin.')
+    return redirect(url_for('index'))
 
 Talisman(app, content_security_policy=None, force_https=False)
 limiter = Limiter(
