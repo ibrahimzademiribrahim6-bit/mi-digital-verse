@@ -707,16 +707,12 @@ BASE_HTML = """
     }
     updateThemeUI();
     function toggleTheme() {
-        if (html.classList.contains('dark')) {
-            html.classList.remove('dark');
-            html.classList.add('light');
-            localStorage.setItem('theme', 'light');
-        } else {
-            html.classList.remove('light');
-            html.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        }
+        // Light mode hazır deyil, həmişə dark qalsın
+        html.classList.remove('light');
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
         updateThemeUI();
+        alert('Hazırda yalnız dark mode aktivdir.');
     }
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
