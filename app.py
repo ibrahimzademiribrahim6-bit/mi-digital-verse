@@ -2529,7 +2529,7 @@ def init_db():
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('admin123'), is_admin=True, points=100)
+            admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
             db.session.commit()
             print("Admin istifadəçi yaradıldı: admin / admin123")
