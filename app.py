@@ -924,6 +924,9 @@ COMMUNITY_HTML = """
             </div>
         </div>
         {% endfor %}
+    </div>
+</div>
+{% endblock %}
 """
 
 ROOM_HTML = """"
