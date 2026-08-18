@@ -576,23 +576,23 @@ BASE_HTML = """
                     <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
                 </div>
                 <div class="hidden md:flex space-x-4">
-                    <a href="/" class="text-gray-300 hover:text-cyan-400">Ana Səhifə</a>
-                    <a href="/news" class="text-gray-300 hover:text-cyan-400">Xəbərlər</a>
+                    <a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+                    <a href="/news" class="text-gray-300 hover:text-cyan-400">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</a>
                     <div class="relative group">
-                        <button class="text-gray-300 hover:text-cyan-400">Kitabxana ▾</button>
+                        <button class="text-gray-300 hover:text-cyan-400">{{ 'Kitabxana' if current_lang == 'az' else 'Library' }} ▾</button>
                         <div class="absolute left-0 top-full pt-2 w-40 bg-gray-800 rounded-lg shadow-lg hidden group-hover:block">
                             <a href="/category/anime" class="block px-4 py-2 text-sm hover:bg-gray-700">Anime</a>
                             <a href="/category/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">Manga</a>
                             <a href="/category/webtoon" class="block px-4 py-2 text-sm hover:bg-gray-700">Webtoon</a>
                             <a href="/category/manhua" class="block px-4 py-2 text-sm hover:bg-gray-700">Manhua</a>
-                            <a href="/category/game" class="block px-4 py-2 text-sm hover:bg-gray-700">Oyun</a>
-                            <a href="/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">Bütün Kitabxana</a>
+                            <a href="/category/game" class="block px-4 py-2 text-sm hover:bg-gray-700">{{ 'Oyun' if current_lang == 'az' else 'Games' }}</a>
+                            <a href="/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">{{ 'Bütün Kitabxana' if current_lang == 'az' else 'All Library' }}</a>
                         </div>
                     </div>
-                    <a href="/community" class="text-gray-300 hover:text-cyan-400">İcma</a>
-                    <a href="/about" class="text-gray-300 hover:text-cyan-400">Haqqımızda</a>
+                    <a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+                    <a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
                     {% if current_user.is_authenticated %}
-                    <a href="/profile" class="text-gray-300 hover:text-cyan-400">Profil</a>
+                    <a href="/profile" class="text-gray-300 hover:text-cyan-400">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
                     {% if current_user.is_admin %}
                     <a href="/admin" class="text-yellow-400 hover:text-yellow-300">Admin</a>
                     {% endif %}
@@ -600,9 +600,9 @@ BASE_HTML = """
                         🔔
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
                     </a>
-                    <a href="/logout" class="text-red-400 hover:text-red-300">Çıxış</a>
+                    <a href="/logout" class="text-red-400 hover:text-red-300">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
                     {% else %}
-                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">Giriş / Qeydiyyat</button>
+                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
