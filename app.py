@@ -776,6 +776,7 @@ setTimeout(function() {
         const newLang = currentLang === 'az' ? 'en' : 'az';
         localStorage.setItem('lang', newLang);
         window.location.href = '/set-language/' + newLang;
+    let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     }
     const langToggle = document.getElementById('langToggle');
     if (langToggle) langToggle.addEventListener('click', toggleLanguage);
