@@ -57,6 +57,8 @@ class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
+    title_en = db.Column(db.String(200), nullable=True)
+    content_en = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), default='Ümumi')
     image_url = db.Column(db.String(500), default='')
     status = db.Column(db.String(20), default='draft')  # 'draft' və ya 'published'
@@ -74,6 +76,8 @@ class Manga(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    title_en = db.Column(db.String(200), nullable=True)
+    description_en = db.Column(db.Text, nullable=True)
     type = db.Column(db.String(50), default='anime')
     cover_url = db.Column(db.String(500), default='')
     rating = db.Column(db.Float, default=0.0)
