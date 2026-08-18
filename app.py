@@ -978,31 +978,31 @@ MANGA_DETAIL_HTML = """
 
 COMMUNITY_HTML = """
 {% extends "base.html" %}
-{% block title %}İcma - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'İcma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">İcma Müzakirələri</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
     {% if current_user.is_authenticated %}
     <form action="/create-room" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <input type="text" name="room_name" placeholder="Müzakirə otağı adı" required class="w-full p-2 rounded bg-gray-700 text-white mb-2">
+        <input type="text" name="room_name" placeholder="{{ 'Müzakirə otağı adı' if current_lang == 'az' else 'Discussion room name' }}" required class="w-full p-2 rounded bg-gray-700 text-white mb-2">
         <select name="news_id" class="w-full p-2 rounded bg-gray-700 text-white mb-2">
-            <option value="">Xəbər seç (istəyə bağlı)</option>
+            <option value="">{{ 'Xəbər seç (istəyə bağlı)' if current_lang == 'az' else 'Select news (optional)' }}</option>
             {% for n in all_news %}<option value="{{ n.id }}">{{ n.title }}</option>{% endfor %}
         </select>
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Otaq yarat</button>
+        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Otaq yarat' if current_lang == 'az' else 'Create room' }}</button>
     </form>
     {% else %}
-    <p class="mb-4">Otaq yaratmaq üçün <a href="#" onclick="openModal()" class="text-cyan-400">giriş edin</a>.</p>
+    <p class="mb-4">{{ 'Otaq yaratmaq üçün' if current_lang == 'az' else 'To create a room' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
         <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
             <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
-            <p class="text-sm text-gray-400">Yaradıcı: {{ room.creator.username }}</p>
-            {% if room.news %}<p class="text-xs text-gray-500">Xəbər: {{ room.news.title }}</p>{% endif %}
+            <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
+            {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
             <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
-                <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">Daxil ol</a>
-                <button onclick="openReportModal('room', {{ room.id }})" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">Şikayət et</button>
+                <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">{{ 'Daxil ol' if current_lang == 'az' else 'Enter' }}</a>
+                <button onclick="openReportModal('room', {{ room.id }})" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
                 {% if current_user.is_authenticated and current_user.is_admin %}
                     {% if room.name == 'Xəta Otağı' %}
                         <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('Bütün mesajları silmək istədiyinizə əminsiniz?')">Mesajları təmizlə</a>
