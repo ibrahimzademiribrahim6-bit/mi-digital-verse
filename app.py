@@ -1296,40 +1296,43 @@ USER_PROFILE_HTML = """
 
 ADMIN_HTML = """
 {% extends "base.html" %}
-{% block title %}Admin Panel - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Admin Panel' if current_lang == 'az' else 'Admin Panel' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Admin Panel</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Admin Panel' if current_lang == 'az' else 'Admin Panel' }}</h1>
     <div class="mb-6">
     <div class="mb-6 bg-gray-800 p-4 rounded">
-        <h2 class="text-xl font-bold mb-3">Siyahı Məqaləsi Yarat</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Siyahı Məqaləsi Yarat' if current_lang == 'az' else 'Create List Article' }}</h2>
         <form action="/admin/generate-listicle" method="POST" class="space-y-3">
-            <input type="text" name="topic" placeholder="Məsələn: best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">Siyahı yarat</button>
+            <input type="text" name="topic" placeholder="{{ 'Məsələn:' if current_lang == 'az' else 'Example:' }} best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Siyahı yarat' if current_lang == 'az' else 'Create list' }}</button>
         </form>
     </div>
-        <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">Son xəbərləri avtomatik çək</a>
+        <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xəbərləri avtomatik çək' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-bold mb-3">Yeni Xəbər Əlavə Et</h2>
+            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Xəbər Əlavə Et' if current_lang == 'az' else 'Add New News' }}</h2>
             <form action="/admin/add-news" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="Başlıq" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title" placeholder="{{ 'Başlıq' if current_lang == 'az' else 'Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="description" placeholder="{{ 'Açıqlama' if current_lang == 'az' else 'Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
                 <textarea name="content" placeholder="Məzmun" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <input type="text" name="category" placeholder="Kateqoriya (Anime, Manga, Webtoon, Oyun, Ümumi)" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Game' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <div id="blocksContainer"></div>
                 <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
                 <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>		
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Əlavə et</button>
+                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
         <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-bold mb-3">Yeni Manqa/Anime Əlavə Et</h2>
+            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Manqa/Anime Əlavə Et' if current_lang == 'az' else 'Add New Manga/Anime' }}</h2>
             <form action="/admin/add-manga" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="Başlıq" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="description" placeholder="Açıqlama" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+                <input type="text" name="title" placeholder="Azərbaycanca Başlıq" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_en" placeholder="İngilis Başlıq (optional)" class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="content" placeholder="Azərbaycanca Məzmun" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <textarea name="content_en" placeholder="İngilis Məzmun (optional)" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <select name="type" class="w-full p-2 rounded bg-gray-700 text-white">
                     <option value="anime">Anime</option>
                     <option value="manga">Manga</option>
@@ -1337,11 +1340,11 @@ ADMIN_HTML = """
                     <option value="manhua">Manhua</option>
                     <option value="webtoon">Webtoon</option>
                 </select>
-                <input type="text" name="cover_url" placeholder="Üz şəkli URL" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="cover_url" placeholder="{{ 'Üz şəkli URL' if current_lang == 'az' else 'Cover image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="cover_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" step="0.1" name="rating" placeholder="Reytinq (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="status" placeholder="Status" value="Davam edir" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="number" name="chapters" placeholder="Bölüm sayı" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">">
+                <input type="text" name="status" placeholder="{{ 'Status' if current_lang == 'az' else 'Status' }}" value="{{ 'Davam edir' if current_lang == 'az' else 'Ongoing' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="number" name="chapters" placeholder="{{ 'Bölüm sayı' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
                 <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Əlavə et</button>
             </form>
         </div>
@@ -1360,15 +1363,14 @@ ADMIN_HTML = """
         {% endfor %}
     </div>
 
-    <h2 class="text-2xl font-bold mt-8 mb-3">Mövcud Xəbərlər</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Xəbərlər' if current_lang == 'az' else 'Existing News' }}</h2>
     <div class="space-y-2">
         {% for news in all_news %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ news.title }}</span>
             <div>
-                <a href="/admin/edit-news/{{ news.id }}" class="text-cyan-400 mr-3">Redaktə et</a>
-                <a href="/admin/delete-news/{{ news.id }}" class="text-red-400">Sil</a>
-            </div>
+                <a href="/admin/edit-news/{{ news.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/delete-news/{{ news.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
         </div>
         {% endfor %}
     </div>
@@ -1463,12 +1465,19 @@ EDIT_NEWS_HTML = """
     <h1 class="text-3xl font-bold mb-6">Xəbəri Redaktə Et</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
         <label class="text-sm text-gray-400">Azərbaycanca Başlıq</label>
+        <label class="text-sm text-gray-400">Azərbaycanca Başlıq</label>
         <input type="text" name="title" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
         <label class="text-sm text-gray-400">İngilis Başlıq</label>
         <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
 
         <label class="text-sm text-gray-400">Azərbaycanca Məzmun</label>
         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
+        <label class="text-sm text-gray-400">İngilis Məzmun</label>
+        <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
+        <label class="text-sm text-gray-400">İngilis Başlıq</label>
+        <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+
+        <label class="text-sm text-gray-400">Azərbaycanca Məzmun</label>
         <label class="text-sm text-gray-400">İngilis Məzmun</label>
         <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
