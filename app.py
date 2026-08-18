@@ -650,8 +650,8 @@ BASE_HTML = """
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
             <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
             <div class="flex justify-center mb-4 space-x-4">
-                <button id="loginTabBtn" onclick="showLogin()" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">Giriş</button>
-                <button id="registerTabBtn" onclick="showRegister()" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">Qeydiyyat</button>
+                <button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">Giriş</button>
+                <button id="registerTabBtn" onclick="document.getElementById('registerForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); this.classList.add('text-purple-400','border-purple-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('loginTabBtn').classList.remove('text-cyan-400','border-cyan-400'); document.getElementById('loginTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">Qeydiyyat</button>
             </div>
             <form id="loginForm" action="/login" method="POST" class="space-y-3">
                 <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
