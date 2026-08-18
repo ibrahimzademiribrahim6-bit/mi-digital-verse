@@ -756,7 +756,7 @@ setTimeout(function() {
         az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
         en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
     };
-    let currentLang = localStorage.getItem('lang') || 'az';
+    let currentLang = '{{ current_lang }}' || localStorage.getItem('lang') || 'az';
     applyLanguage(currentLang);
     function applyLanguage(lang) {
         document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -771,7 +771,7 @@ setTimeout(function() {
         localStorage.setItem('lang', lang);
     }
     function toggleLanguage() {
-        applyLanguage(currentLang === 'az' ? 'en' : 'az');
+        window.location.href = '/set-language/' + (currentLang === 'az' ? 'en' : 'az');
     }
     const langToggle = document.getElementById('langToggle');
     if (langToggle) langToggle.addEventListener('click', toggleLanguage);
