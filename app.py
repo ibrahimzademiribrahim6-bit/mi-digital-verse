@@ -598,7 +598,7 @@ BASE_HTML = """
                     <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">AZ</button>
                     <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
                     <!-- Mobil menyu düyməsi -->
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">☰</button>
+                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">☰</button>
                 </div>
             </div>
         </div>
@@ -709,17 +709,13 @@ function openReportModal(type, id) {
 function closeReportModal() {
     document.getElementById('reportModal').classList.add('hidden');
 }
-    // Flash mesajlarını 5 saniyə sonra yoxa çıxar
-    setTimeout(function() {
-        var flashContainer = document.getElementById('flash-container');
-        if (flashContainer) {
-            flashContainer.style.transition = 'opacity 0.5s';
-            flashContainer.style.opacity = '0';
-            setTimeout(function() {
-                flashContainer.style.display = 'none';
-            }, 500);
-        }
-    }, 5000);
+// Flash mesajlarını 5 saniyə sonra DOM-dan tamamilə sil
+setTimeout(function() {
+    var flashContainer = document.getElementById('flash-container');
+    if (flashContainer) {
+        flashContainer.remove();
+    }
+}, 5000);
     function showLogin() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
