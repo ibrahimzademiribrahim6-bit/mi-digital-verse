@@ -602,7 +602,7 @@ BASE_HTML = """
                     </a>
                     <a href="/logout" class="text-red-400 hover:text-red-300">Çıxış</a>
                     {% else %}
-                    <button onclick="openModal()" class="text-cyan-400 hover:text-cyan-300">Giriş / Qeydiyyat</button>
+                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">Giriş / Qeydiyyat</button>
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
@@ -614,7 +614,7 @@ BASE_HTML = """
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
                     </a>
                     <!-- Dil və tema yalnız masaüstü -->
-                    <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">AZ</button>
+                    <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                     <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
                     <!-- Mobil menyu düyməsi -->
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">☰</button>
@@ -623,7 +623,7 @@ BASE_HTML = """
         </div>
         <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4">
             <div class="flex justify-between items-center py-2">
-                <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white">AZ</button>
+                <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                 <button id="themeToggleMobile" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
             </div>
             <a href="/" class="block py-2 text-gray-300">Ana Səhifə</a>
@@ -641,14 +641,14 @@ BASE_HTML = """
             <a href="/notifications" class="block py-2 text-gray-300">Bildirişlər</a>
             <a href="/logout" class="block py-2 text-red-400">Çıxış</a>
             {% else %}
-            <button onclick="openModal()" class="block py-2 text-cyan-400">Giriş / Qeydiyyat</button>
+            <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">Giriş / Qeydiyyat</button>
             {% endif %}
         </div>
     </nav>
 
     <div id="authModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
-            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
+            <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
             <div class="flex justify-center mb-4 space-x-4">
                 <button id="loginTabBtn" onclick="showLogin()" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">Giriş</button>
                 <button id="registerTabBtn" onclick="showRegister()" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">Qeydiyyat</button>
