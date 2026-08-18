@@ -825,7 +825,7 @@ INDEX_HTML = """
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-                <p class="text-gray-400 text-sm">{{ news.views }} {{ 'oxunma' if current_lang == 'az' else 'reads' }}</p>
+            <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
             </a>
             {% endfor %}
         </div>
@@ -849,13 +849,13 @@ INDEX_HTML = """
 
 NEWS_LIST_HTML = """
 {% extends "base.html" %}
-{% block title %}Xəbərlər - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Xəbərlər' if current_lang == 'az' else 'News' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Xəbərlər</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</h1>
     <form action="/search" method="GET" class="mb-6 flex gap-2">
-        <input type="text" name="q" placeholder="Xəbər axtar..." class="flex-1 p-2 rounded bg-gray-800 text-white">
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Axtar</button>
+        <input type="text" name="q" placeholder="{{ 'Xəbər axtar...' if current_lang == 'az' else 'Search news...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
+        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
     </form>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for news in all_news %}
@@ -876,7 +876,7 @@ NEWS_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | Oxunma: {{ news.views }}</p>
+    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | Oxunma: </p>
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
