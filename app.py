@@ -756,7 +756,7 @@ setTimeout(function() {
         az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
         en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
     };
-    let currentLang = '{{ current_lang }}' || localStorage.getItem('lang') || 'az';
+    let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     applyLanguage(currentLang);
     function applyLanguage(lang) {
         document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -767,11 +767,15 @@ setTimeout(function() {
         if (langBtn) langBtn.textContent = lang === 'az' ? 'EN' : 'AZ';
         const langBtnMobile = document.getElementById('langToggleMobile');
         if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
+        const langBtnMobile = document.getElementById('langToggleMobile');
+        if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
         currentLang = lang;
         localStorage.setItem('lang', lang);
     }
     function toggleLanguage() {
-        window.location.href = '/set-language/' + (currentLang === 'az' ? 'en' : 'az');
+        const newLang = currentLang === 'az' ? 'en' : 'az';
+        localStorage.setItem('lang', newLang);
+        window.location.href = '/set-language/' + newLang;
     }
     const langToggle = document.getElementById('langToggle');
     if (langToggle) langToggle.addEventListener('click', toggleLanguage);
