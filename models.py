@@ -7,7 +7,7 @@ db = SQLAlchemy()
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)  # email artıq məcburi deyil
+    email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     points = db.Column(db.Integer, default=0)
@@ -56,14 +56,14 @@ class User(UserMixin, db.Model):
 class News(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
     title_en = db.Column(db.String(200), nullable=True)
+    content = db.Column(db.Text, nullable=False)
     content_en = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), default='Ümumi')
     image_url = db.Column(db.String(500), default='')
-    status = db.Column(db.String(20), default='draft')  # 'draft' və ya 'published'
     views = db.Column(db.Integer, default=0)
     likes = db.Column(db.Integer, default=0)
+    status = db.Column(db.String(20), default='draft')
     published_at = db.Column(db.DateTime, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -75,8 +75,8 @@ class News(db.Model):
 class Manga(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=False)
     title_en = db.Column(db.String(200), nullable=True)
+    description = db.Column(db.Text, nullable=False)
     description_en = db.Column(db.Text, nullable=True)
     type = db.Column(db.String(50), default='anime')
     cover_url = db.Column(db.String(500), default='')
@@ -123,11 +123,6 @@ class Title(db.Model):
     required_xp = db.Column(db.Integer, default=0)
     unique_legendary = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if 'required_xp' not in kwargs and self.condition_value:
-            self.required_xp = self.condition_value
 
 
 class UserTitle(db.Model):
@@ -192,7 +187,7 @@ class UserQuest(db.Model):
 class Report(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    target_type = db.Column(db.String(20), nullable=False)  # 'post', 'room', 'news'
+    target_type = db.Column(db.String(20), nullable=False)
     target_id = db.Column(db.Integer, nullable=False)
     reason = db.Column(db.String(200), default='')
     handled = db.Column(db.Boolean, default=False)
@@ -200,20 +195,12 @@ class Report(db.Model):
 
     reporter = db.relationship('User', foreign_keys=[reporter_id], backref='reports')
 
-class NewsLike(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user = db.relationship('User', backref='news_likes')
-    news = db.relationship('News', backref='news_likes')
 
 class NewsBlock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
-    block_type = db.Column(db.String(20), nullable=False)  # 'text' və ya 'image'
+    block_type = db.Column(db.String(20), nullable=False)
     text_content = db.Column(db.Text, default='')
     image_url = db.Column(db.String(500), default='')
-    layout = db.Column(db.String(20), default='stack')  # 'stack' və ya 'side'
+    layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
