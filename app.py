@@ -723,13 +723,6 @@ function openReportModal(type, id) {
 function closeReportModal() {
     document.getElementById('reportModal').classList.add('hidden');
 }
-// Flash mesajlarını 5 saniyə sonra DOM-dan tamamilə sil
-setTimeout(function() {
-    var flashContainer = document.getElementById('flash-container');
-    if (flashContainer) {
-        flashContainer.remove();
-    }
-}, 5000);
     function showLogin() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
@@ -778,10 +771,11 @@ setTimeout(function() {
     const langToggleMobile = document.getElementById('langToggleMobile');
     if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
 
-    // Flash mesajlarını 5 saniyə sonra yox et
-document.addEventListener('DOMContentLoaded', function() {
+</script>
+<script>
+(function() {
     setTimeout(function() {
-        var flashItems = document.querySelectorAll('.flash-item');
+        var flashItems = document.querySelectorAll('#flash-container .flash-item');
         flashItems.forEach(function(item) {
             item.style.transition = 'opacity 0.5s ease';
             item.style.opacity = '0';
@@ -790,8 +784,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 500);
         });
     }, 5000);
-});
-
+})();
 </script>
 </body>
 </html>
