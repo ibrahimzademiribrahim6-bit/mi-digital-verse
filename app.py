@@ -2596,7 +2596,7 @@ def init_db():
             admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
             db.session.commit()
-            print("Admin istifadəçi yaradıldı: admin / admin123")
+            print("Admin istifadəçi yaradıldı: admin / MiriMID26&")
         admin = User.query.filter_by(username='admin').first()
         admin_title = Title.query.filter_by(name="Admin").first()
         if admin_title:
