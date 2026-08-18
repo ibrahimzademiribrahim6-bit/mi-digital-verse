@@ -1605,15 +1605,15 @@ ABOUT_HTML = """
 
 SEARCH_HTML = """
 {% extends "base.html" %}
-{% block title %}Axtarış - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Axtarış' if current_lang == 'az' else 'Search' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-2xl mb-4">Axtarış: "{{ q }}"</h1>
-    <h2 class="text-xl mb-3">Xəbərlər</h2>
+    <h1 class="text-2xl mb-4">{{ 'Axtarış:' if current_lang == 'az' else 'Search:' }} "{{ q }}"</h1>
+    <h2 class="text-xl mb-3">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</h2>
     {% for n in news_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/news/{{ n.id }}" class="text-cyan-300">{{ n.title }}</a></div>
-    {% else %}<p>Tapılmadı.</p>{% endfor %}
-    <h2 class="text-xl mb-3 mt-6">Manqa/Anime</h2>
+    {% else %}<p>{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>{% endfor %}
+    <h2 class="text-xl mb-3 mt-6">{{ 'Manqa/Anime' if current_lang == 'az' else 'Manga/Anime' }}</h2>
     {% for m in manga_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/manga/{{ m.id }}" class="text-cyan-300">{{ m.title }} ({{ m.type }})</a></div>
     {% else %}<p>Tapılmadı.</p>{% endfor %}
