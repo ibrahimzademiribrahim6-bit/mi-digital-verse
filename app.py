@@ -997,7 +997,13 @@ COMMUNITY_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
         <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
-            <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
+            <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">
+                {% if room.name == 'Xəta Otağı' %}
+                    {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
+                {% else %}
+                    {{ room.name }}
+                {% endif %}
+            </h3>
             <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
             {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
             <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
@@ -1005,9 +1011,9 @@ COMMUNITY_HTML = """
                 <button onclick="openReportModal('room', {{ room.id }})" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
                 {% if current_user.is_authenticated and current_user.is_admin %}
                     {% if room.name == 'Xəta Otağı' %}
-                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('Bütün mesajları silmək istədiyinizə əminsiniz?')">Mesajları təmizlə</a>
+                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('{{ 'Bütün mesajları silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete all messages?' }}')">{{ 'Mesajları təmizlə' if current_lang == 'az' else 'Clear messages' }}</a>
                     {% else %}
-                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('Otağı silmək istədiyinizə əminsiniz?')">Otağı sil</a>
+                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('{{ 'Otağı silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this room?' }}')">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
                     {% endif %}
                 {% endif %}
             </div>
