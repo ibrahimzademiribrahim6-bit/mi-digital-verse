@@ -1342,7 +1342,7 @@ ADMIN_HTML = """
                 </select>
                 <input type="text" name="cover_url" placeholder="{{ 'Üz şəkli URL' if current_lang == 'az' else 'Cover image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="cover_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">">
+                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="status" placeholder="{{ 'Status' if current_lang == 'az' else 'Status' }}" value="{{ 'Davam edir' if current_lang == 'az' else 'Ongoing' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="number" name="chapters" placeholder="{{ 'Bölüm sayı' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
                 <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
@@ -1457,126 +1457,7 @@ ADMIN_HTML = """
 {% endblock %}
 """
 
-EDIT_NEWS_HTML = """
-{% extends "base.html" %}
-{% block title %}{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }} - Mi Digital Verse{% endblock %}
-{% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }}</h1>
-    <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
-        <label class="text-sm text-gray-400">{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
-        <input type="text" name="title" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-        <label class="text-sm text-gray-400">{{ 'İngilis Başlıq' if current_lang == 'az' else 'English Title' }}</label>
-        <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-
-        <label class="text-sm text-gray-400">{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}</label>
-        <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
-        <label class="text-sm text-gray-400">{{ 'İngilis Məzmun' if current_lang == 'az' else 'English Content' }}</label>
-        <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
-
-        <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
-        <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
-        <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <label class="text-sm text-gray-400">{{ 'Şəkil faylı (və ya URL)' if current_lang == 'az' else 'Image file (or URL)' }}</label>
-        <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-
-        <!-- Dinamik Bloklar -->
-        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Əlavə Bloklar (mətn/şəkil)' if current_lang == 'az' else 'Additional Blocks (text/image)' }}</h2>
-        <div id="blocksContainer"></div>
-        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
-        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
-
-        <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
-    </form>
-</div>
-
-<script>
-    let blockIndex = 0;
-
-    function addTextBlock() {
-        const container = document.getElementById('blocksContainer');
-        const div = document.createElement('div');
-        div.className = 'bg-gray-700 p-3 rounded mt-3';
-        div.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-            </div>
-            <input type="hidden" name="block_type" value="text">
-            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="{{ 'Mətn daxil edin' if current_lang == 'az' else 'Enter text' }}"></textarea>
-            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
-                <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
-            </select>
-        `;
-        container.appendChild(div);
-        blockIndex++;
-    }
-
-    function addImageBlock() {
-        const container = document.getElementById('blocksContainer');
-        const div = document.createElement('div');
-        div.className = 'bg-gray-700 p-3 rounded mt-3';
-        div.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-            </div>
-            <input type="hidden" name="block_type" value="image">
-            <input type="text" name="block_image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-800 text-white">
-            <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
-            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
-                <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
-            </select>
-        `;
-        container.appendChild(div);
-        blockIndex++;
-    }
-
-    // Mövcud blokları yüklə (əgər varsa)
-    window.onload = function() {
-        {% for block in news.blocks %}
-            {% if block.block_type == 'text' %}
-                const textDiv{{ block.id }} = document.createElement('div');
-                textDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
-                textDiv{{ block.id }}.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
-                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-                    </div>
-                    <input type="hidden" name="block_type" value="text">
-                    <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="{{ 'Mətn daxil edin' if current_lang == 'az' else 'Enter text' }}">{{ block.text_content }}</textarea>
-                    <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
-                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
-                    </select>
-                `;
-                document.getElementById('blocksContainer').appendChild(textDiv{{ block.id }});
-            {% else %}
-                const imgDiv{{ block.id }} = document.createElement('div');
-                imgDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
-                imgDiv{{ block.id }}.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
-                        <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-                    </div>
-                    <input type="hidden" name="block_type" value="image">
-                    <input type="text" name="block_image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                    <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
-                    <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
-                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
-                    </select>
-                `;
-                document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
-            {% endif %}
-        {% endfor %}
-    };
-</script>
-{% endblock %}
-"""
+EDIT_NEWS_HTML =
 
 EDIT_MANGA_HTML = """
 {% extends "base.html" %}
