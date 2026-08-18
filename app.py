@@ -1067,62 +1067,62 @@ ROOM_HTML = """"
 
 PROFILE_HTML = """
 {% extends "base.html" %}
-{% block title %}Profil - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Profil' if current_lang == 'az' else 'Profile' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Profil: {{ current_user.username }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Profil' if current_lang == 'az' else 'Profile' }}: {{ current_user.username }}</h1>
     <div class="bg-gray-800 rounded-lg p-6">
         {% if current_user.avatar %}
         <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" alt="Avatar" class="w-24 h-24 rounded-full mb-4">
         {% else %}
         <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl mb-4">{{ current_user.username[0].upper() }}</div>
         {% endif %}
-        <p>Email: {{ current_user.email }}</p>
-        <p>Səviyyə: {{ current_user.get_level() }}</p>
-        <p>XP: {{ current_user.points }} / {{ current_user.get_next_level_xp() }}</p>
+        <p>{{ 'Email' if current_lang == 'az' else 'Email' }}: {{ current_user.email }}</p>
+        <p>{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ current_user.get_level() }}</p>
+        <p>{{ 'XP' if current_lang == 'az' else 'XP' }}: {{ current_user.points }} / {{ current_user.get_next_level_xp() }}</p>
         <div class="w-full bg-gray-700 rounded-full h-3 mt-2">
             <div class="bg-cyan-500 h-3 rounded-full" style="width: {{ current_user.get_level_progress() }}%"></div>
         </div>
-        <p>Günlük giriş seriyası: {{ current_user.streak }} gün</p>
+        <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
         {% if current_user.title %}
-        <p>Aktiv Ünvan: <span style="color: {{ current_user.title.color }};">{{ current_user.title.name }}</span></p>
+        <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.title.color }};">{{ current_user.title.name }}</span></p>
         {% endif %}
         {% if not claimed_today %}
-        <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">Günlük ödülü al</button></form>
+        <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
         {% else %}
-        <p class="text-green-400 mt-2">Bu gün ödülü almısınız.</p>
+        <p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else 'You have already claimed today\'s reward.' }}</p>
         {% endif %}
-        <h2 class="text-xl font-bold mt-6 mb-3">Profil şəklini dəyiş</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Profil şəklini dəyiş' if current_lang == 'az' else 'Change profile picture' }}</h2>
         <form action="/upload-avatar" method="POST" enctype="multipart/form-data" class="space-y-3">
             <input type="file" name="avatar" accept="image/*" required class="w-full p-2 bg-gray-700 rounded">
-            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Yüklə</button>
+            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yüklə' if current_lang == 'az' else 'Upload' }}</button>
         </form>
-        <h2 class="text-xl font-bold mt-6 mb-3">Bio və Sosial Keçidlər</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Bio və Sosial Keçidlər' if current_lang == 'az' else 'Bio and Social Links' }}</h2>
         <form action="/profile/update-bio" method="POST" class="space-y-3">
             <div>
-                <label class="text-sm text-gray-400">Bio</label>
+                <label class="text-sm text-gray-400">{{ 'Bio' if current_lang == 'az' else 'Bio' }}</label>
                 <textarea name="bio" class="w-full p-2 rounded bg-gray-700 text-white" rows="3">{{ current_user.bio or '' }}</textarea>
             </div>
             <div>
-                <label class="text-sm text-gray-400">Twitter linki</label>
+                <label class="text-sm text-gray-400">{{ 'Twitter linki' if current_lang == 'az' else 'Twitter link' }}</label>
                 <input type="text" name="twitter_link" value="{{ current_user.twitter_link or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
             </div>
             <div>
-                <label class="text-sm text-gray-400">Instagram linki</label>
+                <label class="text-sm text-gray-400">{{ 'Instagram linki' if current_lang == 'az' else 'Instagram link' }}</label>
                 <input type="text" name="instagram_link" value="{{ current_user.instagram_link or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
             </div>
             <div>
-                <label class="text-sm text-gray-400">Discord linki</label>
+                <label class="text-sm text-gray-400">{{ 'Discord linki' if current_lang == 'az' else 'Discord link' }}</label>
                 <input type="text" name="discord_link" value="{{ current_user.discord_link or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
             </div>
-            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Yadda saxla</button>
+            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
         </form>
-        <h2 class="text-xl font-bold mt-6 mb-3">Şifrəni dəyiş</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Şifrəni dəyiş' if current_lang == 'az' else 'Change password' }}</h2>
         <form action="/profile/change-password" method="POST" class="space-y-3">
-            <input type="password" name="current_password" placeholder="Hazırkı şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="new_password" placeholder="Yeni şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="confirm_password" placeholder="Yeni şifrəni təkrar yaz" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Şifrəni yenilə</button>
+            <input type="password" name="current_password" placeholder="{{ 'Hazırkı şifrə' if current_lang == 'az' else 'Current password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="new_password" placeholder="{{ 'Yeni şifrə (ən az 8 simvol)' if current_lang == 'az' else 'New password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="confirm_password" placeholder="{{ 'Yeni şifrəni təkrar yaz' if current_lang == 'az' else 'Repeat new password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Şifrəni yenilə' if current_lang == 'az' else 'Update password' }}</button>
         </form>
     </div>
 
