@@ -34,9 +34,10 @@ db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Zəhmət olmasa giriş edin.'
+
 @login_manager.unauthorized_handler
 def unauthorized():
-    flash('Zəhmət olmasa giriş edin.')
+    flash(_t('Zəhmət olmasa giriş edin.', 'Please log in.'))
     return redirect(url_for('index'))
 
 Talisman(app, content_security_policy=None, force_https=False)
@@ -51,6 +52,10 @@ limiter = Limiter(
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+def _t(az_text, en_text):
+    lang = session.get('lang', 'az')
+    return az_text if lang == 'az' else en_text
+
 @app.before_request
 def check_banned_user():
     if current_user.is_authenticated:
@@ -63,7 +68,7 @@ def check_banned_user():
                 db.session.commit()
             else:
                 logout_user()
-                flash('Hesabınız banlandı. Səbəb: ' + (current_user.banned_reason or 'Göstərilməyib'))
+                flash(_t('Hesabınız banlandı. Səbəb: ', 'Your account has been banned. Reason: ') + (current_user.banned_reason or _t('Göstərilməyib', 'Not specified')))
                 return redirect(url_for('index'))
 
 @app.before_request
@@ -1889,7 +1894,7 @@ def create_room():
         name = request.form.get('room_name', '').strip()
         news_id = request.form.get('news_id', '')
         if not name:
-            flash('Otaq adı boş ola bilməz')
+            flash(_t('Otaq adı boş ola bilməz', 'Room name cannot be empty'))
             return redirect(url_for('community'))
         room = Room(name=name, news_id=int(news_id) if news_id else None, creator_id=current_user.id)
         db.session.add(room)
@@ -1939,12 +1944,12 @@ def report_submit():
     target_id = int(request.form.get('target_id'))
     reason = request.form.get('reason', '')
     if target_type not in ['post', 'room']:
-        flash('Səhv şikayət növü.')
+        flash(_t('Səhv şikayət növü.', 'Invalid report type.'))
         return redirect(request.referrer or url_for('index'))
     report = Report(reporter_id=current_user.id, target_type=target_type, target_id=target_id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash('Şikayət göndərildi.')
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/report/post/<int:post_id>', methods=['POST'])
@@ -1955,7 +1960,7 @@ def report_post(post_id):
     report = Report(reporter_id=current_user.id, target_type='post', target_id=post.id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash('Şikayət göndərildi.')
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/report/room/<int:room_id>', methods=['POST'])
@@ -1966,7 +1971,7 @@ def report_room(room_id):
     report = Report(reporter_id=current_user.id, target_type='room', target_id=room.id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash('Şikayət göndərildi.')
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/like-news/<int:news_id>', methods=['POST'])
@@ -1979,7 +1984,7 @@ def like_news(news_id):
         db.session.delete(existing_like)
         news.likes = max(0, news.likes - 1)
         db.session.commit()
-        flash('Bəyənmə geri alındı.')
+        flash(_t('Bəyənmə geri alındı.', 'Like removed.'))
     else:
         # Yeni bəyənmə
         like = NewsLike(user_id=current_user.id, news_id=news.id)
@@ -2015,19 +2020,19 @@ def register():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         if not username or not password:
-            flash('İstifadəçi adı və şifrə məcburidir')
+            flash(_t('İstifadəçi adı və şifrə məcburidir', 'Username and password are required'))
             return redirect(url_for('register'))
         if not is_strong_password(password):
-            flash('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır')
+            flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and numbers'))
             return redirect(url_for('register'))
         if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
-            flash('Email formatı düzgün deyil')
+            flash(_t('Email formatı düzgün deyil', 'Invalid email format'))
             return redirect(url_for('register'))
         if User.query.filter_by(username=username).first():
-            flash('Bu istifadəçi adı artıq mövcuddur')
+            flash(_t('Bu istifadəçi adı artıq mövcuddur', 'This username already exists'))
             return redirect(url_for('register'))
         if email and User.query.filter_by(email=email).first():
-            flash('Bu email artıq qeydiyyatdan keçib')
+            flash(_t('Bu email artıq qeydiyyatdan keçib', 'This email is already registered'))
             return redirect(url_for('register'))
         user = User(username=username, email=email, password_hash=generate_password_hash(password))
         db.session.add(user)
@@ -2070,11 +2075,11 @@ def login():
                 user.banned_reason = ''
                 db.session.commit()
             else:
-                flash('Hesabınız banlandı.')
+                flash(_t('Hesabınız banlandı.', 'Your account has been banned.'))
                 return redirect(url_for('index'))
         login_user(user)
         return redirect(url_for('index'))
-    flash('İstifadəçi adı və ya şifrə yanlışdır')
+    flash(_t('İstifadəçi adı və ya şifrə yanlışdır', 'Invalid username or password'))
     return redirect(url_for('index'))
 
 @app.route('/logout')
@@ -2113,7 +2118,7 @@ def update_bio():
     current_user.instagram_link = request.form.get('instagram_link', '').strip()
     current_user.discord_link = request.form.get('discord_link', '').strip()
     db.session.commit()
-    flash('Profil yeniləndi')
+    flash(_t('Profil yeniləndi', 'Profile updated'))
     return redirect(url_for('profile'))
 
 @app.route('/profile/change-password', methods=['POST'])
@@ -2123,15 +2128,15 @@ def change_password():
     new_password = request.form.get('new_password', '')
     confirm_password = request.form.get('confirm_password', '')
     if not check_password_hash(current_user.password_hash, current_password):
-        flash('Hazırkı şifrə yanlışdır')
+        flash(_t('Hazırkı şifrə yanlışdır', 'Current password is incorrect'))
     elif new_password != confirm_password:
-        flash('Yeni şifrələr uyğun gəlmir')
+        flash(_t('Yeni şifrələr uyğun gəlmir', 'New passwords do not match'))
     elif not is_strong_password(new_password):
-        flash('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır')
+        flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and and numbers'))
     else:
         current_user.password_hash = generate_password_hash(new_password)
         db.session.commit()
-        flash('Şifrə yeniləndi')
+        flash(_t('Şifrə yeniləndi', 'Password updated'))
     return redirect(url_for('profile'))
 
 @app.route('/profile/set-active-title/<int:title_id>', methods=['POST'])
@@ -2143,7 +2148,7 @@ def set_active_title(title_id):
         db.session.commit()
         flash(f"Aktiv ünvan: {title.name}")
     else:
-        flash("Bu ünvana sahib deyilsiniz.")
+        flash(_t("Bu ünvana sahib deyilsiniz.", "You do not own this address."))
     return redirect(url_for('profile'))
 
 @app.route('/profile/set-showcase', methods=['POST'])
@@ -2156,14 +2161,14 @@ def set_showcase():
     current_user.showcase2_id = int(s2) if s2 else None
     current_user.showcase3_id = int(s3) if s3 else None
     db.session.commit()
-    flash("Vitrin yeniləndi")
+    flash(_t("Vitrin yeniləndi", "Showcase updated"))
     return redirect(url_for('profile'))
 
 @app.route('/claim-daily', methods=['POST'])
 @login_required
 def claim_daily():
     if daily_reward(current_user):
-        flash('Günlük ödül alındı!')
+        flash(_t('Günlük ödül alındı!', 'Daily reward claimed!'))
     else:
         flash('Bu gün artıq ödül almısınız.')
     return redirect(url_for('profile'))
@@ -2172,22 +2177,22 @@ def claim_daily():
 @login_required
 def upload_avatar():
     if 'avatar' not in request.files:
-        flash('Fayl seçilməyib')
+        flash(_t('Fayl seçilməyib', 'No file selected'))
         return redirect(url_for('profile'))
     file = request.files['avatar']
     if file.filename == '':
-        flash('Fayl seçilməyib')
+        flash(_t('Fayl seçilməyib', 'No file selected'))
         return redirect(url_for('profile'))
     if file:
         ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
         if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
-            flash('Yalnız şəkil faylları yükləyə bilərsiniz')
+            flash(_t('Yalnız şəkil faylları yükləyə bilərsiniz', 'You can only upload image files'))
             return redirect(url_for('profile'))
         filename = f"{current_user.id}_{datetime.utcnow().timestamp()}.{ext}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         current_user.avatar = filename
         db.session.commit()
-        flash('Profil şəkli yeniləndi')
+        flash(_t('Profil şəkli yeniləndi', 'Profile picture updated'))
     return redirect(url_for('profile'))
 
 # ---------- NOTIFICATIONS ----------
@@ -2211,7 +2216,7 @@ def mark_read(notif_id):
 def mark_all_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
     db.session.commit()
-    flash("Bütün bildirişlər oxunmuş işarələndi")
+    flash(_t("Bütün bildirişlər oxunmuş işarələndi", "All notifications marked as read"))
     return redirect(url_for('notifications'))
 
 # ---------- ADMIN ----------
@@ -2267,7 +2272,7 @@ def fetch_news():
             db.session.add(news)
             count += 1
     db.session.commit()
-    flash(f"{count} xəbər qaralama olaraq əlavə edildi.")
+    flash(_t(f"{count} xəbər qaralama olaraq əlavə edildi.", f"{count} news added as draft."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/generate-listicle', methods=['POST'])
@@ -2276,7 +2281,7 @@ def fetch_news():
 def admin_generate_listicle():
     topic = request.form.get('topic', '').strip()
     if not topic:
-        flash('Mövzu daxil edin')
+        flash(_t('Mövzu daxil edin', 'Please enter a subject'))
         return redirect(url_for('admin'))
     article = generate_listicle(topic)
     if article:
@@ -2295,9 +2300,9 @@ def admin_generate_listicle():
         )
         db.session.add(news)
         db.session.commit()
-        flash('Siyahı məqaləsi qaralama olaraq yaradıldı.')
+        flash(_t('Siyahı məqaləsi qaralama olaraq yaradıldı.', 'List article created as draft.'))
     else:
-        flash('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.')
+        flash(_t('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.', 'Article could not be created, agent returned an empty result.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/add-news', methods=['POST'])
@@ -2375,7 +2380,7 @@ def ban_user(user_id):
         user.is_banned = True
     user.banned_reason = 'Admin tərəfindən banlandı'
     db.session.commit()
-    flash(f"{user.username} banlandı.")
+    flash(_t(f"{user.username} banlandı.", f"{user.username} has been banned."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/mute-user/<int:user_id>')
@@ -2393,7 +2398,7 @@ def mute_user(user_id):
         user.is_muted = True
     user.muted_reason = 'Admin tərəfindən susturuldu'
     db.session.commit()
-    flash(f"{user.username} susturuldu.")
+    flash(_t(f"{user.username} susturuldu.", f"{user.username} has been muted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/unban-user/<int:user_id>')
@@ -2405,7 +2410,7 @@ def unban_user(user_id):
     user.banned_until = None
     user.banned_reason = ''
     db.session.commit()
-    flash(f"{user.username} banı açıldı.")
+    flash(_t(f"{user.username} banı açıldı.", f"{user.username}'s ban has been lifted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/unmute-user/<int:user_id>')
@@ -2417,7 +2422,7 @@ def unmute_user(user_id):
     user.muted_until = None
     user.muted_reason = ''
     db.session.commit()
-    flash(f"{user.username} susturma açıldı.")
+    flash(_t(f"{user.username} susturma açıldı.", f"{user.username}'s mute has been lifted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/handle-report/<int:report_id>')
@@ -2427,7 +2432,7 @@ def handle_report(report_id):
     report = Report.query.get_or_404(report_id)
     report.handled = True
     db.session.commit()
-    flash("Şikayət həll edildi.")
+    flash(_t("Şikayət həll edildi.", "Report resolved."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-report/<int:report_id>')
@@ -2437,7 +2442,7 @@ def delete_report(report_id):
     report = Report.query.get_or_404(report_id)
     db.session.delete(report)
     db.session.commit()
-    flash("Şikayət silindi.")
+    flash(_t("Şikayət silindi.", "Report deleted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/edit-news/<int:news_id>', methods=['GET', 'POST'])
@@ -2492,7 +2497,7 @@ def edit_news(news_id):
                 )
                 db.session.add(block)
         db.session.commit()
-        flash('Xəbər yeniləndi')
+        flash(_t('Xəbər yeniləndi', 'News updated'))
         return redirect(url_for('admin'))
     return render_template('edit_news.html', news=news)
 
@@ -2515,7 +2520,7 @@ def edit_manga(manga_id):
         manga.status = request.form.get('status', 'Davam edir').strip()
         manga.chapters = int(request.form.get('chapters', 100))
         db.session.commit()
-        flash('Manqa yeniləndi')
+        flash(_t('Manqa yeniləndi', 'Manga updated'))
         return redirect(url_for('admin'))
     return render_template('edit_manga.html', manga=manga)
 
@@ -2536,7 +2541,7 @@ def add_manga():
         if filename:
             cover_url = filename
         else:
-            flash('Şəkil formatı dəstəklənmir, URL istifadə ediləcək')
+            flash(_t('Şəkil formatı dəstəklənmir, URL istifadə ediləcək', 'Image format not supported, URL will be used'))
     if title and description:
         if not cover_url:
             cover_url = get_image_url(title)
@@ -2552,7 +2557,7 @@ def publish_news(news_id):
     news = News.query.get_or_404(news_id)
     news.status = 'published'
     db.session.commit()
-    flash('Məqalə yayımlandı.')
+    flash(_t('Məqalə yayımlandı.', 'Article published.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-news/<int:news_id>')
@@ -2566,7 +2571,7 @@ def delete_news(news_id):
     Report.query.filter_by(target_type='news', target_id=news.id).delete()
     db.session.delete(news)
     db.session.commit()
-    flash('Xəbər silindi.')
+    flash(_t('Xəbər silindi.', 'News deleted.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-post/<int:post_id>')
@@ -2580,7 +2585,7 @@ def admin_delete_post(post_id):
     room_id = post.room_id
     db.session.delete(post)
     db.session.commit()
-    flash('Şərh silindi.')
+    flash(_t('Şərh silindi.', 'Comment deleted.'))
     return redirect(request.referrer or url_for('room', room_id=room_id))
 
 @app.route('/admin/clear-room-messages/<int:room_id>')
@@ -2591,9 +2596,9 @@ def admin_clear_room_messages(room_id):
     if room.name == 'Xəta Otağı':
         Post.query.filter_by(room_id=room.id).delete()
         db.session.commit()
-        flash('Xəta Otağındakı bütün mesajlar silindi.')
+        flash(_t('Xəta Otağındakı bütün mesajlar silindi.', 'All messages in the Error Room have been deleted.'))
     else:
-        flash('Bu əməliyyat yalnız Xəta Otağı üçün keçərlidir.')
+        flash(_t('Bu əməliyyat yalnız Xəta Otağı üçün keçərlidir.', 'This operation is only valid for the Error Room.'))
     return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/delete-room/<int:room_id>')
@@ -2602,7 +2607,7 @@ def admin_clear_room_messages(room_id):
 def admin_delete_room(room_id):
     room = Room.query.get_or_404(room_id)
     if room.name == 'Xəta Otağı':
-        flash('Xəta Otağı silinə bilməz.')
+        flash(_t('Xəta Otağı silinə bilməz.', 'The Error Room cannot be deleted.'))
         return redirect(request.referrer or url_for('community'))
     creator = room.creator
     if creator:
@@ -2610,7 +2615,7 @@ def admin_delete_room(room_id):
     Post.query.filter_by(room_id=room.id).delete()
     db.session.delete(room)
     db.session.commit()
-    flash('Otaq silindi.')
+    flash(_t('Otaq silindi.', 'Room deleted.'))
     return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/clear-all-posts')
@@ -2619,7 +2624,7 @@ def admin_delete_room(room_id):
 def clear_all_posts():
     Post.query.delete()
     db.session.commit()
-    flash('Bütün şərhlər silindi.')
+    flash(_t('Bütün şərhlər silindi.', 'All comments deleted.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-manga/<int:manga_id>')
