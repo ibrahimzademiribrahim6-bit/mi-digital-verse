@@ -2613,21 +2613,34 @@ def delete_manga(manga_id):
     return redirect(url_for('admin'))
 
 # ---------- INIT ----------
+def ensure_columns():
+    import sqlite3
+    db_path = os.path.join(app.root_path, 'instance', 'site.db')
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    try:
+        cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE news ADD COLUMN title_en VARCHAR(200) DEFAULT ''")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE news ADD COLUMN content_en TEXT DEFAULT ''")
+    except:
+        pass
+    conn.commit()
+    conn.close()
+
 def init_db():
     with app.app_context():
+        ensure_columns()
         db.create_all()
-        try:
-            db.session.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
-            db.session.commit()
-        except:
-            db.session.rollback()
-
-        try:
-            db.session.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
-            db.session.commit()
-        except:
-            db.session.rollback()
-
         if not User.query.filter_by(username='admin').first():
             admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
