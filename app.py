@@ -663,15 +663,15 @@ BASE_HTML = """
     </div>
 
     <main class="flex-grow">
-        <div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
+<div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
 <!-- Report Modal -->
 <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
@@ -779,16 +779,18 @@ setTimeout(function() {
     if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
 
     // Flash mesajlarını 5 saniyə sonra yox et
+document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
-        var flashItems = document.querySelectorAll('#flash-container .flash-item, #flash-container div');
+        var flashItems = document.querySelectorAll('.flash-item');
         flashItems.forEach(function(item) {
             item.style.transition = 'opacity 0.5s ease';
             item.style.opacity = '0';
             setTimeout(function() {
-                item.style.display = 'none';
+                item.remove();
             }, 500);
         });
     }, 5000);
+});
 
 </script>
 </body>
