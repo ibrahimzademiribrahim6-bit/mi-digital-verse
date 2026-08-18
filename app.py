@@ -28,6 +28,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
+app.config['SESSION_COOKIE_NAME'] = 'midigitalverse_session'
 
 db.init_app(app)
 login_manager = LoginManager(app)
@@ -49,6 +50,7 @@ limiter = Limiter(
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
 @app.before_request
 def check_banned_user():
     if current_user.is_authenticated:
@@ -63,6 +65,23 @@ def check_banned_user():
                 logout_user()
                 flash('Hesabınız banlandı. Səbəb: ' + (current_user.banned_reason or 'Göstərilməyib'))
                 return redirect(url_for('index'))
+
+@app.before_request
+def set_language():
+    lang = request.args.get('lang')
+    if lang in ['az', 'en']:
+        session['lang'] = lang
+    if 'lang' not in session:
+        session['lang'] = 'az'
+
+@app.before_request
+def set_language():
+    lang = request.args.get('lang')
+    if lang in ['az', 'en']:
+        session['lang'] = lang
+    if 'lang' not in session:
+        session['lang'] = 'az'
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -791,7 +810,7 @@ INDEX_HTML = """
             <h2 class="text-2xl font-semibold mb-4">Son Xəbərlər</h2>
             {% for news in latest_news %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
-                <h3 class="text-xl font-bold text-cyan-300">{{ news.title }}</h3>
+                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
                 <p class="text-gray-400 text-sm">{{ news.published_at.strftime('%d.%m.%Y') }} | {{ news.category }}</p>
             </a>
             {% else %}
@@ -800,7 +819,7 @@ INDEX_HTML = """
             <h2 class="text-2xl font-semibold mt-8 mb-4">Ən Çox Oxunanlar</h2>
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
-                <h3 class="text-xl font-bold text-cyan-300">{{ news.title }}</h3>
+                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
                 <p class="text-gray-400 text-sm">{{ news.views }} oxunma</p>
             </a>
             {% endfor %}
@@ -836,9 +855,9 @@ NEWS_LIST_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {% for news in all_news %}
         <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
-            <h3 class="text-xl font-bold text-cyan-300">{{ news.title }}</h3>
+            <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
             <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }}</p>
-            <p class="text-gray-300">{{ news.content[:150] }}...</p>
+            <p class="text-gray-300">{{ get_lang_field(news, 'content')[:150] }}...</p>
         </a>
         {% endfor %}
     </div>
@@ -848,15 +867,15 @@ NEWS_LIST_HTML = """
 
 NEWS_DETAIL_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ news.title }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ get_lang_field(news, 'title') }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-4">{{ news.title }}</h1>
+    <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
     <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | Oxunma: {{ news.views }}</p>
     {% if news.image_url %}
-    <img src="{{ news.image_url }}" alt="{{ news.title }}" class="w-full max-h-96 object-contain rounded-lg my-4">
+    <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
-    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ news.content }}</p>
+    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
@@ -1731,6 +1750,17 @@ def inject_now():
     return {'now': datetime.utcnow()}
 
 @app.context_processor
+def inject_lang():
+    def get_lang_field(obj, field_prefix):
+        lang = session.get('lang', 'az')
+        if lang == 'en':
+            value = getattr(obj, f'{field_prefix}_en', '')
+            if value:
+                return value
+        return getattr(obj, field_prefix, '')
+    return {'get_lang_field': get_lang_field, 'current_lang': session.get('lang', 'az')}
+
+@app.context_processor
 def inject_unread_notifications():
     if current_user.is_authenticated:
         unread = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
@@ -1738,12 +1768,24 @@ def inject_unread_notifications():
     return {'unread_notifications_count': 0}
 
 # ---------- ROUTELAR ----------
+@app.route('/set-language/<lang>')
+def set_language(lang):
+    if lang in ['az', 'en']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
+
 @app.route('/')
 def index():
     latest_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).limit(5).all()
     most_read = News.query.filter_by(status='published').order_by(News.views.desc()).limit(5).all()
     featured = Manga.query.order_by(Manga.rating.desc()).limit(4).all()
     return render_template('index.html', latest_news=latest_news, most_read=most_read, featured=featured)
+
+@app.route('/set-language/<lang>')
+def set_language(lang):
+    if lang in ['az', 'en']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/news')
 def news_list():
