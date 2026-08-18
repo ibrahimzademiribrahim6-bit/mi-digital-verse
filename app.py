@@ -75,7 +75,7 @@ def set_language():
         session['lang'] = 'az'
 
 @app.before_request
-def set_language():
+def set_language_before():
     lang = request.args.get('lang')
     if lang in ['az', 'en']:
         session['lang'] = lang
@@ -1780,12 +1780,6 @@ def index():
     most_read = News.query.filter_by(status='published').order_by(News.views.desc()).limit(5).all()
     featured = Manga.query.order_by(Manga.rating.desc()).limit(4).all()
     return render_template('index.html', latest_news=latest_news, most_read=most_read, featured=featured)
-
-@app.route('/set-language/<lang>')
-def set_language(lang):
-    if lang in ['az', 'en']:
-        session['lang'] = lang
-    return redirect(request.referrer or url_for('index'))
 
 @app.route('/news')
 def news_list():
