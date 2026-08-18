@@ -1568,21 +1568,31 @@ EDIT_MANGA_HTML = """
 
 ABOUT_HTML = """
 {% extends "base.html" %}
-{% block title %}Haqqımızda - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Haqqımızda' if current_lang == 'az' else 'About Us' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Haqqımızda</h1>
-<p class="text-lg leading-relaxed mb-4">
-    Mi Digital Verse, anime, manhwa, manhua və manga həvəskarları üçün yaradılmış müasir rəqəmsal məkandır.
-    Məqsədimiz pərəstişkarlara ən son xəbərləri, keyfiyyətli analizləri və interaktiv icma təcrübəsini bir araya gətirməkdir.
-</p>
-<p class="text-lg leading-relaxed mb-4">
-    Biz inanırıq ki, hər bir pərəstişkarın səsi burada eşidilməlidir. Ona görə də saytımızda müzakirə otaqları, nailiyyətlər və ünvan sistemi qurmuşuq.
-    Gələcəkdə daha çox funksiya və məzmun əlavə edərək böyüməyə davam edəcəyik.
-</p>
-<p class="text-lg leading-relaxed">
-    Mi Digital Verse ailəsinə qoşulun və rəqəmsal dünyada öz yerinizi alın!
-</p>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Haqqımızda' if current_lang == 'az' else 'About Us' }}</h1>
+    <p class="text-lg leading-relaxed">
+        {% if current_lang == 'az' %}
+            Mi Digital Verse, anime, manhwa, manhua və manga həvəskarları üçün yaradılmış müasir rəqəmsal məkandır. Məqsədimiz pərəstişkarlara ən son xəbərləri, keyfiyyətli analizləri və interaktiv icma təcrübəsini bir araya gətirməkdir.
+        {% else %}
+            Mi Digital Verse is a modern digital space created for anime, manhwa, manhua, and manga enthusiasts. Our goal is to bring fans together with the latest news, quality analysis, and interactive community experience.
+        {% endif %}
+    </p>
+    <p class="text-lg leading-relaxed">
+        {% if current_lang == 'az' %}
+            Biz inanırıq ki, hər bir pərəstişkarın səsi burada eşidilməlidir. Ona görə də saytımızda müzakirə otaqları, nailiyyətlər və ünvan sistemi qurmuşuq. Gələcəkdə daha çox funksiya və məzmun əlavə edərək böyüməyə davam edəcəyik.
+        {% else %}
+            We believe that every fan's voice should be heard here. That's why we have built discussion rooms, achievements, and a title system on our site. We will continue to grow by adding more features and content in the future.
+        {% endif %}
+    </p>
+    <p class="text-lg leading-relaxed">
+        {% if current_lang == 'az' %}
+            Mi Digital Verse ailəsinə qoşulun və rəqəmsal dünyada öz yerinizi alın!
+        {% else %}
+            Join the Mi Digital Verse family and take your place in the digital world!
+        {% endif %}
+    </p>
 </div>
 {% endblock %}
 """
