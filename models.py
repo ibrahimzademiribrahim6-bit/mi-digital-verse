@@ -204,3 +204,9 @@ class NewsBlock(db.Model):
     image_url = db.Column(db.String(500), default='')
     layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
+
+class NewsLike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
