@@ -1066,6 +1066,11 @@ ROOM_HTML = """"
 """
 
 PROFILE_HTML = """
+{% set achievement_names = {'İlk Addım': 'First Step', 'Xəbər Canavarı': 'News Beast', 'Bəyənmə Ustası': 'Like Master', 'Şərh Mütəxəssisi': 'Comment Expert', 'Otaq Qurucusu': 'Room Builder', 'Gündəlik Asılılıq': 'Daily Addiction', 'Səssiz Qəhrəman': 'Silent Hero', 'Əfsanəvi Kolleksiyaçı': 'Legendary Collector'} %}
+
+{% set achievement_descriptions = {'İlk xəbəri oxu': 'Read first news', '10 xəbər oxu': 'Read 10 news', '5 bəyənmə et': 'Give 5 likes', '5 şərh yaz': 'Write 5 comments', '3 müzakirə otağı yarat': 'Create 3 rooms', '7 gün ardıcıl giriş': '7-day login streak', '50 XP topla': 'Collect 50 XP', '100 XP topla': 'Collect 100 XP'} %}
+{% set quest_descriptions = {'1 xəbər oxu': 'Read 1 news', '1 bəyənmə et': 'Like 1 item', '1 şərh yaz': 'Write 1 comment', '5 xəbər oxu': 'Read 5 news', '5 bəyənmə et': 'Like 5 items', '1 müzakirə otağı yarat': 'Create 1 discussion room'} %}
+{% set quest_names = {'Gündəlik Oxucu': 'Daily Reader', 'Gündəlik Bəyənən': 'Daily Liker', 'Gündəlik Şərhçi': 'Daily Commenter', 'Həftəlik Məhsuldar': 'Weekly Producer', 'Həftəlik Bəyənən': 'Weekly Liker', 'Həftəlik Sosial': 'Weekly Social'} %}
 {% extends "base.html" %}
 {% block title %}{{ 'Profil' if current_lang == 'az' else 'Profile' }} - Mi Digital Verse{% endblock %}
 {% block content %}
@@ -1128,7 +1133,7 @@ PROFILE_HTML = """
 
     <!-- Ünvanlar bölməsi -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">Qazandığın Ünvanlar</h2>
+        <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             {% for user_title in earned_titles %}
             <div class="bg-gray-700 p-3 rounded text-center">
@@ -1144,14 +1149,14 @@ PROFILE_HTML = """
 
     <!-- Vitrin bölməsi -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">Vitrin (3 seçim)</h2>
+        <h2 class="text-xl font-bold mb-4">{{ 'Vitrin (3 seçim)' if current_lang == 'az' else 'Showcase (3 choices)' }}</h2>
         <form action="/profile/set-showcase" method="POST" class="space-y-3">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {% for i in range(1, 4) %}
                 <div>
-                    <label class="text-sm">Vitrin {{ i }}</label>
+                    <label class="text-sm">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }} {{ i }}</label>
                     <select name="showcase{{ i }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                        <option value="">Boş</option>
+                        <option value="">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</option>
                         {% for ut in earned_titles %}
                         <option value="{{ ut.title.id }}" {% if (i==1 and current_user.showcase1_id == ut.title.id) or (i==2 and current_user.showcase2_id == ut.title.id) or (i==3 and current_user.showcase3_id == ut.title.id) %}selected{% endif %}>{{ ut.title.name }}</option>
                         {% endfor %}
@@ -1159,21 +1164,21 @@ PROFILE_HTML = """
                 </div>
                 {% endfor %}
             </div>
-            <button type="submit" class="px-4 py-2 bg-purple-500 rounded mt-3">Vitrinini yadda saxla</button>
+            <button type="submit" class="px-4 py-2 bg-purple-500 rounded mt-3">{{ 'Vitrinini yadda saxla' if current_lang == 'az' else 'Save showcase' }}</button>
         </form>
     </div>
 
     <!-- Görəvlər və Nailiyyətlər -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-3">Görəvlər</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Görəvlər' if current_lang == 'az' else 'Quests' }}</h2>
         <div class="space-y-2">
             {% for quest in daily_quests %}
             <div class="bg-gray-700 p-3 rounded">
                 <div class="flex justify-between">
-                    <span>{{ quest.name }}</span>
+                    <span>{{ quest_names.get(quest.name, quest.name) if current_lang == 'en' else quest.name }}</span>
                     <span class="text-cyan-400">{{ quest.reward_xp }} XP</span>
                 </div>
-                <p class="text-sm text-gray-400">{{ quest.description }}</p>
+                <p class="text-sm text-gray-400">{{ quest_descriptions.get(quest.description, quest.description) if current_lang == 'en' else quest.description }}</p>
                 {% set progress = user_quests.get(quest.id) %}
                 {% if progress and progress.completed %}
                 <span class="text-green-400">Tamamlandı ✔</span>
@@ -1188,10 +1193,10 @@ PROFILE_HTML = """
             {% for quest in weekly_quests %}
             <div class="bg-gray-700 p-3 rounded">
                 <div class="flex justify-between">
-                    <span>{{ quest.name }}</span>
+                    <span>{{ quest_names.get(quest.name, quest.name) if current_lang == 'en' else quest.name }}</span>
                     <span class="text-cyan-400">{{ quest.reward_xp }} XP</span>
                 </div>
-                <p class="text-sm text-gray-400">{{ quest.description }}</p>
+                <p class="text-sm text-gray-400">{{ quest_descriptions.get(quest.description, quest.description) if current_lang == 'en' else quest.description }}</p>
                 {% set progress = user_quests.get(quest.id) %}
                 {% if progress and progress.completed %}
                 <span class="text-green-400">Tamamlandı ✔</span>
@@ -1207,18 +1212,18 @@ PROFILE_HTML = """
     </div>
 
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-3">Nailiyyətlər</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Nailiyyətlər' if current_lang == 'az' else 'Achievements' }}</h2>
         <div class="space-y-2">
             {% for ach in all_achievements %}
             <div class="bg-gray-700 p-3 rounded flex items-center gap-3 {% if ach.hidden and not earned_achievements[ach.id] %}opacity-50{% endif %}">
                 <div class="text-2xl">{{ ach.badge_icon }}</div>
                 <div>
-                    <span class="font-bold">{{ ach.name }}</span>
-                    <p class="text-sm text-gray-400">{{ ach.description }}</p>
+                    <span class="font-bold">{{ achievement_names.get(ach.name, ach.name) if current_lang == 'en' else ach.name }}</span>
+                    <p class="text-sm text-gray-400">{{ achievement_descriptions.get(ach.description, ach.description) if current_lang == 'en' else ach.description }}</p>
                     {% if earned_achievements[ach.id] %}
-                    <span class="text-green-400">Qazanılıb ✔</span>
+                    <span class="text-green-400">{{ 'Qazanılıb' if current_lang == 'az' else 'Earned' }} ✔</span>
                     {% else %}
-                    <span class="text-gray-500">Hələ qazanılmayıb</span>
+                    <span class="text-gray-500">{{ 'Hələ qazanılmayıb' if current_lang == 'az' else 'Not earned yet' }}</span>
                     {% endif %}
                 </div>
             </div>
