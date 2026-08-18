@@ -1322,7 +1322,7 @@ ADMIN_HTML = """
                 <div id="blocksContainer"></div>
                 <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
                 <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>		
-                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
+                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white" title="{{ 'Şəkil faylı seç' if current_lang == 'az' else 'Choose image file' }}">
                 <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
@@ -1345,11 +1345,11 @@ ADMIN_HTML = """
                 <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">">
                 <input type="text" name="status" placeholder="{{ 'Status' if current_lang == 'az' else 'Status' }}" value="{{ 'Davam edir' if current_lang == 'az' else 'Ongoing' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="number" name="chapters" placeholder="{{ 'Bölüm sayı' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Əlavə et</button>
+                <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
     </div>
-    <h2 class="text-2xl font-bold mt-8 mb-3">Qaralamalar</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Qaralamalar' if current_lang == 'az' else 'Drafts' }}</h2>
     <div class="space-y-2">
         {% for draft in draft_news %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
@@ -1374,9 +1374,9 @@ ADMIN_HTML = """
         </div>
         {% endfor %}
     </div>
-    <h2 class="text-2xl font-bold mt-8 mb-3">Mövcud Manqa/Anime</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
 
-    <h2 class="text-2xl font-bold mt-8 mb-3">Şikayətlər</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Şikayətlər' if current_lang == 'az' else 'Reports' }}</h2>
     <div class="space-y-2">
         {% for item in report_details %}
         <div class="bg-gray-800 p-3 rounded">
@@ -1407,8 +1407,8 @@ ADMIN_HTML = """
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ m.title }} ({{ m.type }})</span>
             <div>
-                <a href="/admin/edit-manga/{{ m.id }}" class="text-cyan-400 mr-3">Redaktə et</a>
-                <a href="/admin/delete-manga/{{ m.id }}" class="text-red-400">Sil</a>
+                <a href="/admin/edit-manga/{{ m.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/delete-manga/{{ m.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
             </div>
         </div>
         {% endfor %}
@@ -1464,15 +1464,14 @@ EDIT_NEWS_HTML = """
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Xəbəri Redaktə Et</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
-        <label class="text-sm text-gray-400">Azərbaycanca Başlıq</label>
-        <label class="text-sm text-gray-400">Azərbaycanca Başlıq</label>
+        <label class="text-sm text-gray-400">{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
         <input type="text" name="title" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-        <label class="text-sm text-gray-400">İngilis Başlıq</label>
+        <label class="text-sm text-gray-400">{{ 'İngilis Başlıq' if current_lang == 'az' else 'English Title' }}</label>
         <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
 
-        <label class="text-sm text-gray-400">Azərbaycanca Məzmun</label>
+        <label class="text-sm text-gray-400">{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}</label>
         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
-        <label class="text-sm text-gray-400">İngilis Məzmun</label>
+        <label class="text-sm text-gray-400">{{ 'İngilis Məzmun' if current_lang == 'az' else 'English Content' }}</label>
         <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         <label class="text-sm text-gray-400">İngilis Başlıq</label>
         <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
@@ -1487,8 +1486,8 @@ EDIT_NEWS_HTML = """
         <!-- Dinamik Bloklar -->
         <h2 class="text-xl font-bold mt-6 mb-3">Əlavə Bloklar (mətn/şəkil)</h2>
         <div id="blocksContainer"></div>
-        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
-        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>
+                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
+                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
 
         <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">Yadda saxla</button>
     </form>
