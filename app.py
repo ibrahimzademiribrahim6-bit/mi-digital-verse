@@ -596,10 +596,6 @@ BASE_HTML = """
                     {% if current_user.is_admin %}
                     <a href="/admin" class="text-yellow-400 hover:text-yellow-300">Admin</a>
                     {% endif %}
-                    <a href="/notifications" class="text-gray-300 hover:text-cyan-400 relative">
-                        🔔
-                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
-                    </a>
                     <a href="/logout" class="text-red-400 hover:text-red-300">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
                     {% else %}
                     <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
@@ -638,7 +634,6 @@ BASE_HTML = """
             <a href="/about" class="block py-2 text-gray-300">Haqqımızda</a>
             {% if current_user.is_authenticated %}
             <a href="/profile" class="block py-2 text-gray-300">Profil</a>
-            <a href="/notifications" class="block py-2 text-gray-300">Bildirişlər</a>
             <a href="/logout" class="block py-2 text-red-400">Çıxış</a>
             {% else %}
             <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">Giriş / Qeydiyyat</button>
@@ -2001,6 +1996,13 @@ def like_news(news_id):
     return redirect(url_for('news_detail', news_id=news.id))
 
 # ---------- AUTH ----------
+@app.route('/user/<int:user_id>')
+@login_required
+@admin_required
+def user_profile(user_id):
+    user = User.query.get_or_404(user_id)
+    return render_template('user_profile.html', profile_user=user)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
