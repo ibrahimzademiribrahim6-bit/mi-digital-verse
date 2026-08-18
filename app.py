@@ -1459,10 +1459,10 @@ ADMIN_HTML = """
 
 EDIT_NEWS_HTML = """
 {% extends "base.html" %}
-{% block title %}Xəbəri Redaktə Et - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Xəbəri Redaktə Et</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }}</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
         <label class="text-sm text-gray-400">{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
         <input type="text" name="title" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
@@ -1473,23 +1473,21 @@ EDIT_NEWS_HTML = """
         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
         <label class="text-sm text-gray-400">{{ 'İngilis Məzmun' if current_lang == 'az' else 'English Content' }}</label>
         <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
-        <label class="text-sm text-gray-400">İngilis Başlıq</label>
-        <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
 
-        <label class="text-sm text-gray-400">Azərbaycanca Məzmun</label>
-        <label class="text-sm text-gray-400">İngilis Məzmun</label>
-        <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
+        <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
+        <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
+        <label class="text-sm text-gray-400">{{ 'Şəkil faylı (və ya URL)' if current_lang == 'az' else 'Image file (or URL)' }}</label>
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
 
         <!-- Dinamik Bloklar -->
-        <h2 class="text-xl font-bold mt-6 mb-3">Əlavə Bloklar (mətn/şəkil)</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Əlavə Bloklar (mətn/şəkil)' if current_lang == 'az' else 'Additional Blocks (text/image)' }}</h2>
         <div id="blocksContainer"></div>
-                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
-                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
+        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
+        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
 
-        <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">Yadda saxla</button>
+        <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
     </form>
 </div>
 
@@ -1502,14 +1500,14 @@ EDIT_NEWS_HTML = """
         div.className = 'bg-gray-700 p-3 rounded mt-3';
         div.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">Mətn Bloku</span>
+                <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
                 <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
             </div>
             <input type="hidden" name="block_type" value="text">
-            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin"></textarea>
+            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="{{ 'Mətn daxil edin' if current_lang == 'az' else 'Enter text' }}"></textarea>
             <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">Alt-alta</option>
-                <option value="side">Yan-yana</option>
+                <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
+                <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
             </select>
         `;
         container.appendChild(div);
@@ -1522,15 +1520,15 @@ EDIT_NEWS_HTML = """
         div.className = 'bg-gray-700 p-3 rounded mt-3';
         div.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">Şəkil Bloku</span>
+                <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
                 <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
             </div>
             <input type="hidden" name="block_type" value="image">
-            <input type="text" name="block_image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-800 text-white">
+            <input type="text" name="block_image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-800 text-white">
             <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
             <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">Alt-alta</option>
-                <option value="side">Yan-yana</option>
+                <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
+                <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
             </select>
         `;
         container.appendChild(div);
@@ -1545,14 +1543,14 @@ EDIT_NEWS_HTML = """
                 textDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
                 textDiv{{ block.id }}.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold">Mətn Bloku</span>
+                        <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
                         <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                     </div>
                     <input type="hidden" name="block_type" value="text">
-                    <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin">{{ block.text_content }}</textarea>
+                    <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="{{ 'Mətn daxil edin' if current_lang == 'az' else 'Enter text' }}">{{ block.text_content }}</textarea>
                     <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
-                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
+                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
                     </select>
                 `;
                 document.getElementById('blocksContainer').appendChild(textDiv{{ block.id }});
@@ -1561,15 +1559,15 @@ EDIT_NEWS_HTML = """
                 imgDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
                 imgDiv{{ block.id }}.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold">Şəkil Bloku</span>
+                        <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
                         <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                     </div>
                     <input type="hidden" name="block_type" value="image">
-                    <input type="text" name="block_image_url" placeholder="Şəkil URL" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="text" name="block_image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
                     <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
                     <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
-                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                        <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stack' }}</option>
+                        <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side by side' }}</option>
                     </select>
                 `;
                 document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
