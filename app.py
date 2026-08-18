@@ -1440,8 +1440,15 @@ EDIT_NEWS_HTML = """
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Xəbəri Redaktə Et</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
+        <label class="text-sm text-gray-400">Azərbaycanca Başlıq</label>
         <input type="text" name="title" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+        <label class="text-sm text-gray-400">İngilis Başlıq</label>
+        <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+
+        <label class="text-sm text-gray-400">Azərbaycanca Məzmun</label>
         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
+        <label class="text-sm text-gray-400">İngilis Məzmun</label>
+        <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
@@ -2308,7 +2315,16 @@ def add_news():
     if title and content:
         if not image_url:
             image_url = get_image_url(title)
-        news = News(title=title, content=content, category=category, image_url=image_url, author_id=current_user.id)
+        news = News(
+            title=title,
+            title_en=request.form.get('title_en', '').strip(),
+            content=content,
+            content_en=request.form.get('content_en', '').strip(),
+            category=category,
+            image_url=image_url,
+            author_id=current_user.id,
+            status='draft'
+        )
         db.session.add(news)
         db.session.commit()
 
@@ -2431,6 +2447,8 @@ def edit_news(news_id):
     if request.method == 'POST':
         news.title = request.form.get('title', '').strip()
         news.content = request.form.get('content', '').strip()
+        news.title_en = request.form.get('title_en', '').strip()
+        news.content_en = request.form.get('content_en', '').strip()
         news.category = request.form.get('category', 'Ümumi').strip()
         news.image_url = request.form.get('image_url', '').strip()
         image_file = request.files.get('image_file')
