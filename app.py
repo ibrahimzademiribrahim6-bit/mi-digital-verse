@@ -803,41 +803,41 @@ setTimeout(function() {
 # Digər bütün şablonlar əvvəlki kimi qalır, lakin profil şablonunu yeniləyirik.
 INDEX_HTML = """
 {% extends "base.html" %}
-{% block title %}Ana Səhifə - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="hero-section rounded-xl p-8 mb-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 neon-text">Xoş gəldiniz!</h1>
-        <p class="text-gray-300 mt-2">Anime, manhwa, manhua və oyun dünyasının ən son xəbərləri</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 neon-text">{{ 'Xoş gəldiniz!' if current_lang == 'az' else 'Welcome!' }}</h1>
+        <p class="text-gray-300 mt-2">{{ 'Anime, manhwa, manhua və oyun dünyasının ən son xəbərləri' if current_lang == 'az' else 'The latest news from the world of anime, manhwa, manhua and games' }}</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="col-span-2">
-            <h2 class="text-2xl font-semibold mb-4">Son Xəbərlər</h2>
+            <h2 class="text-2xl font-semibold mb-4">{{ 'Son Xəbərlər' if current_lang == 'az' else 'Latest News' }}</h2>
             {% for news in latest_news %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
                 <p class="text-gray-400 text-sm">{{ news.published_at.strftime('%d.%m.%Y') }} | {{ news.category }}</p>
             </a>
             {% else %}
-            <p>Hələ xəbər yoxdur.</p>
+            <p>{{ 'Hələ xəbər yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
             {% endfor %}
-            <h2 class="text-2xl font-semibold mt-8 mb-4">Ən Çox Oxunanlar</h2>
+            <h2 class="text-2xl font-semibold mt-8 mb-4">{{ 'Ən Çox Oxunanlar' if current_lang == 'az' else 'Most Read' }}</h2>
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-                <p class="text-gray-400 text-sm">{{ news.views }} oxunma</p>
+                <p class="text-gray-400 text-sm">{{ news.views }} {{ 'oxunma' if current_lang == 'az' else 'reads' }}</p>
             </a>
             {% endfor %}
         </div>
         <div>
-            <h2 class="text-2xl font-semibold mb-4">Seçilmiş Manqa/Anime</h2>
+            <h2 class="text-2xl font-semibold mb-4">{{ 'Seçilmiş Manqa/Anime' if current_lang == 'az' else 'Featured Manga/Anime' }}</h2>
             {% for m in featured %}
             <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 mb-3 card-glow flex items-center gap-3">
                 <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-16 h-24 object-cover rounded">
                 <div>
                     <h3 class="font-bold">{{ m.title }}</h3>
                     <p class="text-sm text-gray-400">{{ m.type }}</p>
-                    <p class="text-yellow-400">Rating: {{ m.rating }}</p>
+                    <p class="text-yellow-400">{{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }}</p>
                 </div>
             </a>
             {% endfor %}
