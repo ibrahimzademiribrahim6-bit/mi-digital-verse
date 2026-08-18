@@ -1090,7 +1090,7 @@ PROFILE_HTML = """
         {% if not claimed_today %}
         <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
         {% else %}
-        <p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else 'You have already claimed today\'s reward.' }}</p>
+<p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else "You have already claimed today's reward." }}</p>
         {% endif %}
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Profil şəklini dəyiş' if current_lang == 'az' else 'Change profile picture' }}</h2>
         <form action="/upload-avatar" method="POST" enctype="multipart/form-data" class="space-y-3">
