@@ -1023,15 +1023,21 @@ ROOM_HTML = """"
 {% block title %}{{ room.name }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">{{ room.name }}</h1>
+    <h1 class="text-2xl font-bold mb-4">
+        {% if room.name == 'Xəta Otağı' %}
+            {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
+        {% else %}
+            {{ room.name }}
+        {% endif %}
+    </h1>
     {% if current_user.is_authenticated %}
     <form action="/post/{{ room.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <textarea name="content" placeholder="Mesajınız..." required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-        <label class="flex items-center mt-2"><input type="checkbox" name="is_spoiler" value="1" class="mr-2"> Spoiler olaraq işarələ</label>
-        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">Göndər</button>
+        <textarea name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+        <label class="flex items-center mt-2"><input type="checkbox" name="is_spoiler" value="1" class="mr-2"> {{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</label>
+        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
     </form>
     {% else %}
-    <p>Yazmaq üçün <a href="#" onclick="openModal()" class="text-cyan-400">giriş edin</a>.</p>
+    <p>{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
     <div class="space-y-4">
         {% for post in posts %}
