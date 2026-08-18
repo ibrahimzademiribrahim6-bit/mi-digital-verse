@@ -55,7 +55,8 @@ def load_user(user_id):
 def check_banned_user():
     if current_user.is_authenticated:
         if current_user.is_banned:
-            if current_user.banned_until and current_user.banned_until < datetime.now():
+            if current_user.banned_until and \
+               current_user.banned_until < datetime.now():
                 current_user.is_banned = False
                 current_user.banned_until = None
                 current_user.banned_reason = ''
@@ -1750,7 +1751,7 @@ PROFILE_HTML = """
         <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; position:relative;">
             <div class="avatar avatar-lg">
                 {% if current_user.avatar %}
-                <img src="{{ url_for('static', filename='uploads/' ~ current_user.avatar) }}" alt="Avatar">
+                <img src="{{ url_for('static', filename='uploads/' + current_user.avatar) }}" alt="Avatar">
                 {% else %}{{ current_user.username[0].upper() }}{% endif %}
             </div>
             <div style="flex:1; min-width:0;">
@@ -2001,7 +2002,7 @@ USER_PROFILE_HTML = """
         <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap;">
             <div class="avatar avatar-lg">
                 {% if profile_user.avatar %}
-                <img src="{{ url_for('static', filename='uploads/' ~ profile_user.avatar) }}" alt="Avatar">
+                <img src="{{ url_for('static', filename='uploads/' + profile_user.avatar) }}" alt="Avatar">
                 {% else %}{{ profile_user.username[0].upper() }}{% endif %}
             </div>
             <div style="flex:1; min-width:0;">
