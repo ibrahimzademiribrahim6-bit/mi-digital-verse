@@ -2618,10 +2618,14 @@ def ensure_columns():
     db_path = os.path.join(app.root_path, 'instance', 'site.db')
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
+
+    # title cədvəli
     try:
         cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
     except:
         pass
+
+    # news cədvəli
     try:
         cursor.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
     except:
@@ -2634,6 +2638,17 @@ def ensure_columns():
         cursor.execute("ALTER TABLE news ADD COLUMN content_en TEXT DEFAULT ''")
     except:
         pass
+
+    # manga cədvəli
+    try:
+        cursor.execute("ALTER TABLE manga ADD COLUMN title_en VARCHAR(200) DEFAULT ''")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE manga ADD COLUMN description_en TEXT DEFAULT ''")
+    except:
+        pass
+
     conn.commit()
     conn.close()
 
