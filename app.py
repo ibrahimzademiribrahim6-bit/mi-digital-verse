@@ -1296,11 +1296,10 @@ USER_PROFILE_HTML = """
 
 ADMIN_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'Admin Panel' if current_lang == 'az' else 'Admin Panel' }} - Mi Digital Verse{% endblock %}
+{% block title %}Admin Panel - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'Admin Panel' if current_lang == 'az' else 'Admin Panel' }}</h1>
-    <div class="mb-6">
     <div class="mb-6 bg-gray-800 p-4 rounded">
         <h2 class="text-xl font-bold mb-3">{{ 'Siyahı Məqaləsi Yarat' if current_lang == 'az' else 'Create List Article' }}</h2>
         <form action="/admin/generate-listicle" method="POST" class="space-y-3">
@@ -1308,31 +1307,33 @@ ADMIN_HTML = """
             <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Siyahı yarat' if current_lang == 'az' else 'Create list' }}</button>
         </form>
     </div>
+    <div class="mb-6">
         <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xəbərləri avtomatik çək' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-gray-800 p-4 rounded">
             <h2 class="text-xl font-bold mb-3">{{ 'Yeni Xəbər Əlavə Et' if current_lang == 'az' else 'Add New News' }}</h2>
             <form action="/admin/add-news" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="{{ 'Başlıq' if current_lang == 'az' else 'Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="description" placeholder="{{ 'Açıqlama' if current_lang == 'az' else 'Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-                <textarea name="content" placeholder="Məzmun" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Game' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="content" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <textarea name="content_en" placeholder="{{ 'İngilis Məzmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Games' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <div id="blocksContainer"></div>
-                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">+ Mətn Bloku</button>
-                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">+ Şəkil Bloku</button>		
-                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white" title="{{ 'Şəkil faylı seç' if current_lang == 'az' else 'Choose image file' }}">
+                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
+                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
+                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
                 <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
         <div class="bg-gray-800 p-4 rounded">
             <h2 class="text-xl font-bold mb-3">{{ 'Yeni Manqa/Anime Əlavə Et' if current_lang == 'az' else 'Add New Manga/Anime' }}</h2>
             <form action="/admin/add-manga" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="Azərbaycanca Başlıq" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="title_en" placeholder="İngilis Başlıq (optional)" class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="content" placeholder="Azərbaycanca Məzmun" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <textarea name="content_en" placeholder="İngilis Məzmun (optional)" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <input type="text" name="title" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="description" placeholder="{{ 'Azərbaycanca Açıqlama' if current_lang == 'az' else 'Azerbaijani Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+                <textarea name="description_en" placeholder="{{ 'İngilis Açıqlama (optional)' if current_lang == 'az' else 'English Description (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
                 <select name="type" class="w-full p-2 rounded bg-gray-700 text-white">
                     <option value="anime">Anime</option>
                     <option value="manga">Manga</option>
@@ -1355,14 +1356,13 @@ ADMIN_HTML = """
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ draft.title }}</span>
             <div>
-                <a href="/admin/publish-news/{{ draft.id }}" class="text-green-400 mr-3">Yayımla</a>
-                <a href="/admin/edit-news/{{ draft.id }}" class="text-cyan-400 mr-3">Redaktə et</a>
-                <a href="/admin/delete-news/{{ draft.id }}" class="text-red-400">Sil</a>
+                <a href="/admin/publish-news/{{ draft.id }}" class="text-green-400 mr-3">{{ 'Yayımla' if current_lang == 'az' else 'Publish' }}</a>
+                <a href="/admin/edit-news/{{ draft.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/delete-news/{{ draft.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
             </div>
         </div>
         {% endfor %}
     </div>
-
     <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Xəbərlər' if current_lang == 'az' else 'Existing News' }}</h2>
     <div class="space-y-2">
         {% for news in all_news %}
@@ -1371,37 +1371,11 @@ ADMIN_HTML = """
             <div>
                 <a href="/admin/edit-news/{{ news.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
                 <a href="/admin/delete-news/{{ news.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-        </div>
-        {% endfor %}
-    </div>
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
-
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Şikayətlər' if current_lang == 'az' else 'Reports' }}</h2>
-    <div class="space-y-2">
-        {% for item in report_details %}
-        <div class="bg-gray-800 p-3 rounded">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p><strong>{{ item.report.reporter.username }}</strong> tərəfindən şikayət</p>
-                    <p class="text-sm text-gray-400">Növ: {{ item.report.target_type }} #{{ item.report.target_id }}</p>
-                    <p class="text-sm text-gray-400">Səbəb: {{ item.report.reason }}</p>
-                    <p class="text-xs text-gray-500 mt-2">Məzmun: {{ item.snippet }}</p>
-                    <a href="{{ item.link }}" class="text-blue-400 text-xs" target="_blank">Məzmuna bax</a>
-                </div>
-                <div class="flex gap-2">
-                    <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">Həll et</a>
-                    <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">Sil</a>
-                    {% if item.report.target_type == 'post' %}
-                        <a href="/admin/delete-post/{{ item.report.target_id }}" class="text-red-500">Şərhi sil</a>
-                    {% elif item.report.target_type == 'room' %}
-                        <a href="/admin/delete-room/{{ item.report.target_id }}" class="text-red-500">Otağı sil</a>
-                    {% endif %}
-                </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    </div>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
     <div class="space-y-2">
         {% for m in all_manga %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
@@ -1413,47 +1387,44 @@ ADMIN_HTML = """
         </div>
         {% endfor %}
     </div>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'İstifadəçilər' if current_lang == 'az' else 'Users' }}</h2>
+    <div class="space-y-2">
+        {% for user in all_users %}
+        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
+            <a href="/user/{{ user.id }}" class="text-cyan-400">{{ user.username }}</a>
+            <div>
+                {% if user.is_banned %}<span class="text-red-400"> ({{ 'Banlı' if current_lang == 'az' else 'Banned' }})</span>{% endif %}
+                {% if user.is_muted %}<span class="text-yellow-400"> ({{ 'Susturulub' if current_lang == 'az' else 'Muted' }})</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Şikayətlər' if current_lang == 'az' else 'Reports' }}</h2>
+    <div class="space-y-2">
+        {% for item in report_details %}
+        <div class="bg-gray-800 p-3 rounded">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p><strong>{{ item.report.reporter.username }}</strong> {{ 'tərəfindən şikayət' if current_lang == 'az' else 'reported' }}</p>
+                    <p class="text-sm text-gray-400">{{ 'Növ' if current_lang == 'az' else 'Type' }}: {{ item.report.target_type }} #{{ item.report.target_id }}</p>
+                    <p class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}: {{ item.report.reason }}</p>
+                    <p class="text-xs text-gray-500 mt-2">{{ 'Məzmun' if current_lang == 'az' else 'Content' }}: {{ item.snippet }}</p>
+                    <a href="{{ item.link }}" class="text-blue-400 text-xs" target="_blank">{{ 'Məzmuna bax' if current_lang == 'az' else 'View content' }}</a>
+                </div>
+                <div class="flex gap-2">
+                    <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'Həll et' if current_lang == 'az' else 'Resolve' }}</a>
+                    <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                    {% if item.report.target_type == 'post' %}
+                        <a href="/admin/delete-post/{{ item.report.target_id }}" class="text-red-500">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
+                    {% elif item.report.target_type == 'room' %}
+                        <a href="/admin/delete-room/{{ item.report.target_id }}" class="text-red-500">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
-<script>
-    function addTextBlock() {
-        const container = document.getElementById('blocksContainer');
-        const div = document.createElement('div');
-        div.className = 'bg-gray-700 p-3 rounded mt-3';
-        div.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">Mətn Bloku</span>
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-            </div>
-            <input type="hidden" name="block_type" value="text">
-            <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4" placeholder="Mətn daxil edin"></textarea>
-            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">Alt-alta</option>
-                <option value="side">Yan-yana</option>
-            </select>
-        `;
-        container.appendChild(div);
-    }
-
-    function addImageBlock() {
-        const container = document.getElementById('blocksContainer');
-        const div = document.createElement('div');
-        div.className = 'bg-gray-700 p-3 rounded mt-3';
-        div.innerHTML = `
-            <div class="flex justify-between items-center mb-2">
-                <span class="font-bold">Şəkil Bloku</span>
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
-            </div>
-            <input type="hidden" name="block_type" value="image">
-            <input type="text" name="block_image_url" placeholder="Şəkil URL" class="w-full p-2 rounded bg-gray-800 text-white">
-            <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mt-2">
-            <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                <option value="stack">Alt-alta</option>
-                <option value="side">Yan-yana</option>
-            </select>
-        `;
-        container.appendChild(div);
-    }
-</script>
 {% endblock %}
 """
 
