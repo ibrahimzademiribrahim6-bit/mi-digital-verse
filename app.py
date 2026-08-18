@@ -922,29 +922,29 @@ NEWS_DETAIL_HTML = """
 
 MANGA_LIST_HTML = """
 {% extends "base.html" %}
-{% block title %}Kitabxana - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Kitabxana' if current_lang == 'az' else 'Library' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Manhwa & Anime Kitabxanası</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Manhwa & Anime Kitabxanası' if current_lang == 'az' else 'Manhwa & Anime Library' }}</h1>
     <form action="/manga" method="GET" class="mb-6 flex gap-2">
-        <input type="text" name="q" placeholder="Başlıq axtar..." class="flex-1 p-2 rounded bg-gray-800 text-white">
+        <input type="text" name="q" placeholder="{{ 'Başlıq axtar...' if current_lang == 'az' else 'Search title...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
         <select name="type" class="p-2 rounded bg-gray-800 text-white">
-            <option value="">Hamısı</option>
+            <option value="">{{ 'Hamısı' if current_lang == 'az' else 'All' }}</option>
             <option value="anime">Anime</option>
             <option value="manga">Manga</option>
             <option value="manhwa">Manhwa</option>
             <option value="manhua">Manhua</option>
             <option value="webtoon">Webtoon</option>
         </select>
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Axtar</button>
+        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
     </form>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         {% for m in mangas %}
         <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 card-glow">
             <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-full h-64 object-cover rounded">
             <h3 class="font-bold mt-2">{{ m.title }}</h3>
-            <p class="text-sm text-gray-400">{{ m.type }} | Rating: {{ m.rating }}</p>
-            <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} bölüm</p>
+            <p class="text-sm text-gray-400">{{ m.type }} | {{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }}</p>
+            <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} {{ 'bölüm' if current_lang == 'az' else 'chapters' }}</p>
         </a>
         {% endfor %}
     </div>
