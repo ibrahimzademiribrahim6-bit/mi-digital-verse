@@ -229,25 +229,21 @@ def fetch_and_generate_news():
 
 def generate_listicle(topic):
     """
-    Mövzuya uyğun Azərbaycanca siyahı məqaləsi yaradır.
+    Mövzuya uyğun İNGİLİS dilində siyahı məqaləsi yaradır.
     Axtarışlar ingilis + uyğun orijinal dildə aparılır.
     """
     from datetime import datetime
     current_date = datetime.now().strftime("%Y-%m-%d")
 
-    # Mövzuya uyğun dili müəyyənləşdir
+    # Mövzuya uyğun əlavə dildə axtarış
     topic_lower = topic.lower()
-    if 'manhua' in topic_lower or 'çin' in topic_lower or 'china' in topic_lower:
-        extra_lang = 'zh'
+    if 'manhua' in topic_lower or 'china' in topic_lower:
         extra_query = '最佳十部国产漫画 2026'
-    elif 'manhwa' in topic_lower or 'kore' in topic_lower:
-        extra_lang = 'ko'
+    elif 'manhwa' in topic_lower or 'korea' in topic_lower:
         extra_query = '최고의 만화 2026'
     elif 'anime' in topic_lower or 'manga' in topic_lower:
-        extra_lang = 'ja'
         extra_query = '2026年 アニメ ランキング'
     else:
-        extra_lang = 'en'
         extra_query = topic
 
     queries = [
@@ -275,37 +271,36 @@ def generate_listicle(topic):
     }
 
     prompt = f"""
-    Sən peşəkar anime/manqa/webtoon redaktorusan. Məqaləni **Azərbaycan dilində** yaz.
-    Mövzu: "{topic}"
-    Bugünkü tarix: {current_date}
+You are an experienced anime/manga journalist writing for a global audience.
+Topic: "{topic}"
+Current date: {current_date}
 
-    Tələblər:
-    - Başlıq Azərbaycanca olsun, amma orijinal adları ingilis/orijinal dildə saxla.
-    - Məqalə 8-10 maddədən ibarət olsun.
-    - Hər maddə üçün:
-      a) Sıra nömrəsi
-      b) Orijinal adı (ingilis + mötərizədə yapon/koreya/çin adı)
-      c) Qısa hekayə (2-3 cümlə, konkret, süni olmayan)
-      d) Niyə populyardır (1-2 cümlə)
-      e) **Ulduz (*) işarəsi və Markdown formatı istifadə etmə.**
-    - Giriş hissəsində mövzunun niyə önəmli olduğunu 2-3 cümlə ilə izah et.
-    - Nəticədə oxucuya ümumi tövsiyə ver, 2-3 cümlə.
-    - Heç bir saytdan köçürmə, məlumatları çoxsaylı mənbədən toplayıb öz sözlərinlə yaz.
-    - Süni, boş ifadələr işlətmə. Hər cümlə məlumat versin.
-    - Hər maddə üçün şəkil axtarmaq üçün 3-4 açar söz təklif et.
-    - Məqalə mətni düz mətn formatında olsun, hər maddə ayrı sətirdə başlasın.
+Write a high-quality list article in English. Follow these rules:
+- Title: catchy, accurate, under 12 words.
+- Introduction: 2-3 sentences explaining why this topic is relevant.
+- List: 8-10 entries.
+- For each entry:
+  a) Number
+  b) Original title (English + native title in parentheses if available)
+  c) A short, specific description (2-3 sentences). Avoid vague statements.
+  d) Why it is popular or notable (1-2 sentences with concrete reasons)
+- Conclusion: 2-3 sentences with a recommendation.
+- Do NOT use generic AI phrases like "delve", "landscape", "testament", "elevate".
+- Use natural, human-sounding language. Vary sentence structure.
+- Only use information from the search results or widely known facts.
+- Suggest 3-4 search keywords for image for each entry.
+- Output plain text, not markdown. Use line breaks between entries.
 
-    Axtarış nəticələri (yalnız mənbə kimi):
-    {json.dumps(raw, ensure_ascii=False)}
+Search results (source material):
+{json.dumps(raw, ensure_ascii=False)}
 
-    Cavab JSON formatında olsun:
-    {{"title": "...", "content": "...", "category": "Anime", "image_search_keywords": "..."}}
-    """
-
+Return JSON with fields:
+{{"title": "...", "content": "...", "category": "Anime", "image_search_keywords": "..."}}
+"""
     data = {
         "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.7,
+        "temperature": 0.8,
         "max_tokens": 8000
     }
 
@@ -316,12 +311,8 @@ def generate_listicle(topic):
         start = text.find('{')
         end = text.rfind('}') + 1
         if start != -1 and end > start:
-            result = json.loads(text[start:end])
-            # Ulduz işarələrini məzmundan təmizlə
-            if 'content' in result:
-                result['content'] = result['content'].replace('**', '')
-            return result
+            return json.loads(text[start:end])
         return None
     except Exception as e:
-        print(f"generate_listicle xətası: {e}")
+        print(f"generate_listicle error: {e}")
         return None
