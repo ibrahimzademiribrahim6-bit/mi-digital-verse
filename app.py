@@ -1081,19 +1081,12 @@ COMMUNITY_HTML = """
                 {% if room.name == 'Xəta Otağı' %}text-red-500
                 {% elif room.name == 'Təkliflər Otağı' %}text-green-400
                 {% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
-                {% if room.name == 'Xəta Otağı' %}
-                    {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
-                {% else %}
-                    {{ room.name }}
-                {% endif %}
-            </h3>
             <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
             {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
             <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
                 <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">{{ 'Daxil ol' if current_lang == 'az' else 'Enter' }}</a>
-                <button onclick="openReportModal('room', {{ room.id }})" class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
                 {% if current_user.is_authenticated and current_user.is_admin %}
-                    {% if room.name == 'Xəta Otağı' %}
+                    {% if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı' %}
                         <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('{{ 'Bütün mesajları silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete all messages?' }}')">{{ 'Mesajları təmizlə' if current_lang == 'az' else 'Clear messages' }}</a>
                     {% else %}
                         <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('{{ 'Otağı silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this room?' }}')">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
@@ -2135,7 +2128,9 @@ def about():
 
 @app.route('/community')
 def community():
-    rooms = Room.query.order_by(Room.created_at.desc()).all()
+    special_rooms = Room.query.filter(Room.name.in_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.id).all()
+    normal_rooms = Room.query.filter(Room.name.notin_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.created_at.desc()).all()
+    rooms = special_rooms + normal_rooms
     all_news = News.query.all()
     return render_template('community.html', rooms=rooms, all_news=all_news)
 
