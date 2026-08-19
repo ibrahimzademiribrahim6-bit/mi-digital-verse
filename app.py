@@ -581,19 +581,10 @@ BASE_HTML = """
                     <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
                 </div>
                 <div class="hidden md:flex space-x-4">
-                    <a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
-                    <a href="/news" class="text-gray-300 hover:text-cyan-400">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</a>
-                    <div class="relative group">
-                        <button class="text-gray-300 hover:text-cyan-400">{{ 'Kitabxana' if current_lang == 'az' else 'Library' }} ▾</button>
-                        <div class="absolute left-0 top-full pt-2 w-40 bg-gray-800 rounded-lg shadow-lg hidden group-hover:block">
-                            <a href="/category/anime" class="block px-4 py-2 text-sm hover:bg-gray-700">Anime</a>
-                            <a href="/category/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">Manga</a>
-                            <a href="/category/webtoon" class="block px-4 py-2 text-sm hover:bg-gray-700">Webtoon</a>
-                            <a href="/category/manhua" class="block px-4 py-2 text-sm hover:bg-gray-700">Manhua</a>
-                            <a href="/category/game" class="block px-4 py-2 text-sm hover:bg-gray-700">{{ 'Oyun' if current_lang == 'az' else 'Games' }}</a>
-                            <a href="/manga" class="block px-4 py-2 text-sm hover:bg-gray-700">{{ 'Bütün Kitabxana' if current_lang == 'az' else 'All Library' }}</a>
-                        </div>
-                    </div>
+<a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+<a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
+<a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+<a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
                     <a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
                     <a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
                     {% if current_user.is_authenticated %}
@@ -627,22 +618,10 @@ BASE_HTML = """
             <div class="flex justify-between items-center py-2">
                 <button id="themeToggleMobile" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
             </div>
-            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
-            <a href="/news" class="block py-2 text-gray-300">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</a>
-            <a href="/category/anime" class="block py-2 text-gray-300">Anime</a>
-            <a href="/category/manga" class="block py-2 text-gray-300">Manga</a>
-            <a href="/category/webtoon" class="block py-2 text-gray-300">Webtoon</a>
-            <a href="/category/manhua" class="block py-2 text-gray-300">Manhua</a>
-            <a href="/category/game" class="block py-2 text-gray-300">{{ 'Oyun' if current_lang == 'az' else 'Games' }}</a>
-            <a href="/manga" class="block py-2 text-gray-300">{{ 'Kitabxana' if current_lang == 'az' else 'Library' }}</a>
-            <a href="/community" class="block py-2 text-gray-300">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
-            <a href="/about" class="block py-2 text-gray-300">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
-            {% if current_user.is_authenticated %}
-            <a href="/profile" class="block py-2 text-gray-300">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
-            <a href="/logout" class="block py-2 text-red-400">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
-            {% else %}
-            <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
-            {% endif %}
+<a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+<a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
+<a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+<a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
         </div>
     </nav>
 
@@ -942,6 +921,71 @@ MANGA_LIST_HTML = """
             <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} {{ 'bölüm' if current_lang == 'az' else 'chapters' }}</p>
         </a>
         {% endfor %}
+    </div>
+</div>
+{% endblock %}
+"""
+
+ARCHIVE_HTML = """
+{% extends "base.html" %}
+{% block title %}{{ 'Arxiv' if current_lang == 'az' else 'Archive' }} - Mi Digital Verse{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</h1>
+
+    <!-- Axtarış və Filtrlər -->
+    <form action="/archive" method="GET" class="mb-6 bg-gray-800 p-4 rounded space-y-3">
+        <div class="flex flex-col md:flex-row gap-3">
+            <input type="text" name="q" value="{{ q }}" placeholder="{{ 'Axtar...' if current_lang == 'az' else 'Search...' }}" class="flex-1 p-2 rounded bg-gray-700 text-white">
+            <select name="type" class="p-2 rounded bg-gray-700 text-white">
+                <option value="">{{ 'Hamısı' if current_lang == 'az' else 'All' }}</option>
+                <option value="news" {% if type_filter == 'news' %}selected{% endif %}>{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</option>
+                <option value="manga" {% if type_filter == 'manga' %}selected{% endif %}>{{ 'Manqa/Anime' if current_lang == 'az' else 'Manga/Anime' }}</option>
+            </select>
+            <select name="category" class="p-2 rounded bg-gray-700 text-white">
+                <option value="">{{ 'Bütün janrlar' if current_lang == 'az' else 'All genres' }}</option>
+                <option value="anime" {% if category_filter == 'anime' %}selected{% endif %}>Anime</option>
+                <option value="manga" {% if category_filter == 'manga' %}selected{% endif %}>Manga</option>
+                <option value="manhwa" {% if category_filter == 'manhwa' %}selected{% endif %}>Manhwa</option>
+                <option value="manhua" {% if category_filter == 'manhua' %}selected{% endif %}>Manhua</option>
+                <option value="webtoon" {% if category_filter == 'webtoon' %}selected{% endif %}>Webtoon</option>
+                <option value="game" {% if category_filter == 'game' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
+                <option value="Ümumi" {% if category_filter == 'Ümumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
+        </div>
+    </form>
+
+    <!-- Nəticələr -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if news_results %}
+            {% for item in news_results %}
+            <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
+                <span class="chip chip-pulse mb-2">{{ item.category }}</span>
+                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
+                <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
+                <p class="text-gray-500 text-xs mt-2">{{ item.published_at.strftime('%d.%m.%Y') }} | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
+            </a>
+            {% endfor %}
+        {% endif %}
+
+        {% if manga_results %}
+            {% for m in manga_results %}
+            <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 card-glow">
+                {% if m.cover_url %}
+                <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-full h-48 object-cover rounded mb-3">
+                {% endif %}
+                <span class="chip chip-violet">{{ m.type }}</span>
+                <h3 class="font-bold mt-2">{{ m.title }}</h3>
+                <p class="text-sm text-gray-400">{{ m.description[:80] }}...</p>
+                <p class="text-xs text-gray-500 mt-1">{{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }} | {{ m.status }}</p>
+            </a>
+            {% endfor %}
+        {% endif %}
+
+        {% if not news_results and not manga_results %}
+            <p class="col-span-full">{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -1743,6 +1787,7 @@ templates = {
     'edit_news.html': EDIT_NEWS_HTML,
     'edit_manga.html': EDIT_MANGA_HTML,
     'search.html': SEARCH_HTML,
+    'archive.html': ARCHIVE_HTML,
     'notifications.html': NOTIFICATIONS_HTML,
     'quests.html': QUESTS_HTML,
     'achievements.html': ACHIEVEMENTS_HTML,
@@ -1791,6 +1836,46 @@ def index():
 def news_list():
     all_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).all()
     return render_template('news_list.html', all_news=all_news)
+
+@app.route('/archive')
+def archive():
+    q = request.args.get('q', '').strip()
+    type_filter = request.args.get('type', '')
+    category_filter = request.args.get('category', '')
+
+    news_query = News.query.filter_by(status='published')
+    manga_query = Manga.query
+
+    if q:
+        news_query = news_query.filter(News.title.contains(q) | News.content.contains(q))
+        manga_query = manga_query.filter(Manga.title.contains(q) | Manga.description.contains(q))
+
+    if category_filter:
+        if category_filter in ['anime', 'manga', 'manhwa', 'manhua', 'webtoon']:
+            manga_query = manga_query.filter(Manga.type == category_filter)
+        elif category_filter == 'game':
+            news_query = news_query.filter(News.category == 'Oyun')
+        elif category_filter == 'Ümumi':
+            news_query = news_query.filter(News.category == 'Ümumi')
+        else:
+            news_query = news_query.filter(News.category == category_filter)
+
+    if type_filter == 'news':
+        manga_results = []
+        news_results = news_query.order_by(News.published_at.desc()).all()
+    elif type_filter == 'manga':
+        news_results = []
+        manga_results = manga_query.order_by(Manga.rating.desc()).all()
+    else:
+        news_results = news_query.order_by(News.published_at.desc()).all()
+        manga_results = manga_query.order_by(Manga.rating.desc()).all()
+
+    return render_template('archive.html', 
+                           q=q, 
+                           type_filter=type_filter, 
+                           category_filter=category_filter,
+                           news_results=news_results, 
+                           manga_results=manga_results)
 
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
