@@ -1077,7 +1077,10 @@ COMMUNITY_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
         <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
-            <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% else %}text-cyan-300{% endif %}">
+            <h3 class="font-bold 
+                {% if room.name == 'Xəta Otağı' %}text-red-500
+                {% elif room.name == 'Təkliflər Otağı' %}text-green-400
+                {% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
                 {% if room.name == 'Xəta Otağı' %}
                     {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
                 {% else %}
@@ -2980,6 +2983,12 @@ def init_db():
             db.session.add(error_room)
             db.session.commit()
             print("Xəta Otağı yaradıldı.")
+
+        if Room.query.filter_by(name="Təkliflər Otağı").first() is None:
+            suggestion_room = Room(name="Təkliflər Otağı", news_id=None, creator_id=admin.id)
+            db.session.add(suggestion_room)
+            db.session.commit()
+            print("Təkliflər Otağı yaradıldı.")
 
 if __name__ == '__main__':
     init_db()
