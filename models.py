@@ -201,7 +201,7 @@ class NewsBlock(db.Model):
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
     block_type = db.Column(db.String(20), nullable=False)  # 'text' və ya 'image'
     text_content = db.Column(db.Text, default='')
-    image_url = db.Column(db.String(500), default='')
+    title = db.Column(db.String(200), default='')  # blok başlığı (hər iki dil üçün ortaq)
     layout = db.Column(db.String(20), default='stack')  # 'stack' və ya 'side'
     order = db.Column(db.Integer, default=0)
     title_az = db.Column(db.String(200), default='')    # Yeni

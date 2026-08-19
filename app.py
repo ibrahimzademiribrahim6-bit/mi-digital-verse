@@ -1502,6 +1502,54 @@ ADMIN_HTML = """
         {% endfor %}
     </div>
 </div>
+
+<script>
+function addTextBlock() {
+    const container = document.getElementById('blocksContainer');
+    const div = document.createElement('div');
+    div.className = 'bg-gray-700 p-3 rounded mt-3';
+    div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-bold">Mətn Bloku</span>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+        </div>
+        <input type="hidden" name="block_type" value="text">
+        <label class="text-xs text-gray-400">Başlıq</label>
+        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white">
+        <label class="text-xs text-gray-400">Mətn</label>
+        <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4"></textarea>
+        <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+            <option value="stack">Alt-alta</option>
+            <option value="side">Yan-yana</option>
+        </select>
+    `;
+    container.appendChild(div);
+}
+
+function addImageBlock() {
+    const container = document.getElementById('blocksContainer');
+    const div = document.createElement('div');
+    div.className = 'bg-gray-700 p-3 rounded mt-3';
+    div.innerHTML = `
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-bold">Şəkil Bloku</span>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+        </div>
+        <input type="hidden" name="block_type" value="image">
+        <label class="text-xs text-gray-400">Başlıq</label>
+        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white">
+        <label class="text-xs text-gray-400">Şəkil URL</label>
+        <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white">
+        <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
+        <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
+        <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
+            <option value="stack">Alt-alta</option>
+            <option value="side">Yan-yana</option>
+        </select>
+    `;
+    container.appendChild(div);
+}
+</script>
 {% endblock %}
 """
 
@@ -1536,6 +1584,7 @@ EDIT_NEWS_HTML = """
 
         <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
+
         <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <label class="text-sm text-gray-400">{{ 'Şəkil faylı yüklə' if current_lang == 'az' else 'Upload image file' }}</label>
@@ -1552,7 +1601,10 @@ EDIT_NEWS_HTML = """
 </div>
 
 <script>
+let currentEditLang = '{{ current_lang }}'; // serverdən gələn cari dil
+
 function switchLang(lang) {
+    currentEditLang = lang;
     const azFields = document.getElementById('azFields');
     const enFields = document.getElementById('enFields');
     const azTab = document.getElementById('azTab');
@@ -1573,6 +1625,17 @@ function switchLang(lang) {
         azTab.classList.add('bg-gray-600');
         azTab.classList.remove('bg-cyan-600');
     }
+
+    // Mövcud blokların placeholder/label-larını yenilə
+    document.querySelectorAll('#blocksContainer .block-title').forEach(el => {
+        el.placeholder = currentEditLang === 'az' ? 'Başlıq' : 'Title';
+    });
+    document.querySelectorAll('#blocksContainer .block-text').forEach(el => {
+        el.placeholder = currentEditLang === 'az' ? 'Mətn daxil edin' : 'Enter text';
+    });
+    document.querySelectorAll('#blocksContainer .block-image-url').forEach(el => {
+        el.placeholder = currentEditLang === 'az' ? 'Şəkil URL' : 'Image URL';
+    });
 }
 
 function addTextBlock() {
@@ -1585,10 +1648,10 @@ function addTextBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
         </div>
         <input type="hidden" name="block_type" value="text">
-        <label class="text-xs text-gray-400">{{ 'Başlıq' if current_lang == 'az' else 'Title' }}</label>
-        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white">
-        <label class="text-xs text-gray-400">{{ 'Mətn' if current_lang == 'az' else 'Text' }}</label>
-        <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4"></textarea>
+        <label class="text-xs text-gray-400 block-title">${currentEditLang === 'az' ? 'Başlıq' : 'Title'}</label>
+        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white block-title-input" placeholder="${currentEditLang === 'az' ? 'Başlıq' : 'Title'}">
+        <label class="text-xs text-gray-400 block-text-label">${currentEditLang === 'az' ? 'Mətn' : 'Text'}</label>
+        <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white block-text" rows="4" placeholder="${currentEditLang === 'az' ? 'Mətn daxil edin' : 'Enter text'}"></textarea>
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
             <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
             <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side-by-side' }}</option>
@@ -1607,11 +1670,11 @@ function addImageBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
         </div>
         <input type="hidden" name="block_type" value="image">
-        <label class="text-xs text-gray-400">{{ 'Başlıq' if current_lang == 'az' else 'Title' }}</label>
-        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white">
-        <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
-        <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white">
-        <label class="text-xs text-gray-400">{{ 'Və ya şəkil faylı yüklə' if current_lang == 'az' else 'Or upload image file' }}</label>
+        <label class="text-xs text-gray-400 block-title">${currentEditLang === 'az' ? 'Başlıq' : 'Title'}</label>
+        <input type="text" name="block_title" class="w-full p-2 rounded bg-gray-800 text-white block-title-input" placeholder="${currentEditLang === 'az' ? 'Başlıq' : 'Title'}">
+        <label class="text-xs text-gray-400 block-image-url-label">${currentEditLang === 'az' ? 'Şəkil URL' : 'Image URL'}</label>
+        <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white block-image-url" placeholder="${currentEditLang === 'az' ? 'Şəkil URL' : 'Image URL'}">
+        <label class="text-xs text-gray-400 block-image-file-label">${currentEditLang === 'az' ? 'Və ya fayl yüklə' : 'Or upload file'}</label>
         <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
             <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
@@ -1633,13 +1696,13 @@ window.onload = function() {
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="text">
-                <label class="text-xs text-gray-400">{{ 'Başlıq' if current_lang == 'az' else 'Title' }}</label>
-                <input type="text" name="block_title" value="{{ block.title }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                <label class="text-xs text-gray-400">{{ 'Mətn' if current_lang == 'az' else 'Text' }}</label>
-                <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white" rows="4">{{ block.text_content }}</textarea>
+                <label class="text-xs text-gray-400 block-title">Başlıq</label>
+                <input type="text" name="block_title" value="{{ block.title }}" class="w-full p-2 rounded bg-gray-800 text-white block-title-input" placeholder="Başlıq">
+                <label class="text-xs text-gray-400 block-text-label">Mətn</label>
+                <textarea name="block_text" class="w-full p-2 rounded bg-gray-800 text-white block-text" rows="4">{{ block.text_content }}</textarea>
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
-                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side-by-side' }}</option>
+                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
+                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
                 </select>
             `;
             document.getElementById('blocksContainer').appendChild(textDiv{{ block.id }});
@@ -1652,20 +1715,31 @@ window.onload = function() {
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="image">
-                <label class="text-xs text-gray-400">{{ 'Başlıq' if current_lang == 'az' else 'Title' }}</label>
-                <input type="text" name="block_title" value="{{ block.title }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
-                <input type="text" name="block_image_url" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                <label class="text-xs text-gray-400">{{ 'Və ya şəkil faylı yüklə' if current_lang == 'az' else 'Or upload image file' }}</label>
+                <label class="text-xs text-gray-400 block-title">Başlıq</label>
+                <input type="text" name="block_title" value="{{ block.title }}" class="w-full p-2 rounded bg-gray-800 text-white block-title-input" placeholder="Başlıq">
+                <label class="text-xs text-gray-400 block-image-url-label">Şəkil URL</label>
+                <input type="text" name="block_image_url" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white block-image-url" placeholder="Şəkil URL">
+                <label class="text-xs text-gray-400 block-image-file-label">Və ya fayl yüklə</label>
                 <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
-                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>{{ 'Yan-yana' if current_lang == 'az' else 'Side-by-side' }}</option>
+                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
+                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
                 </select>
             `;
             document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
         {% endif %}
     {% endfor %}
+
+    // Mövcud blokların placeholder/label-larını cari dilə uyğunlaşdır
+    if (currentEditLang === 'en') {
+        document.querySelectorAll('.block-title').forEach(el => el.textContent = 'Title');
+        document.querySelectorAll('.block-title-input').forEach(el => el.placeholder = 'Title');
+        document.querySelectorAll('.block-text-label').forEach(el => el.textContent = 'Text');
+        document.querySelectorAll('.block-text').forEach(el => el.placeholder = 'Enter text');
+        document.querySelectorAll('.block-image-url-label').forEach(el => el.textContent = 'Image URL');
+        document.querySelectorAll('.block-image-url').forEach(el => el.placeholder = 'Image URL');
+        document.querySelectorAll('.block-image-file-label').forEach(el => el.textContent = 'Or upload file');
+    }
 };
 </script>
 {% endblock %}
@@ -2596,10 +2670,12 @@ def delete_report(report_id):
 def edit_news(news_id):
     news = News.query.get_or_404(news_id)
     if request.method == 'POST':
+        # Yeni əlavə edilmiş çoxdilli sahələr
         news.title = request.form.get('title_az', '').strip()
         news.content = request.form.get('content_az', '').strip()
         news.title_en = request.form.get('title_en', '').strip()
         news.content_en = request.form.get('content_en', '').strip()
+        
         news.category = request.form.get('category', 'Ümumi').strip()
         news.image_url = request.form.get('image_url', '').strip()
         
