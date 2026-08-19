@@ -1372,14 +1372,14 @@ ADMIN_HTML = """
     </div>
     <div class="mb-6">
         <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xəbərləri avtomatik çək' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
-    </div>
+</div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-gray-800 p-4 rounded">
             <h2 class="text-xl font-bold mb-3">{{ 'Yeni Xəbər Əlavə Et' if current_lang == 'az' else 'Add New News' }}</h2>
             <form action="/admin/add-news" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_az" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="content" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <textarea name="content_az" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <textarea name="content_en" placeholder="{{ 'İngilis Məzmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Games' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
@@ -1498,6 +1498,13 @@ EDIT_NEWS_HTML = """
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }}</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
+        <div class="flex items-center gap-3 mb-2">
+            <label class="text-sm font-semibold">{{ 'Dil' if current_lang == 'az' else 'Language' }}:</label>
+            <select id="articleLang" onchange="toggleLangFields()" class="p-2 rounded bg-gray-700 text-white">
+                <option value="az">{{ 'Azərbaycan' if current_lang == 'az' else 'Azerbaijani' }}</option>
+                <option value="en">{{ 'İngilis' if current_lang == 'az' else 'English' }}</option>
+            </select>
+        </div>
         <!-- Dil seçimi -->
         <div class="flex gap-3 mb-4">
             <button type="button" id="azTab" class="px-4 py-2 rounded bg-cyan-600 text-white" onclick="switchLang('az')">AZ</button>
@@ -1535,14 +1542,23 @@ EDIT_NEWS_HTML = """
 </div>
 
 <script>
-    function switchLang(lang) {
-        document.getElementById('azFields').classList.toggle('hidden', lang !== 'az');
-        document.getElementById('enFields').classList.toggle('hidden', lang !== 'en');
-        document.getElementById('azTab').classList.toggle('bg-cyan-600', lang === 'az');
-        document.getElementById('azTab').classList.toggle('bg-gray-600', lang !== 'az');
-        document.getElementById('enTab').classList.toggle('bg-cyan-600', lang === 'en');
-        document.getElementById('enTab').classList.toggle('bg-gray-600', lang !== 'en');
+function switchLang(lang) {
+    if (lang === 'az') {
+        document.getElementById('azFields').classList.remove('hidden');
+        document.getElementById('enFields').classList.add('hidden');
+        document.getElementById('azTab').classList.add('bg-cyan-600');
+        document.getElementById('azTab').classList.remove('bg-gray-600');
+        document.getElementById('enTab').classList.add('bg-gray-600');
+        document.getElementById('enTab').classList.remove('bg-cyan-600');
+    } else {
+        document.getElementById('azFields').classList.add('hidden');
+        document.getElementById('enFields').classList.remove('hidden');
+        document.getElementById('enTab').classList.add('bg-cyan-600');
+        document.getElementById('enTab').classList.remove('bg-gray-600');
+        document.getElementById('azTab').classList.add('bg-gray-600');
+        document.getElementById('azTab').classList.remove('bg-cyan-600');
     }
+}
 
     function addTextBlock() {
         const container = document.getElementById('blocksContainer');
@@ -2445,23 +2461,28 @@ def admin_generate_listicle():
 @login_required
 @admin_required
 def add_news():
-    title = request.form.get('title', '').strip()
-    content = request.form.get('content', '').strip()
+    title = request.form.get('title_az', '').strip()
+    content = request.form.get('content_az', '').strip()
+    title_en = request.form.get('title_en', '').strip()
+    content_en = request.form.get('content_en', '').strip()
     category = request.form.get('category', 'Ümumi').strip()
     image_url = request.form.get('image_url', '').strip()
     image_file = request.files.get('image_file')
+
     if image_file and image_file.filename != '':
         filename = process_image(image_file, 800, 500)
         if filename:
             image_url = filename
+
     if title and content:
         if not image_url:
             image_url = get_image_url(title)
+
         news = News(
             title=title,
-            title_en=request.form.get('title_en', '').strip(),
+            title_en=title_en,
             content=content,
-            content_en=request.form.get('content_en', '').strip(),
+            content_en=content_en,
             category=category,
             image_url=image_url,
             author_id=current_user.id,
@@ -2471,36 +2492,11 @@ def add_news():
         db.session.commit()
 
         # Blokları əlavə et
-        block_types = request.form.getlist('block_type')
-        block_texts = request.form.getlist('block_text')
-        block_image_urls = request.form.getlist('block_image_url')
-        block_image_files = request.files.getlist('block_image_file')
-        block_layouts = request.form.getlist('block_layout')
-
-        for i in range(len(block_types)):
-            btype = block_types[i]
-            text_content = block_texts[i] if i < len(block_texts) else ''
-            image_url_block = block_image_urls[i] if i < len(block_image_urls) else ''
-            layout = block_layouts[i] if i < len(block_layouts) else 'stack'
-            if btype == 'image':
-                if i < len(block_image_files):
-                    file = block_image_files[i]
-                    if file and file.filename != '':
-                        fname = process_image(file, 800, 500)
-                        if fname:
-                            image_url_block = fname
-            if btype in ['text', 'image']:
-                block = NewsBlock(
-                    news_id=news.id,
-                    block_type=btype,
-                    text_content=text_content,
-                    image_url=image_url_block,
-                    layout=layout,
-                    order=i
-                )
-                db.session.add(block)
+        process_blocks(request, news.id)
         db.session.commit()
+
     return redirect(url_for('admin'))
+
 @app.route('/admin/ban-user/<int:user_id>')
 @login_required
 @admin_required
@@ -2587,8 +2583,8 @@ def delete_report(report_id):
 def edit_news(news_id):
     news = News.query.get_or_404(news_id)
     if request.method == 'POST':
-        news.title = request.form.get('title', '').strip()
-        news.content = request.form.get('content', '').strip()
+        news.title = request.form.get('title_az', '').strip()
+        news.content = request.form.get('content_az', '').strip()
         news.title_en = request.form.get('title_en', '').strip()
         news.content_en = request.form.get('content_en', '').strip()
         news.category = request.form.get('category', 'Ümumi').strip()
