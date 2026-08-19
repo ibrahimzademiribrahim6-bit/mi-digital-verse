@@ -629,19 +629,19 @@ BASE_HTML = """
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
             <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
             <div class="flex justify-center mb-4 space-x-4">
-                <button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">Giriş</button>
-                <button id="registerTabBtn" onclick="document.getElementById('registerForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); this.classList.add('text-purple-400','border-purple-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('loginTabBtn').classList.remove('text-cyan-400','border-cyan-400'); document.getElementById('loginTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">Qeydiyyat</button>
+<button id="loginTabBtn" onclick="showLogin()" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">{{ 'Giriş' if current_lang == 'az' else 'Login' }}</button>
+<button id="registerTabBtn" onclick="showRegister()" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">{{ 'Qeydiyyat' if current_lang == 'az' else 'Register' }}</button>
             </div>
             <form id="loginForm" action="/login" method="POST" class="space-y-3">
-                <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="password" name="password" placeholder="Şifrə" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">Daxil ol</button>
+<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="password" name="password" placeholder="{{ 'Şifrə' if current_lang == 'az' else 'Password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">{{ 'Daxil ol' if current_lang == 'az' else 'Sign In' }}</button>
             </form>
             <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
-                <input type="text" name="username" placeholder="İstifadəçi adı" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="email" name="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">Qeydiyyatdan keç</button>
+<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="email" name="email" placeholder="{{ 'Email' if current_lang == 'az' else 'Email' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="password" name="password" placeholder="{{ 'Şifrə (ən az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
             </form>
         </div>
     </div>
@@ -707,22 +707,22 @@ function openReportModal(type, id) {
 function closeReportModal() {
     document.getElementById('reportModal').classList.add('hidden');
 }
-    function showLogin() {
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('registerForm').classList.add('hidden');
-        document.getElementById('loginTabBtn').classList.remove('text-gray-400', 'border-transparent');
-        document.getElementById('loginTabBtn').classList.add('text-cyan-400', 'border-cyan-400');
-        document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
-        document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
-    }
-    function showRegister() {
-        document.getElementById('registerForm').classList.remove('hidden');
-        document.getElementById('loginForm').classList.add('hidden');
-        document.getElementById('registerTabBtn').classList.remove('text-gray-400', 'border-transparent');
-        document.getElementById('registerTabBtn').classList.add('text-purple-400', 'border-purple-400');
-        document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
-        document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
-    }
+function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('registerForm').classList.add('hidden');
+    document.getElementById('loginTabBtn').classList.add('text-cyan-400', 'border-cyan-400');
+    document.getElementById('loginTabBtn').classList.remove('text-gray-400', 'border-transparent');
+    document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
+    document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
+}
+function showRegister() {
+    document.getElementById('registerForm').classList.remove('hidden');
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('registerTabBtn').classList.add('text-purple-400', 'border-purple-400');
+    document.getElementById('registerTabBtn').classList.remove('text-gray-400', 'border-transparent');
+    document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
+    document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
+}
     // Dil sistemi
     const translations = {
         az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
@@ -945,7 +945,6 @@ ARCHIVE_HTML = """
                 <option value="manhua" {% if category_filter == 'manhua' %}selected{% endif %}>Manhua</option>
                 <option value="webtoon" {% if category_filter == 'webtoon' %}selected{% endif %}>Webtoon</option>
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
-                <option value="umumi" {% if category_filter == 'umumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
         </div>
@@ -1851,9 +1850,6 @@ def archive():
         elif category_filter == 'oyun':
             news_query = news_query.filter(News.category.ilike('%oyun%'))
             manga_query = manga_query.filter(Manga.id == -1)  # oyun manqası yoxdur
-        elif category_filter == 'umumi':
-            news_query = news_query.filter(News.category.ilike('%ümumi%'))
-            manga_query = manga_query.filter(Manga.id == -1)  # ümumi manqa yoxdur
         else:
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
 
