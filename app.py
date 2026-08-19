@@ -616,6 +616,7 @@ BASE_HTML = """
                     </a>
                     <!-- Dil və tema yalnız masaüstü -->
                     <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
+                    <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white md:hidden" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                     <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
                     <!-- Mobil menyu düyməsi -->
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">☰</button>
@@ -624,24 +625,23 @@ BASE_HTML = """
         </div>
         <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4">
             <div class="flex justify-between items-center py-2">
-                <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                 <button id="themeToggleMobile" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400">🌙</button>
             </div>
-            <a href="/" class="block py-2 text-gray-300">Ana Səhifə</a>
-            <a href="/news" class="block py-2 text-gray-300">Xəbərlər</a>
+            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+            <a href="/news" class="block py-2 text-gray-300">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</a>
             <a href="/category/anime" class="block py-2 text-gray-300">Anime</a>
             <a href="/category/manga" class="block py-2 text-gray-300">Manga</a>
             <a href="/category/webtoon" class="block py-2 text-gray-300">Webtoon</a>
             <a href="/category/manhua" class="block py-2 text-gray-300">Manhua</a>
-            <a href="/category/game" class="block py-2 text-gray-300">Oyun</a>
-            <a href="/manga" class="block py-2 text-gray-300">Kitabxana</a>
-            <a href="/community" class="block py-2 text-gray-300">İcma</a>
-            <a href="/about" class="block py-2 text-gray-300">Haqqımızda</a>
+            <a href="/category/game" class="block py-2 text-gray-300">{{ 'Oyun' if current_lang == 'az' else 'Games' }}</a>
+            <a href="/manga" class="block py-2 text-gray-300">{{ 'Kitabxana' if current_lang == 'az' else 'Library' }}</a>
+            <a href="/community" class="block py-2 text-gray-300">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+            <a href="/about" class="block py-2 text-gray-300">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
             {% if current_user.is_authenticated %}
-            <a href="/profile" class="block py-2 text-gray-300">Profil</a>
-            <a href="/logout" class="block py-2 text-red-400">Çıxış</a>
+            <a href="/profile" class="block py-2 text-gray-300">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
+            <a href="/logout" class="block py-2 text-red-400">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
             {% else %}
-            <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">Giriş / Qeydiyyat</button>
+            <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
             {% endif %}
         </div>
     </nav>
