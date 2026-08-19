@@ -60,7 +60,7 @@ class News(db.Model):
     content = db.Column(db.Text, nullable=False)
     content_en = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), default='Ümumi')
-    title = db.Column(db.String(200), default='')  # blok başlığı (hər iki dil üçün)
+    image_url = db.Column(db.String(500), default='')
     views = db.Column(db.Integer, default=0)
     likes = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default='draft')
@@ -207,9 +207,3 @@ class NewsBlock(db.Model):
     image_url = db.Column(db.String(500), default='')
     layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
-
-class NewsLike(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
