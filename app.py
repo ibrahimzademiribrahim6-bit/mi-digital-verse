@@ -28,6 +28,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = True   # PythonAnywhere HTTPS olduğu üçün təhlükəsizdir
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+app.config['REMEMBER_COOKIE_SECURE'] = True
+app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_NAME'] = 'midigitalverse_session'
 
 db.init_app(app)
@@ -40,7 +46,7 @@ def unauthorized():
     flash(_t('Zəhmət olmasa giriş edin.', 'Please log in.'))
     return redirect(url_for('index'))
 
-Talisman(app, content_security_policy=None, force_https=False)
+Talisman(app, content_security_policy=None, force_https=True)
 limiter = Limiter(
     get_remote_address,
     app=app,
