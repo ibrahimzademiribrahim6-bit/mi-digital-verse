@@ -60,7 +60,7 @@ class News(db.Model):
     content = db.Column(db.Text, nullable=False)
     content_en = db.Column(db.Text, nullable=True)
     category = db.Column(db.String(50), default='Ümumi')
-    image_url = db.Column(db.String(500), default='')
+    title = db.Column(db.String(200), default='')  # blok başlığı (hər iki dil üçün)
     views = db.Column(db.Integer, default=0)
     likes = db.Column(db.Integer, default=0)
     status = db.Column(db.String(20), default='draft')
@@ -199,11 +199,13 @@ class Report(db.Model):
 class NewsBlock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
-    block_type = db.Column(db.String(20), nullable=False)
+    block_type = db.Column(db.String(20), nullable=False)  # 'text' və ya 'image'
     text_content = db.Column(db.Text, default='')
     image_url = db.Column(db.String(500), default='')
-    layout = db.Column(db.String(20), default='stack')
+    layout = db.Column(db.String(20), default='stack')  # 'stack' və ya 'side'
     order = db.Column(db.Integer, default=0)
+    title_az = db.Column(db.String(200), default='')    # Yeni
+    title_en = db.Column(db.String(200), default='')    # Yeni
 
 class NewsLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
