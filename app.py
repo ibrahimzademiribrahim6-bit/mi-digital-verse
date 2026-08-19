@@ -644,7 +644,7 @@ BASE_HTML = """
                 </div>
                 <div class="flex items-center space-x-3">
                     <!-- Axtarış yalnız masaüstü -->
-                    <a href="/news" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
+                    <a href="/archive" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
                     <!-- Bildiriş zəngi həmişə -->
                     <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
                         🔔
@@ -703,6 +703,7 @@ BASE_HTML = """
         {% endif %}
     {% endwith %}
 </div>
+
 <!-- Report Modal -->
 <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
@@ -711,17 +712,21 @@ BASE_HTML = """
         <form action="/report/submit" method="POST" class="space-y-3">
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
-            <div>
-                <label class="text-sm text-gray-400">Səbəb</label>
-                <select name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required>
-                    <option value="">Səbəb seçin</option>
-                    <option value="söyüş">Söyüş</option>
-                    <option value="spoiler">Spoiler paylaşır</option>
-                    <option value="təhqir">Təhqir edici</option>
-                    <option value="spam">Spam</option>
-                    <option value="digər">Digər</option>
-                </select>
-            </div>
+<div>
+    <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
+    <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required>
+        <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
+        <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
+        <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
+        <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
+        <option value="spam">Spam</option>
+        <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
+    </select>
+</div>
+<div id="otherReasonWrap" class="hidden mt-2">
+    <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
+    <textarea name="other_reason" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+</div>
             <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">Göndər</button>
         </form>
     </div>
@@ -736,72 +741,100 @@ BASE_HTML = """
     </footer>
 </div>
 
-<script>        const html = document.documentElement;
+<script>
+    const html = document.documentElement;
     html.classList.add('dark');
     html.classList.remove('light');
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-    document.getElementById('themeToggleMobile').addEventListener('click', toggleTheme);
-    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+    
+    // Tema və Menyu
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('themeToggleMobile')?.addEventListener('click', toggleTheme);
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
         document.getElementById('mobileMenu').classList.toggle('hidden');
     });
+
+    // Modallar
     function openModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeModal() { document.getElementById('authModal').classList.add('hidden'); }
-function openReportModal(type, id) {
-    document.getElementById('reportTargetType').value = type;
-    document.getElementById('reportTargetId').value = id;
-    document.getElementById('reportModal').classList.remove('hidden');
-}
-function closeReportModal() {
-    document.getElementById('reportModal').classList.add('hidden');
-}
-function showLogin() {
-    document.getElementById('loginForm').classList.remove('hidden');
-    document.getElementById('registerForm').classList.add('hidden');
-    document.getElementById('loginTabBtn').classList.add('text-cyan-400', 'border-cyan-400');
-    document.getElementById('loginTabBtn').classList.remove('text-gray-400', 'border-transparent');
-    document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
-    document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
-}
-function showRegister() {
-    document.getElementById('registerForm').classList.remove('hidden');
-    document.getElementById('loginForm').classList.add('hidden');
-    document.getElementById('registerTabBtn').classList.add('text-purple-400', 'border-purple-400');
-    document.getElementById('registerTabBtn').classList.remove('text-gray-400', 'border-transparent');
-    document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
-    document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
-}
+
+    function openReportModal(type, id) {
+        document.getElementById('reportTargetType').value = type;
+        document.getElementById('reportTargetId').value = id;
+        document.getElementById('reportModal').classList.remove('hidden');
+    }
+    
+    function closeReportModal() {
+        document.getElementById('reportModal').classList.add('hidden');
+    }
+
+    // Giriş / Qeydiyyat Tabları
+    function showLogin() {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('loginTabBtn').classList.add('text-cyan-400', 'border-cyan-400');
+        document.getElementById('loginTabBtn').classList.remove('text-gray-400', 'border-transparent');
+        document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
+        document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
+    }
+    
+    function showRegister() {
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerTabBtn').classList.add('text-purple-400', 'border-purple-400');
+        document.getElementById('registerTabBtn').classList.remove('text-gray-400', 'border-transparent');
+        document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
+        document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
+    }
+
     // Dil sistemi
     const translations = {
         az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
         en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
     };
+    
     let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     applyLanguage(currentLang);
+    
     function applyLanguage(lang) {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
         });
-                const langBtn = document.getElementById('langToggle');
+        
+        const langBtn = document.getElementById('langToggle');
         if (langBtn) langBtn.textContent = lang === 'az' ? 'EN' : 'AZ';
+        
         const langBtnMobile = document.getElementById('langToggleMobile');
         if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
-        const langBtnMobile = document.getElementById('langToggleMobile');
-        if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
+        
         currentLang = lang;
         localStorage.setItem('lang', lang);
     }
+    
     function toggleLanguage() {
         const newLang = currentLang === 'az' ? 'en' : 'az';
         localStorage.setItem('lang', newLang);
         window.location.href = '/set-language/' + newLang;
-    let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     }
-    const langToggle = document.getElementById('langToggle');
-    if (langToggle) langToggle.addEventListener('click', toggleLanguage);
-    const langToggleMobile = document.getElementById('langToggleMobile');
-    if (langToggleMobile) langToggleMobile.addEventListener('click', toggleLanguage);
+    
+    document.getElementById('langToggle')?.addEventListener('click', toggleLanguage);
+    document.getElementById('langToggleMobile')?.addEventListener('click', toggleLanguage);
 
+    // Şikayət bölməsində "Digər" seçimi
+    document.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('reportReasonSelect');
+        const otherWrap = document.getElementById('otherReasonWrap');
+        
+        if (select && otherWrap) {
+            select.addEventListener('change', function() {
+                if (this.value === 'digər') {
+                    otherWrap.classList.remove('hidden');
+                } else {
+                    otherWrap.classList.add('hidden');
+                }
+            });
+        }
+    });
 </script>
 <script>
 (function() {
@@ -2211,9 +2244,16 @@ def report_submit():
     target_type = request.form.get('target_type')
     target_id = int(request.form.get('target_id'))
     reason = request.form.get('reason', '')
+
+    if reason == 'digər':
+        other_reason = request.form.get('other_reason', '').strip()
+        if other_reason:
+            reason = other_reason
+
     if target_type not in ['post', 'room']:
         flash(_t('Səhv şikayət növü.', 'Invalid report type.'))
         return redirect(request.referrer or url_for('index'))
+
     report = Report(reporter_id=current_user.id, target_type=target_type, target_id=target_id, reason=reason)
     db.session.add(report)
     db.session.commit()
@@ -2861,8 +2901,8 @@ def admin_clear_room_messages(room_id):
 @admin_required
 def admin_delete_room(room_id):
     room = Room.query.get_or_404(room_id)
-    if room.name == 'Xəta Otağı':
-        flash(_t('Xəta Otağı silinə bilməz.', 'The Error Room cannot be deleted.'))
+    if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı':
+        flash(_t('Bu otaq silinə bilməz.', 'This room cannot be deleted.'))
         return redirect(request.referrer or url_for('community'))
     creator = room.creator
     if creator:
