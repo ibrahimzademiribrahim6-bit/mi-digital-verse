@@ -1135,7 +1135,13 @@ COMMUNITY_HTML = """
         <div class="bg-gray-800 rounded p-3">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+<p class="text-sm text-gray-400">
+    <strong>{{ post.user.username }}</strong>
+    {% if post.user.title %}
+        <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+    {% endif %}
+    | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+</p>
                     {% if post.is_spoiler %}
                     <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
                     {% else %}
@@ -1215,7 +1221,13 @@ ROOM_HTML = """"
     <div class="space-y-4">
         {% for post in posts %}
 <div class="bg-gray-800 rounded p-3">
-    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+<p class="text-sm text-gray-400">
+    <strong>{{ post.user.username }}</strong>
+    {% if post.user.title %}
+        <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+    {% endif %}
+    | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+</p>
     {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
     {% endif %}
