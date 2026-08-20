@@ -971,10 +971,16 @@ NEWS_DETAIL_HTML = """
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
-                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}</p></div>
+                    <div class="flex-1">
+                        <p class="text-lg" style="white-space: pre-line;">
+                            {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+                        </p>
+                    </div>
                 </div>
             {% else %}
-                <p class="text-lg my-4" style="white-space: pre-line;">{% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}</p>
+                <p class="text-lg my-4" style="white-space: pre-line;">
+                    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+                </p>
             {% endif %}
         {% elif block.block_type == 'image' %}
             {% if block.layout == 'side' %}
@@ -988,12 +994,13 @@ NEWS_DETAIL_HTML = """
             {% else %}
                 <div class="my-4">
                     {% if block.image_url %}
-                        <img src="{{ block.image_url }}" class="w-full max-h-96 object-contain rounded-lg">
+                        <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
                     {% endif %}
                 </div>
             {% endif %}
         {% endif %}
     {% endfor %}
+
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
         <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
@@ -1001,26 +1008,26 @@ NEWS_DETAIL_HTML = """
         <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
     </div>
+
     <!-- Şərh bölməsi -->
     <div class="mt-8">
         <h2 class="text-2xl font-bold mb-4">{{ 'Şərhlər' if current_lang == 'az' else 'Comments' }}</h2>
 
         {% if current_user.is_authenticated %}
-    {% if current_user.is_authenticated %}
-    <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <div class="flex items-start gap-2">
-            <textarea id="mainCommentText" oninput="autoResizeComment(this)" name="content" required
-                      class="flex-1 p-2 rounded bg-gray-700 text-white resize-none"
-                      rows="1"
-                      placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
-            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
-        </div>
-        <div class="flex items-center mt-2">
-            <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
-            <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
-        </div>
-    </form>
-    {% else %}
+        <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+            <div class="flex items-start gap-2">
+                <textarea id="mainCommentText" oninput="autoResizeComment(this)" name="content" required
+                          class="flex-1 p-2 rounded bg-gray-700 text-white resize-none"
+                          rows="1"
+                          placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
+                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+            </div>
+            <div class="flex items-center mt-2">
+                <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+                <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+            </div>
+        </form>
+        {% else %}
         <p class="mb-4">{{ 'Şərh yazmaq üçün' if current_lang == 'az' else 'To comment' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
         {% endif %}
 
@@ -1079,18 +1086,8 @@ NEWS_DETAIL_HTML = """
             {% endfor %}
         </div>
     </div>
-    </div>
-    <!-- Əsas konteyner bağlanır -->
 </div>
 
-<script>
-function toggleReplyForm(commentId) {
-    const form = document.getElementById('replyForm' + commentId);
-    if (form) {
-        form.classList.toggle('hidden');
-    }
-}
-</script>
 <script>
 function autoResizeComment(el) {
     el.style.height = 'auto';
