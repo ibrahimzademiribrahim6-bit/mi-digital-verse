@@ -1104,41 +1104,93 @@ COMMUNITY_HTML = """
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 mb-6">
+        <a href="/community?tab=general" class="px-4 py-2 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            {{ 'Ümumi Söhbət' if current_lang == 'az' else 'General Chat' }}
+        </a>
+        <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            {{ 'Təkliflər' if current_lang == 'az' else 'Suggestions' }}
+        </a>
+        <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            {{ 'Xəta Bildirişi' if current_lang == 'az' else 'Bug Reports' }}
+        </a>
+    </div>
+
+    <!-- Mesaj yazma forması -->
     {% if current_user.is_authenticated %}
-    <form action="/create-room" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <input type="text" name="room_name" placeholder="{{ 'Müzakirə otağı adı' if current_lang == 'az' else 'Discussion room name' }}" required class="w-full p-2 rounded bg-gray-700 text-white mb-2">
-        <select name="news_id" class="w-full p-2 rounded bg-gray-700 text-white mb-2">
-            <option value="">{{ 'Xəbər seç (istəyə bağlı)' if current_lang == 'az' else 'Select news (optional)' }}</option>
-            {% for n in all_news %}<option value="{{ n.id }}">{{ n.title }}</option>{% endfor %}
-        </select>
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Otaq yarat' if current_lang == 'az' else 'Create room' }}</button>
+    <form action="/post/{{ room.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+        <textarea name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+        <div class="flex items-center mt-2">
+            <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+            <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+        </div>
+        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
     </form>
     {% else %}
-    <p class="mb-4">{{ 'Otaq yaratmaq üçün' if current_lang == 'az' else 'To create a room' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
+    <p class="mb-4">{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% for room in rooms %}
-        <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
-            <h3 class="font-bold 
-                {% if room.name == 'Xəta Otağı' %}text-red-500
-                {% elif room.name == 'Təkliflər Otağı' %}text-green-400
-                {% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
-            <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
-            {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
-            <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
-                <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">{{ 'Daxil ol' if current_lang == 'az' else 'Enter' }}</a>
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                    {% if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı' %}
-                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('{{ 'Bütün mesajları silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete all messages?' }}')">{{ 'Mesajları təmizlə' if current_lang == 'az' else 'Clear messages' }}</a>
+
+    <!-- Mesajlar -->
+    <div class="space-y-4">
+        {% for post in posts %}
+        <div class="bg-gray-800 rounded p-3">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                    {% if post.is_spoiler %}
+                    <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
                     {% else %}
-                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('{{ 'Otağı silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this room?' }}')">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
+                    <p class="text-gray-300 mt-1">{{ post.content }}</p>
                     {% endif %}
-                {% endif %}
+                </div>
+                <div class="flex gap-2">
+                    {% if current_user.is_authenticated %}
+                    <button onclick="openReplyForm({{ post.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
+                    {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="/admin/delete-post/{{ post.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                    {% endif %}
+                    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+                </div>
             </div>
+            <!-- Cavab forması -->
+            <div id="replyForm{{ post.id }}" class="hidden mt-3">
+                <form action="/post/{{ room.id }}" method="POST" class="space-y-2">
+                    <input type="hidden" name="parent_id" value="{{ post.id }}">
+                    <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
+                    <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+                </form>
+            </div>
+            <!-- Cavablar -->
+            {% if post.replies %}
+            <div class="ml-4 mt-2 space-y-2">
+                {% for reply in post.replies %}
+                <div class="bg-gray-700 rounded p-2">
+                    <p class="text-xs text-gray-400"><strong>{{ reply.user.username }}</strong> | {{ reply.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                    {% if reply.is_spoiler %}
+                    <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
+                    {% else %}
+                    <p class="text-gray-300">{{ reply.content }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
 </div>
+
+<script>
+function openReplyForm(postId) {
+    const form = document.getElementById('replyForm' + postId);
+    if (form) {
+        form.classList.toggle('hidden');
+    }
+}
+</script>
 {% endblock %}
 """
 
@@ -2166,11 +2218,20 @@ def about():
 
 @app.route('/community')
 def community():
-    special_rooms = Room.query.filter(Room.name.in_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.id).all()
-    normal_rooms = Room.query.filter(Room.name.notin_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.created_at.desc()).all()
-    rooms = special_rooms + normal_rooms
-    all_news = News.query.all()
-    return render_template('community.html', rooms=rooms, all_news=all_news)
+    tab = request.args.get('tab', 'general')
+    if tab == 'suggestions':
+        room = Room.query.filter_by(name='Təkliflər').first()
+    elif tab == 'bugs':
+        room = Room.query.filter_by(name='Xəta Bildirişi').first()
+    else:
+        room = Room.query.filter_by(name='Ümumi Söhbət').first()
+        tab = 'general'
+    if not room:
+        room = Room.query.first()  # fallback
+    posts = []
+    if room:
+        posts = Post.query.filter_by(room_id=room.id).order_by(Post.created_at.asc()).all()
+    return render_template('community.html', room=room, posts=posts, tab=tab)
 
 @app.route('/create-room', methods=['GET', 'POST'])
 @login_required
@@ -2227,21 +2288,26 @@ def room(room_id):
 def add_post(room_id):
     content = request.form.get('content', '').strip()
     is_spoiler = request.form.get('is_spoiler') == '1'
+    parent_id = request.form.get('parent_id')
+    if parent_id:
+        parent_id = int(parent_id)
+    else:
+        parent_id = None
     if not content:
-        return redirect(url_for('room', room_id=room_id))
-    post = Post(room_id=room_id, user_id=current_user.id, content=content, is_spoiler=is_spoiler)
+        return redirect(request.referrer or url_for('community'))
+    post = Post(room_id=room_id, user_id=current_user.id, content=content, is_spoiler=is_spoiler, parent_id=parent_id)
     db.session.add(post)
     db.session.commit()
     add_xp(current_user, 5)
     update_quest_progress(current_user, 'post', 1)
     check_achievements(current_user)
-        # Yalnız otaq sahibinə bildiriş göndər (özü deyilsə)
-    room = Room.query.get(room_id)
-    if room and room.creator_id != current_user.id:
-        room_owner = User.query.get(room.creator_id)
-        if room_owner:
-            add_notification(room_owner, f"{current_user.username} '{room.name}' otağında yeni mesaj yazdı.")
-    return redirect(url_for('room', room_id=room_id))
+
+    if post.room.name == 'Xəta Bildirişi':
+        admin = User.query.filter_by(is_admin=True).first()
+        if admin:
+            add_notification(admin, f"Xəta Bildirişində yeni mesaj: {current_user.username} tərəfindən.")
+
+    return redirect(request.referrer or url_for('community'))
 
 @app.route('/report/submit', methods=['POST'])
 @login_required
@@ -3018,17 +3084,23 @@ def init_db():
             print("İlkin məzmun bazaya yazıldı.")
         seed_titles()
         seed_quests_and_achievements()
-        if Room.query.filter_by(name="Xəta Otağı").first() is None:
-            error_room = Room(name="Xəta Otağı", news_id=None, creator_id=admin.id)
-            db.session.add(error_room)
-            db.session.commit()
-            print("Xəta Otağı yaradıldı.")
-
-        if Room.query.filter_by(name="Təkliflər Otağı").first() is None:
-            suggestion_room = Room(name="Təkliflər Otağı", news_id=None, creator_id=admin.id)
-            db.session.add(suggestion_room)
-            db.session.commit()
-            print("Təkliflər Otağı yaradıldı.")
+        # Üç əsas otağı yaradın və köhnə adları dəyişdirin
+        room_names = ["Ümumi Söhbət", "Təkliflər", "Xəta Bildirişi"]
+        for name in room_names:
+            room = Room.query.filter_by(name=name).first()
+            if not room:
+                room = Room(name=name, news_id=None, creator_id=admin.id)
+                db.session.add(room)
+                db.session.commit()
+                print(f"{name} otağı yaradıldı.")
+        # Köhnə adları dəyişək (əgər mövcuddursa)
+        old_error = Room.query.filter_by(name="Xəta Otağı").first()
+        if old_error:
+            old_error.name = "Xəta Bildirişi"
+        old_suggestion = Room.query.filter_by(name="Təkliflər Otağı").first()
+        if old_suggestion:
+            old_suggestion.name = "Təkliflər"
+        db.session.commit()
 
 if __name__ == '__main__':
     init_db()
