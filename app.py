@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from models import db, User, News, Comment, NewsBlock, Title, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, Room, Post, UserTitle, NewsLike
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
