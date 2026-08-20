@@ -1006,15 +1006,21 @@ NEWS_DETAIL_HTML = """
         <h2 class="text-2xl font-bold mb-4">{{ 'Şərhlər' if current_lang == 'az' else 'Comments' }}</h2>
 
         {% if current_user.is_authenticated %}
-        <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-            <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3" placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
-            <div class="flex items-center mt-2">
-                <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
-                <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
-            </div>
-            <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
-        </form>
-        {% else %}
+    {% if current_user.is_authenticated %}
+    <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+        <div class="flex items-start gap-2">
+            <textarea id="mainCommentText" oninput="autoResizeComment(this)" name="content" required
+                      class="flex-1 p-2 rounded bg-gray-700 text-white resize-none"
+                      rows="1"
+                      placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+        </div>
+        <div class="flex items-center mt-2">
+            <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+            <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+        </div>
+    </form>
+    {% else %}
         <p class="mb-4">{{ 'Şərh yazmaq üçün' if current_lang == 'az' else 'To comment' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
         {% endif %}
 
@@ -1078,6 +1084,25 @@ NEWS_DETAIL_HTML = """
 </div>
 
 <script>
+function toggleReplyForm(commentId) {
+    const form = document.getElementById('replyForm' + commentId);
+    if (form) {
+        form.classList.toggle('hidden');
+    }
+}
+</script>
+<script>
+function autoResizeComment(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+    if (parseInt(el.style.height) > 200) {
+        el.style.height = '200px';
+        el.style.overflowY = 'auto';
+    } else {
+        el.style.overflowY = 'hidden';
+    }
+}
+
 function toggleReplyForm(commentId) {
     const form = document.getElementById('replyForm' + commentId);
     if (form) {
