@@ -213,3 +213,16 @@ class NewsBlock(db.Model):
     image_url = db.Column(db.String(500), default='')
     layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_spoiler = db.Column(db.Boolean, default=False)
+
+    user = db.relationship('User', backref='comments')
+    news = db.relationship('News', backref='comments')
+    replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
