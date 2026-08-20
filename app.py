@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 import json
 import random
@@ -30,7 +30,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = True   # PythonAnywhere HTTPS olduÄŸu Ã¼Ã§Ã¼n tÉ™hlÃ¼kÉ™sizdir
+app.config['SESSION_COOKIE_SECURE'] = True   # PythonAnywhere HTTPS olduğu üçün təhlükəsizdir
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 app.config['REMEMBER_COOKIE_SECURE'] = True
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
@@ -39,11 +39,11 @@ app.config['SESSION_COOKIE_NAME'] = 'midigitalverse_session'
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-login_manager.login_message = 'ZÉ™hmÉ™t olmasa giriÅŸ edin.'
+login_manager.login_message = 'Zəhmət olmasa giriş edin.'
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    flash(_t('ZÉ™hmÉ™t olmasa giriÅŸ edin.', 'Please log in.'))
+    flash(_t('Zəhmət olmasa giriş edin.', 'Please log in.'))
     return redirect(url_for('index'))
 
 Talisman(app, content_security_policy=None, force_https=True)
@@ -67,14 +67,14 @@ def check_banned_user():
     if current_user.is_authenticated:
         if current_user.is_banned:
             if current_user.banned_until and current_user.banned_until < datetime.now():
-                # Ban mÃ¼ddÉ™ti bitib, azad et
+                # Ban müddəti bitib, azad et
                 current_user.is_banned = False
                 current_user.banned_until = None
                 current_user.banned_reason = ''
                 db.session.commit()
             else:
                 logout_user()
-                flash(_t('HesabÄ±nÄ±z banlandÄ±. SÉ™bÉ™b: ', 'Your account has been banned. Reason: ') + (current_user.banned_reason or _t('GÃ¶stÉ™rilmÉ™yib', 'Not specified')))
+                flash(_t('Hesabınız banlandı. Səbəb: ', 'Your account has been banned. Reason: ') + (current_user.banned_reason or _t('Göstərilməyib', 'Not specified')))
                 return redirect(url_for('index'))
 
 @app.before_request
@@ -135,7 +135,7 @@ def daily_reward(user):
     update_quest_progress(user, 'points', bonus)
     check_achievements(user)
     update_user_title(user)
-    add_notification(user, f"GÃ¼nlÃ¼k giriÅŸ Ã¶dÃ¼lÃ¼: +{bonus} XP")
+    add_notification(user, f"Günlük giriş ödülü: +{bonus} XP")
     return True
 
 def can_increment_view(obj_id):
@@ -175,7 +175,7 @@ def process_image(file, max_width, max_height):
         img.save(save_path, "JPEG", quality=85)
         return filename
     except Exception as e:
-        print(f"ÅžÉ™kil emalÄ± xÉ™tasÄ±: {e}")
+        print(f"Şəkil emalı xətası: {e}")
         return None
 
 def process_blocks(request, news_id):
@@ -219,7 +219,7 @@ def process_blocks(request, news_id):
             )
             db.session.add(block)
 
-# ---------- Bonus hesablanmasÄ± ----------
+# ---------- Bonus hesablanması ----------
 def get_bonus_percent(user):
     if user.is_admin:
         return 100
@@ -252,97 +252,97 @@ def add_xp(user, amount):
     update_user_title(user)
     return total
 
-# ---------- Ãœnvan sisteminin yenilÉ™nmÉ™si ----------
+# ---------- Ünvan sisteminin yenilənməsi ----------
 def seed_titles():
     if Title.query.count() > 0:
         return
-    # AÄŸ (20)
+    # Ağ (20)
     white_titles = [
-        ("BaÅŸlanÄŸÄ±c", "Ä°lk addÄ±m"),
-        ("Ä°lk AddÄ±m", "Saytda ilk fÉ™aliyyÉ™t"),
-        ("Oxucu", "Ä°lk xÉ™bÉ™ri oxu"),
-        ("Ä°zlÉ™yici", "Ä°lk manqa/animeni izlÉ™"),
-        ("MaraqlÄ±", "5 xÉ™bÉ™r oxu"),
-        ("NaÅŸÄ±", "10 XP topla"),
-        ("PÉ™rÉ™stiÅŸkar", "3 gÃ¼n ardÄ±cÄ±l giriÅŸ"),
-        ("Sadiq", "7 gÃ¼n ardÄ±cÄ±l giriÅŸ"),
-        ("Aktiv", "5 ÅŸÉ™rh yaz"),
-        ("Daimi", "10 ÅŸÉ™rh yaz"),
-        ("GÉ™nc QÉ™hrÉ™man", "25 bÉ™yÉ™nmÉ™ et"),
-        ("TÉ™dqiqatÃ§Ä±", "3 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh yaz"),
-        ("SÉ™yyah", "5 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh yaz"),
-        ("MÃ¼ÅŸahidÉ™Ã§i", "10 xÉ™bÉ™r oxu"),
-        ("NaÄŸÄ±lÃ§Ä±", "1 mÃ¼zakirÉ™ otaÄŸÄ± yarat"),
-        ("YolÃ§u", "20 xÉ™bÉ™r oxu"),
-        ("KÉ™ÅŸfiyyatÃ§Ä±", "50 bÉ™yÉ™nmÉ™ et"),
-        ("Dost", "2 nailiyyÉ™t qazan"),
-        ("Ä°lk Vitrin", "Ä°lk Ã¼nvanÄ± vitrinÉ™ É™lavÉ™ et"),
-        ("Sadiq Oxucu", "30 xÉ™bÉ™r oxu"),
+        ("Başlanğıc", "İlk addım"),
+        ("İlk Addım", "Saytda ilk fəaliyyət"),
+        ("Oxucu", "İlk xəbəri oxu"),
+        ("İzləyici", "İlk manqa/animeni izlə"),
+        ("Maraqlı", "5 xəbər oxu"),
+        ("Naşı", "10 XP topla"),
+        ("Pərəstişkar", "3 gün ardıcıl giriş"),
+        ("Sadiq", "7 gün ardıcıl giriş"),
+        ("Aktiv", "5 şərh yaz"),
+        ("Daimi", "10 şərh yaz"),
+        ("Gənc Qəhrəman", "25 bəyənmə et"),
+        ("Tədqiqatçı", "3 müxtəlif otaqda şərh yaz"),
+        ("Səyyah", "5 müxtəlif otaqda şərh yaz"),
+        ("Müşahidəçi", "10 xəbər oxu"),
+        ("Nağılçı", "1 müzakirə otağı yarat"),
+        ("Yolçu", "20 xəbər oxu"),
+        ("Kəşfiyyatçı", "50 bəyənmə et"),
+        ("Dost", "2 nailiyyət qazan"),
+        ("İlk Vitrin", "İlk ünvanı vitrinə əlavə et"),
+        ("Sadiq Oxucu", "30 xəbər oxu"),
     ]
-    # YaÅŸÄ±l (18)
+    # Yaşıl (18)
     green_titles = [
-        ("TÉ™crÃ¼bÉ™li", "100 XP topla"),
-        ("Bilikli", "50 xÉ™bÉ™r oxu"),
-        ("SÃ¼rÉ™tli", "3 gÃ¼nlÃ¼k giriÅŸ seriyasÄ±"),
-        ("Ã‡evik", "7 gÃ¼nlÃ¼k giriÅŸ seriyasÄ±"),
-        ("Usta TÉ™lÉ™bÉ™", "100 bÉ™yÉ™nmÉ™ et"),
-        ("Gizli GÉ™zÉ™n", "10 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh yaz"),
-        ("Anime OvÃ§usu", "5 anime manqasÄ± oxu"),
-        ("Manhwa KÉ™ÅŸfiyyatÃ§Ä±sÄ±", "5 manhwa oxu"),
+        ("Təcrübəli", "100 XP topla"),
+        ("Bilikli", "50 xəbər oxu"),
+        ("Sürətli", "3 günlük giriş seriyası"),
+        ("Çevik", "7 günlük giriş seriyası"),
+        ("Usta Tələbə", "100 bəyənmə et"),
+        ("Gizli Gəzən", "10 müxtəlif otaqda şərh yaz"),
+        ("Anime Ovçusu", "5 anime manqası oxu"),
+        ("Manhwa Kəşfiyyatçısı", "5 manhwa oxu"),
         ("Manga Bilici", "5 manga oxu"),
-        ("Webtoon HÉ™vÉ™skarÄ±", "5 webtoon oxu"),
-        ("SÉ™hnÉ™ UstasÄ±", "5 mÃ¼zakirÉ™ otaÄŸÄ± yarat"),
-        ("DÃ¶yÃ¼ÅŸÃ§Ã¼", "200 XP topla"),
-        ("Sadiq Ä°zlÉ™yici", "14 gÃ¼nlÃ¼k giriÅŸ seriyasÄ±"),
-        ("SÉ™sli", "50 ÅŸÉ™rh yaz"),
-        ("Ä°namlÄ±", "300 XP topla"),
-        ("CanlÄ±", "100 xÉ™bÉ™r oxu"),
-        ("Ulduz", "3 nailiyyÉ™t qazan"),
+        ("Webtoon Həvəskarı", "5 webtoon oxu"),
+        ("Səhnə Ustası", "5 müzakirə otağı yarat"),
+        ("Döyüşçü", "200 XP topla"),
+        ("Sadiq İzləyici", "14 günlük giriş seriyası"),
+        ("Səsli", "50 şərh yaz"),
+        ("İnamlı", "300 XP topla"),
+        ("Canlı", "100 xəbər oxu"),
+        ("Ulduz", "3 nailiyyət qazan"),
         ("Veteran", "400 XP topla"),
     ]
     # Mavi (16)
     blue_titles = [
         ("Usta", "500 XP topla"),
         ("Veteran", "700 XP topla"),
-        ("Strateq", "300 bÉ™yÉ™nmÉ™ et"),
-        ("DÃ¶yÃ¼ÅŸÃ§Ã¼", "30 gÃ¼nlÃ¼k giriÅŸ seriyasÄ±"),
-        ("ÆfsanÉ™vi OvÃ§u", "20 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh yaz"),
-        ("QaranlÄ±q CÉ™ngavÉ™r", "1000 XP topla"),
-        ("Neon QÄ±lÄ±nc", "1500 XP topla"),
-        ("SÉ™viyyÉ™ AtÄ±cÄ±sÄ±", "10 nailiyyÉ™t qazan"),
+        ("Strateq", "300 bəyənmə et"),
+        ("Döyüşçü", "30 günlük giriş seriyası"),
+        ("Əfsanəvi Ovçu", "20 müxtəlif otaqda şərh yaz"),
+        ("Qaranlıq Cəngavər", "1000 XP topla"),
+        ("Neon Qılınc", "1500 XP topla"),
+        ("Səviyyə Atıcısı", "10 nailiyyət qazan"),
         ("Manhva Lordu", "50 manhwa oxu"),
-        ("Anime SenpaysÄ±", "50 anime izlÉ™"),
-        ("Manga HÉ™kimi", "50 manga oxu"),
-        ("Webtoon UstasÄ±", "50 webtoon oxu"),
-        ("Sadiq MÃ¼zakirÉ™Ã§i", "20 mÃ¼zakirÉ™ otaÄŸÄ± yarat"),
-        ("SÉ™s KralÄ±", "200 ÅŸÉ™rh yaz"),
-        ("XÉ™bÉ™r CanavarÄ±", "200 xÉ™bÉ™r oxu"),
-        ("Ä°ÅŸÄ±q SÃ¼rÉ™ti", "500 bÉ™yÉ™nmÉ™ et"),
+        ("Anime Senpaysı", "50 anime izlə"),
+        ("Manga Həkimi", "50 manga oxu"),
+        ("Webtoon Ustası", "50 webtoon oxu"),
+        ("Sadiq Müzakirəçi", "20 müzakirə otağı yarat"),
+        ("Səs Kralı", "200 şərh yaz"),
+        ("Xəbər Canavarı", "200 xəbər oxu"),
+        ("İşıq Sürəti", "500 bəyənmə et"),
     ]
-    # BÉ™nÃ¶vÅŸÉ™yi (12) - gizli, xÃ¼susi ÅŸÉ™rtlÉ™r
+    # Bənövşəyi (12) - gizli, xüsusi şərtlər
     purple_titles = [
-        ("Epik QÉ™hrÉ™man", "3000 XP + 50 xÉ™bÉ™r + 5 nailiyyÉ™t", "purple", True, "xp", 3000),
-        ("ÆfsanÉ™vi GÃ¶zÉ™tÃ§i", "3500 XP + 100 xÉ™bÉ™r + 7 nailiyyÉ™t", "purple", True, "xp", 3500),
-        ("Buz DÃ¶yÃ¼ÅŸÃ§Ã¼sÃ¼", "4000 XP + 20 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh", "purple", True, "xp", 4000),
-        ("Alov Ruhu", "4500 XP + 30 gÃ¼nlÃ¼k seriya", "purple", True, "xp", 4500),
-        ("KÃ¶lgÉ™ UstasÄ±", "5000 XP + 150 xÉ™bÉ™r", "purple", True, "xp", 5000),
-        ("SÉ™ma PÉ™rÉ™stiÅŸkarÄ±", "5500 XP + 10 mÃ¼zakirÉ™ otaÄŸÄ±", "purple", True, "xp", 5500),
-        ("Titan", "6000 XP + 500 bÉ™yÉ™nmÉ™", "purple", True, "xp", 6000),
-        ("DÉ™rviÅŸ", "6500 XP + 30 nailiyyÉ™t", "purple", True, "xp", 6500),
-        ("FÄ±rtÄ±na Ã‡aÄŸÄ±ran", "7000 XP + 300 xÉ™bÉ™r", "purple", True, "xp", 7000),
-        ("ZamansÄ±z", "7500 XP + 40 gÃ¼nlÃ¼k seriya", "purple", True, "xp", 7500),
-        ("Ã–lÃ¼msÃ¼z", "8000 XP + 600 bÉ™yÉ™nmÉ™", "purple", True, "xp", 8000),
-        ("Kosmik SÉ™yyah", "8500 XP + 100 mÃ¼xtÉ™lif otaqda ÅŸÉ™rh", "purple", True, "xp", 8500),
+        ("Epik Qəhrəman", "3000 XP + 50 xəbər + 5 nailiyyət", "purple", True, "xp", 3000),
+        ("Əfsanəvi Gözətçi", "3500 XP + 100 xəbər + 7 nailiyyət", "purple", True, "xp", 3500),
+        ("Buz Döyüşçüsü", "4000 XP + 20 müxtəlif otaqda şərh", "purple", True, "xp", 4000),
+        ("Alov Ruhu", "4500 XP + 30 günlük seriya", "purple", True, "xp", 4500),
+        ("Kölgə Ustası", "5000 XP + 150 xəbər", "purple", True, "xp", 5000),
+        ("Səma Pərəstişkarı", "5500 XP + 10 müzakirə otağı", "purple", True, "xp", 5500),
+        ("Titan", "6000 XP + 500 bəyənmə", "purple", True, "xp", 6000),
+        ("Dərviş", "6500 XP + 30 nailiyyət", "purple", True, "xp", 6500),
+        ("Fırtına Çağıran", "7000 XP + 300 xəbər", "purple", True, "xp", 7000),
+        ("Zamansız", "7500 XP + 40 günlük seriya", "purple", True, "xp", 7500),
+        ("Ölümsüz", "8000 XP + 600 bəyənmə", "purple", True, "xp", 8000),
+        ("Kosmik Səyyah", "8500 XP + 100 müxtəlif otaqda şərh", "purple", True, "xp", 8500),
     ]
-    # SarÄ± (7) - É™fsanÉ™vi, hÉ™r biri yalnÄ±z bir nÉ™fÉ™rÉ™
+    # Sarı (7) - əfsanəvi, hər biri yalnız bir nəfərə
     legendary_titles = [
-        ("Ä°lk Toxum", "10000 XP + 100 gÃ¼nlÃ¼k seriya + 10 nailiyyÉ™t + 200 xÉ™bÉ™r + 100 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 10000),
-        ("TanrÄ± SÉ™viyyÉ™si", "12000 XP + 120 gÃ¼nlÃ¼k seriya + 12 nailiyyÉ™t + 300 xÉ™bÉ™r + 200 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 12000),
-        ("MÃ¼tlÉ™q GÃ¼c", "14000 XP + 150 gÃ¼nlÃ¼k seriya + 15 nailiyyÉ™t + 500 xÉ™bÉ™r + 500 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 14000),
-        ("Kainat HÃ¶kmdarÄ±", "16000 XP + 180 gÃ¼nlÃ¼k seriya + 20 nailiyyÉ™t + 800 xÉ™bÉ™r + 1000 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 16000),
-        ("Son Ãœmid", "18000 XP + 200 gÃ¼nlÃ¼k seriya + 25 nailiyyÉ™t + 1000 xÉ™bÉ™r + 2000 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 18000),
-        ("ÆbÉ™di ÆfsanÉ™", "20000 XP + 250 gÃ¼nlÃ¼k seriya + 30 nailiyyÉ™t + 1500 xÉ™bÉ™r + 5000 bÉ™yÉ™nmÉ™", "yellow", True, "xp", 20000),
-        ("Ä°lk Toxum (Alternativ)", "Æsl É™fsanÉ™", "yellow", True, "xp", 99999),  # ehtiyat
+        ("İlk Toxum", "10000 XP + 100 günlük seriya + 10 nailiyyət + 200 xəbər + 100 bəyənmə", "yellow", True, "xp", 10000),
+        ("Tanrı Səviyyəsi", "12000 XP + 120 günlük seriya + 12 nailiyyət + 300 xəbər + 200 bəyənmə", "yellow", True, "xp", 12000),
+        ("Mütləq Güc", "14000 XP + 150 günlük seriya + 15 nailiyyət + 500 xəbər + 500 bəyənmə", "yellow", True, "xp", 14000),
+        ("Kainat Hökmdarı", "16000 XP + 180 günlük seriya + 20 nailiyyət + 800 xəbər + 1000 bəyənmə", "yellow", True, "xp", 16000),
+        ("Son Ümid", "18000 XP + 200 günlük seriya + 25 nailiyyət + 1000 xəbər + 2000 bəyənmə", "yellow", True, "xp", 18000),
+        ("Əbədi Əfsanə", "20000 XP + 250 günlük seriya + 30 nailiyyət + 1500 xəbər + 5000 bəyənmə", "yellow", True, "xp", 20000),
+        ("İlk Toxum (Alternativ)", "Əsl əfsanə", "yellow", True, "xp", 99999),  # ehtiyat
     ]
     all_titles = []
     for name, desc in white_titles:
@@ -368,33 +368,33 @@ def seed_titles():
         cvalue = item[5]
         all_titles.append(Title(name=name, description=desc, color=color, rarity="legendary", hidden=True, condition_type="xp", condition_value=cvalue, unique_legendary=True))
 
-    # Admin Ã¼nvanÄ±
-    all_titles.append(Title(name="Admin", description="Sayt rÉ™hbÉ™ri", color="red", rarity="admin", hidden=False, condition_type="admin", condition_value=0))
+    # Admin ünvanı
+    all_titles.append(Title(name="Admin", description="Sayt rəhbəri", color="red", rarity="admin", hidden=False, condition_type="admin", condition_value=0))
     db.session.add_all(all_titles)
     db.session.commit()
 
 def seed_quests_and_achievements():
     if Quest.query.count() == 0:
         quests = [
-            Quest(name="GÃ¼ndÉ™lik Oxucu", description="1 xÉ™bÉ™r oxu", requirement_type="news_read", target_value=1, reward_xp=10, is_daily=True),
-            Quest(name="GÃ¼ndÉ™lik BÉ™yÉ™nÉ™n", description="1 bÉ™yÉ™nmÉ™ et", requirement_type="like", target_value=1, reward_xp=5, is_daily=True),
-            Quest(name="GÃ¼ndÉ™lik ÅžÉ™rhÃ§i", description="1 ÅŸÉ™rh yaz", requirement_type="post", target_value=1, reward_xp=10, is_daily=True),
-            Quest(name="HÉ™ftÉ™lik MÉ™hsuldar", description="5 xÉ™bÉ™r oxu", requirement_type="news_read", target_value=5, reward_xp=30, is_weekly=True),
-            Quest(name="HÉ™ftÉ™lik BÉ™yÉ™nÉ™n", description="5 bÉ™yÉ™nmÉ™ et", requirement_type="like", target_value=5, reward_xp=20, is_weekly=True),
-            Quest(name="HÉ™ftÉ™lik Sosial", description="1 mÃ¼zakirÉ™ otaÄŸÄ± yarat", requirement_type="room_create", target_value=1, reward_xp=25, is_weekly=True),
+            Quest(name="Gündəlik Oxucu", description="1 xəbər oxu", requirement_type="news_read", target_value=1, reward_xp=10, is_daily=True),
+            Quest(name="Gündəlik Bəyənən", description="1 bəyənmə et", requirement_type="like", target_value=1, reward_xp=5, is_daily=True),
+            Quest(name="Gündəlik Şərhçi", description="1 şərh yaz", requirement_type="post", target_value=1, reward_xp=10, is_daily=True),
+            Quest(name="Həftəlik Məhsuldar", description="5 xəbər oxu", requirement_type="news_read", target_value=5, reward_xp=30, is_weekly=True),
+            Quest(name="Həftəlik Bəyənən", description="5 bəyənmə et", requirement_type="like", target_value=5, reward_xp=20, is_weekly=True),
+            Quest(name="Həftəlik Sosial", description="1 müzakirə otağı yarat", requirement_type="room_create", target_value=1, reward_xp=25, is_weekly=True),
         ]
         db.session.add_all(quests)
 
     if Achievement.query.count() == 0:
         achievements = [
-            Achievement(name="Ä°lk AddÄ±m", description="Ä°lk xÉ™bÉ™ri oxu", badge_icon="ðŸ“°", requirement_type="news_read", requirement_value=1),
-            Achievement(name="XÉ™bÉ™r CanavarÄ±", description="10 xÉ™bÉ™r oxu", badge_icon="ðŸ“š", requirement_type="news_read", requirement_value=10),
-            Achievement(name="BÉ™yÉ™nmÉ™ UstasÄ±", description="5 bÉ™yÉ™nmÉ™ et", badge_icon="â¤ï¸", requirement_type="like", requirement_value=5),
-            Achievement(name="ÅžÉ™rh MÃ¼tÉ™xÉ™ssisi", description="5 ÅŸÉ™rh yaz", badge_icon="ðŸ’¬", requirement_type="post", requirement_value=5),
-            Achievement(name="Otaq Qurucusu", description="3 mÃ¼zakirÉ™ otaÄŸÄ± yarat", badge_icon="ðŸ ", requirement_type="room_create", requirement_value=3),
-            Achievement(name="GÃ¼ndÉ™lik AsÄ±lÄ±lÄ±q", description="7 gÃ¼n ardÄ±cÄ±l giriÅŸ", badge_icon="ðŸ”¥", requirement_type="streak", requirement_value=7),
-            Achievement(name="SÉ™ssiz QÉ™hrÉ™man", description="50 XP topla", badge_icon="ðŸ¤«", requirement_type="points", requirement_value=50, hidden=True),
-            Achievement(name="ÆfsanÉ™vi KolleksiyaÃ§Ä±", description="100 XP topla", badge_icon="ðŸŒŸ", requirement_type="points", requirement_value=100, hidden=True),
+            Achievement(name="İlk Addım", description="İlk xəbəri oxu", badge_icon="📰", requirement_type="news_read", requirement_value=1),
+            Achievement(name="Xəbər Canavarı", description="10 xəbər oxu", badge_icon="📚", requirement_type="news_read", requirement_value=10),
+            Achievement(name="Bəyənmə Ustası", description="5 bəyənmə et", badge_icon="❤️", requirement_type="like", requirement_value=5),
+            Achievement(name="Şərh Mütəxəssisi", description="5 şərh yaz", badge_icon="💬", requirement_type="post", requirement_value=5),
+            Achievement(name="Otaq Qurucusu", description="3 müzakirə otağı yarat", badge_icon="🏠", requirement_type="room_create", requirement_value=3),
+            Achievement(name="Gündəlik Asılılıq", description="7 gün ardıcıl giriş", badge_icon="🔥", requirement_type="streak", requirement_value=7),
+            Achievement(name="Səssiz Qəhrəman", description="50 XP topla", badge_icon="🤫", requirement_type="points", requirement_value=50, hidden=True),
+            Achievement(name="Əfsanəvi Kolleksiyaçı", description="100 XP topla", badge_icon="🌟", requirement_type="points", requirement_value=100, hidden=True),
         ]
         db.session.add_all(achievements)
     db.session.commit()
@@ -436,7 +436,7 @@ def update_quest_progress(user, action_type, amount=1):
             user_quest.progress = quest.target_value
             user_quest.completed = True
             earned_xp = add_xp(user, quest.reward_xp)
-            add_notification(user, f"GÃ¶rÉ™vi tamamladÄ±n: {quest.name} (+{earned_xp} XP)")
+            add_notification(user, f"Görəvi tamamladın: {quest.name} (+{earned_xp} XP)")
         db.session.commit()
 
 def check_achievements(user):
@@ -466,7 +466,7 @@ def check_achievements(user):
         if earned:
             ua = UserAchievement(user_id=user.id, achievement_id=ach.id)
             db.session.add(ua)
-            add_notification(user, f"NailiyyÉ™t qazandÄ±n: {ach.name} {ach.badge_icon}")
+            add_notification(user, f"Nailiyyət qazandın: {ach.name} {ach.badge_icon}")
     db.session.commit()
 
 def update_user_title(user):
@@ -479,52 +479,52 @@ def update_user_title(user):
             db.session.commit()
         return
 
-    # Qeyri-gizli Ã¼nvanlarÄ± XP-yÉ™ gÃ¶rÉ™ sÄ±rala
+    # Qeyri-gizli ünvanları XP-yə görə sırala
     normal_titles = Title.query.filter_by(hidden=False).order_by(Title.required_xp.desc()).all()
     for title in normal_titles:
         if title.rarity in ('common', 'uncommon', 'rare'):
             if user.points >= title.required_xp:
-                # UyÄŸun Ã¼nvanÄ± qazanmadÄ±sa É™lavÉ™ et
+                # Uyğun ünvanı qazanmadısa əlavə et
                 if not UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
                     user_title = UserTitle(user_id=user.id, title_id=title.id)
                     db.session.add(user_title)
                     db.session.commit()
-                    add_notification(user, f"Yeni Ã¼nvan qazandÄ±n: {title.name}")
-                # Aktiv Ã¼nvana tÉ™yin et (É™n yÃ¼ksÉ™k)
+                    add_notification(user, f"Yeni ünvan qazandın: {title.name}")
+                # Aktiv ünvana təyin et (ən yüksək)
                 if user.title_id != title.id:
                     user.title_id = title.id
                     db.session.commit()
                 break
 
-    # Gizli Epik Ã¼nvanlar Ã¼Ã§Ã¼n ÅŸÉ™rtlÉ™r (sadÉ™lÉ™ÅŸdirilmiÅŸ: yalnÄ±z XP + bÉ™zi ÅŸÉ™rtlÉ™r)
+    # Gizli Epik ünvanlar üçün şərtlər (sadələşdirilmiş: yalnız XP + bəzi şərtlər)
     epic_titles = Title.query.filter_by(rarity="epic", hidden=True).all()
     for title in epic_titles:
         if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
             continue
-        # MÃ¼vÉ™qqÉ™ti sadÉ™ ÅŸÉ™rt: XP-yÉ™ gÃ¶rÉ™
+        # Müvəqqəti sadə şərt: XP-yə görə
         if user.points >= title.condition_value:
             user_title = UserTitle(user_id=user.id, title_id=title.id)
             db.session.add(user_title)
             db.session.commit()
-            add_notification(user, f"Epik Ã¼nvan qazandÄ±n: {title.name}")
+            add_notification(user, f"Epik ünvan qazandın: {title.name}")
             if user.title_id != title.id:
                 user.title_id = title.id
                 db.session.commit()
 
-    # ÆfsanÉ™vi Ã¼nvanlar (unique)
+    # Əfsanəvi ünvanlar (unique)
     legendaries = Title.query.filter_by(rarity="legendary", hidden=True).all()
     for title in legendaries:
         if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
             continue
-        # ÆgÉ™r baÅŸqasÄ± alÄ±bsa, keÃ§
+        # Əgər başqası alıbsa, keç
         if title.unique_legendary and UserTitle.query.filter_by(title_id=title.id).first():
             continue
-        # ÅžÉ™rtlÉ™r (sadÉ™lÉ™ÅŸdirilmiÅŸ)
+        # Şərtlər (sadələşdirilmiş)
         if (user.points >= title.condition_value and user.streak >= 100):
             user_title = UserTitle(user_id=user.id, title_id=title.id)
             db.session.add(user_title)
             db.session.commit()
-            add_notification(user, f"ÆfsanÉ™vi Ã¼nvan qazandÄ±n: {title.name}")
+            add_notification(user, f"Əfsanəvi ünvan qazandın: {title.name}")
             if user.title_id != title.id:
                 user.title_id = title.id
                 db.session.commit()
@@ -532,7 +532,7 @@ def update_user_title(user):
 def get_earned_titles(user):
     return user.user_titles
 
-# ---------- HTML ÅžABLONLARI (É™vvÉ™lki kimi, lakin profilÉ™ Ã¼nvan idarÉ™si É™lavÉ™ olundu) ----------
+# ---------- HTML ŞABLONLARI (əvvəlki kimi, lakin profilə ünvan idarəsi əlavə olundu) ----------
 BASE_HTML = """
 <!DOCTYPE html>
 <html lang="az" class="dark">
@@ -550,7 +550,7 @@ BASE_HTML = """
         .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
         .spoiler.revealed { background: transparent; color: inherit; }
 
-        /* ===== IÅžIQLI REJIM (LIGHT MODE) ===== */
+        /* ===== IŞIQLI REJIM (LIGHT MODE) ===== */
         html.light body {
             background: #f4f6f9;
             color: #111827;
@@ -561,12 +561,12 @@ BASE_HTML = """
             color: #111827;
         }
         html.light .bg-gray-800 {
-            background-color: #1f2937; /* TÃ¼nd boz - dÃ¼ymÉ™lÉ™r vÉ™ kartlar */
+            background-color: #1f2937; /* Tünd boz - düymələr və kartlar */
             color: #ffffff;
             border: 1px solid #374151;
         }
         html.light .bg-gray-700 {
-            background-color: #e5e7eb; /* AÃ§Ä±q boz - inputlar */
+            background-color: #e5e7eb; /* Açıq boz - inputlar */
             color: #111827;
         }
         html.light .text-gray-300 { color: #374151; }
@@ -600,7 +600,7 @@ BASE_HTML = """
         html.light .hero-section p {
             color: #1e293b;
         }
-        /* Mobil menyu vÉ™ dÃ¼ymÉ™lÉ™r Ã¼Ã§Ã¼n */
+        /* Mobil menyu və düymələr üçün */
         html.light #mobileMenu {
             background-color: #ffffff;
             border-bottom: 1px solid #e5e7eb;
@@ -628,46 +628,46 @@ BASE_HTML = """
                     <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
                 </div>
                 <div class="hidden md:flex space-x-4">
-<a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana SÉ™hifÉ™' if current_lang == 'az' else 'Home' }}</a>
+<a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
 <a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
-<a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'Ä°cma' if current_lang == 'az' else 'Community' }}</a>
-<a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'HaqqÄ±mÄ±zda' if current_lang == 'az' else 'About' }}</a>
+<a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+<a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
                     {% if current_user.is_authenticated %}
                     <a href="/profile" class="text-gray-300 hover:text-cyan-400">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
                     {% if current_user.is_admin %}
                     <a href="/admin" class="text-yellow-400 hover:text-yellow-300">Admin</a>
                     {% endif %}
-                    <a href="/logout" class="text-red-400 hover:text-red-300">{{ 'Ã‡Ä±xÄ±ÅŸ' if current_lang == 'az' else 'Logout' }}</a>
+                    <a href="/logout" class="text-red-400 hover:text-red-300">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
                     {% else %}
-                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'GiriÅŸ / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
+                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
-                    <!-- AxtarÄ±ÅŸ yalnÄ±z masaÃ¼stÃ¼ -->
-                    <a href="/archive" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">ðŸ”</a>
-                    <!-- BildiriÅŸ zÉ™ngi hÉ™miÅŸÉ™ -->
+                    <!-- Axtarış yalnız masaüstü -->
+                    <a href="/archive" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
+                    <!-- Bildiriş zəngi həmişə -->
                     <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
-                        ðŸ””
+                        🔔
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
                     </a>
-                    <!-- Dil vÉ™ tema yalnÄ±z masaÃ¼stÃ¼ -->
+                    <!-- Dil və tema yalnız masaüstü -->
                     <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                     <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white md:hidden" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
-                    <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">ðŸŒ™</button>
-                    <!-- Mobil menyu dÃ¼ymÉ™si -->
-                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">â˜°</button>
+                    <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
+                    <!-- Mobil menyu düyməsi -->
+                    <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">☰</button>
                 </div>
             </div>
         </div>
-        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4 flex flex-col">            <a href="/" class="block py-2 text-gray-300">{{ 'Ana SÉ™hifÉ™' if current_lang == 'az' else 'Home' }}</a>
+        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4 flex flex-col">            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
             <a href="/archive" class="block py-2 text-gray-300">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
-            <a href="/community" class="block py-2 text-gray-300">{{ 'Ä°cma' if current_lang == 'az' else 'Community' }}</a>
-            <a href="/about" class="block py-2 text-gray-300">{{ 'HaqqÄ±mÄ±zda' if current_lang == 'az' else 'About' }}</a>
+            <a href="/community" class="block py-2 text-gray-300">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+            <a href="/about" class="block py-2 text-gray-300">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
             {% if current_user.is_authenticated %}
                 <a href="/profile" class="block py-2 text-gray-300">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
-                <a href="/logout" class="block py-2 text-red-400">{{ 'Ã‡Ä±xÄ±ÅŸ' if current_lang == 'az' else 'Logout' }}</a>
+                <a href="/logout" class="block py-2 text-red-400">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
             {% else %}
-                <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'GiriÅŸ / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
+                <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
             {% endif %}
         </div>
     </nav>
@@ -676,19 +676,19 @@ BASE_HTML = """
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
             <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
             <div class="flex justify-center mb-4 space-x-4">
-<button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">{{ 'GiriÅŸ' if current_lang == 'az' else 'Login' }}</button>
+<button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">{{ 'Giriş' if current_lang == 'az' else 'Login' }}</button>
 <button id="registerTabBtn" onclick="document.getElementById('registerForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); this.classList.add('text-purple-400','border-purple-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('loginTabBtn').classList.remove('text-cyan-400','border-cyan-400'); document.getElementById('loginTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">{{ 'Qeydiyyat' if current_lang == 'az' else 'Register' }}</button>
             </div>
             <form id="loginForm" action="/login" method="POST" class="space-y-3">
-<input type="text" name="username" placeholder="{{ 'Ä°stifadÉ™Ã§i adÄ±' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<input type="password" name="password" placeholder="{{ 'ÅžifrÉ™' if current_lang == 'az' else 'Password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="password" name="password" placeholder="{{ 'Şifrə' if current_lang == 'az' else 'Password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
 <button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">{{ 'Daxil ol' if current_lang == 'az' else 'Sign In' }}</button>
             </form>
             <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
-<input type="text" name="username" placeholder="{{ 'Ä°stifadÉ™Ã§i adÄ±' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
 <input type="email" name="email" placeholder="{{ 'Email' if current_lang == 'az' else 'Email' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-<input type="password" name="password" placeholder="{{ 'ÅžifrÉ™ (É™n az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keÃ§' if current_lang == 'az' else 'Register' }}</button>
+<input type="password" name="password" placeholder="{{ 'Şifrə (ən az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+<button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
             </form>
         </div>
     </div>
@@ -708,26 +708,26 @@ BASE_HTML = """
 <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
         <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
-        <h3 class="text-xl font-bold mb-4">{{ 'ÅžikayÉ™t et' if current_lang == 'az' else 'Report' }}</h3>
+        <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
         <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
             <div>
-                <label class="text-sm text-gray-400">{{ 'SÉ™bÉ™b' if current_lang == 'az' else 'Reason' }}</label>
-                <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digÉ™r');">
-                    <option value="">{{ 'SÉ™bÉ™b seÃ§in' if current_lang == 'az' else 'Select reason' }}</option>
-                    <option value="sÃ¶yÃ¼ÅŸ">{{ 'SÃ¶yÃ¼ÅŸ' if current_lang == 'az' else 'Swearing' }}</option>
-                    <option value="spoiler">{{ 'Spoiler paylaÅŸÄ±r' if current_lang == 'az' else 'Shares spoiler' }}</option>
-                    <option value="tÉ™hqir">{{ 'TÉ™hqir edici' if current_lang == 'az' else 'Insulting' }}</option>
+                <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
+                <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
+                    <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
+                    <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
+                    <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
+                    <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
                     <option value="spam">Spam</option>
-                    <option value="digÉ™r">{{ 'DigÉ™r' if current_lang == 'az' else 'Other' }}</option>
+                    <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
                 </select>
             </div>
             <div id="otherReasonWrap" class="hidden mt-2">
-                <label class="text-sm text-gray-400">{{ 'ÆlavÉ™ aÃ§Ä±qlama' if current_lang == 'az' else 'Additional details' }}</label>
+                <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
                 <textarea name="other_reason" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
             </div>
-            <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">{{ 'GÃ¶ndÉ™r' if current_lang == 'az' else 'Submit' }}</button>
+            <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">{{ 'Göndər' if current_lang == 'az' else 'Submit' }}</button>
         </form>
     </div>
 </div>
@@ -736,7 +736,7 @@ BASE_HTML = """
 
     <footer class="bg-gray-900 text-gray-400 py-6 border-t border-gray-700">
         <div class="max-w-7xl mx-auto text-center">
-            <p>Â© {{ now.year }} Mi Digital Verse. BÃ¼tÃ¼n hÃ¼quqlar qorunur.</p>
+            <p>© {{ now.year }} Mi Digital Verse. Bütün hüquqlar qorunur.</p>
         </div>
     </footer>
 </div>
@@ -746,7 +746,7 @@ BASE_HTML = """
     html.classList.add('dark');
     html.classList.remove('light');
     
-    // Tema vÉ™ Menyu
+    // Tema və Menyu
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
     document.getElementById('themeToggleMobile')?.addEventListener('click', toggleTheme);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
@@ -767,7 +767,7 @@ BASE_HTML = """
         document.getElementById('reportModal').classList.add('hidden');
     }
 
-    // GiriÅŸ / Qeydiyyat TablarÄ±
+    // Giriş / Qeydiyyat Tabları
     function showLogin() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
@@ -788,8 +788,8 @@ BASE_HTML = """
 
     // Dil sistemi
     const translations = {
-        az: { home: "Ana SÉ™hifÉ™", news: "XÉ™bÉ™rlÉ™r", library: "Kitabxana â–¾", community: "Ä°cma", about: "HaqqÄ±mÄ±zda", profile: "Profil", quests: "GÃ¶rÉ™vlÉ™r", achievements: "NailiyyÉ™tlÉ™r", admin: "Admin", logout: "Ã‡Ä±xÄ±ÅŸ", login: "GiriÅŸ / Qeydiyyat" },
-        en: { home: "Home", news: "News", library: "Library â–¾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
+        az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
+        en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
     };
     
     let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
@@ -820,13 +820,13 @@ BASE_HTML = """
     document.getElementById('langToggle')?.addEventListener('click', toggleLanguage);
     document.getElementById('langToggleMobile')?.addEventListener('click', toggleLanguage);
 
-    // ÅžikayÉ™t bÃ¶lmÉ™sindÉ™ "DigÉ™r" seÃ§imi
+    // Şikayət bölməsində "Digər" seçimi
 document.addEventListener('DOMContentLoaded', function() {
     const select = document.getElementById('reportReasonSelect');
     const otherWrap = document.getElementById('otherReasonWrap');
     if (select && otherWrap) {
         select.addEventListener('change', function() {
-            if (this.value === 'digÉ™r') {
+            if (this.value === 'digər') {
                 otherWrap.classList.remove('hidden');
             } else {
                 otherWrap.classList.add('hidden');
@@ -852,7 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function validateReportForm(form) {
     const reasonSelect = document.getElementById('reportReasonSelect');
     if (!reasonSelect || reasonSelect.value === '') {
-        alert("{{ 'ZÉ™hmÉ™t olmasa sÉ™bÉ™b seÃ§in.' if current_lang == 'az' else 'Please select a reason.' }}");
+        alert("{{ 'Zəhmət olmasa səbəb seçin.' if current_lang == 'az' else 'Please select a reason.' }}");
         return false;
     }
     return true;
@@ -863,28 +863,28 @@ function validateReportForm(form) {
 </html>
 """
 
-# DigÉ™r bÃ¼tÃ¼n ÅŸablonlar É™vvÉ™lki kimi qalÄ±r, lakin profil ÅŸablonunu yenilÉ™yirik.
+# Digər bütün şablonlar əvvəlki kimi qalır, lakin profil şablonunu yeniləyirik.
 INDEX_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'Ana SÉ™hifÉ™' if current_lang == 'az' else 'Home' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="hero-section rounded-xl p-8 mb-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 neon-text">{{ 'XoÅŸ gÉ™ldiniz!' if current_lang == 'az' else 'Welcome!' }}</h1>
-        <p class="text-gray-300 mt-2">{{ 'Anime, manhwa, manhua vÉ™ oyun dÃ¼nyasÄ±nÄ±n É™n son xÉ™bÉ™rlÉ™ri' if current_lang == 'az' else 'The latest news from the world of anime, manhwa, manhua and games' }}</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 neon-text">{{ 'Xoş gəldiniz!' if current_lang == 'az' else 'Welcome!' }}</h1>
+        <p class="text-gray-300 mt-2">{{ 'Anime, manhwa, manhua və oyun dünyasının ən son xəbərləri' if current_lang == 'az' else 'The latest news from the world of anime, manhwa, manhua and games' }}</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="col-span-2">
-            <h2 class="text-2xl font-semibold mb-4">{{ 'Son XÉ™bÉ™rlÉ™r' if current_lang == 'az' else 'Latest News' }}</h2>
+            <h2 class="text-2xl font-semibold mb-4">{{ 'Son Xəbərlər' if current_lang == 'az' else 'Latest News' }}</h2>
             {% for news in latest_news %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
                 <p class="text-gray-400 text-sm">{{ news.published_at.strftime('%d.%m.%Y') }} | {{ news.category }}</p>
             </a>
             {% else %}
-            <p>{{ 'HÉ™lÉ™ xÉ™bÉ™r yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
+            <p>{{ 'Hələ xəbər yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
             {% endfor %}
-            <h2 class="text-2xl font-semibold mt-8 mb-4">{{ 'Æn Ã‡ox Oxunanlar' if current_lang == 'az' else 'Most Read' }}</h2>
+            <h2 class="text-2xl font-semibold mt-8 mb-4">{{ 'Ən Çox Oxunanlar' if current_lang == 'az' else 'Most Read' }}</h2>
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
@@ -893,7 +893,7 @@ INDEX_HTML = """
             {% endfor %}
         </div>
         <div>
-            <h2 class="text-2xl font-semibold mb-4">{{ 'SeÃ§ilmiÅŸ Manqa/Anime' if current_lang == 'az' else 'Featured Manga/Anime' }}</h2>
+            <h2 class="text-2xl font-semibold mb-4">{{ 'Seçilmiş Manqa/Anime' if current_lang == 'az' else 'Featured Manga/Anime' }}</h2>
             {% for m in featured %}
             <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 mb-3 card-glow flex items-center gap-3">
                 <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-16 h-24 object-cover rounded">
@@ -912,12 +912,12 @@ INDEX_HTML = """
 
 NEWS_LIST_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'XÉ™bÉ™rlÉ™r' if current_lang == 'az' else 'News' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Xəbərlər' if current_lang == 'az' else 'News' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'XÉ™bÉ™rlÉ™r' if current_lang == 'az' else 'News' }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</h1>
     <form action="/search" method="GET" class="mb-6 flex gap-2">
-        <input type="text" name="q" placeholder="{{ 'XÉ™bÉ™r axtar...' if current_lang == 'az' else 'Search news...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
+        <input type="text" name="q" placeholder="{{ 'Xəbər axtar...' if current_lang == 'az' else 'Search news...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
         <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
     </form>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -958,14 +958,14 @@ NEWS_DETAIL_HTML = """
                 <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
                     <div class="flex-1">
                         {% if block.image_url %}
-                            <img src="{{ block.image_url }}" alt="Blok ÅŸÉ™kli" class="w-full max-h-96 object-contain rounded-lg">
+                            <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <div class="my-4">
                     {% if block.image_url %}
-                        <img src="{{ block.image_url }}" alt="Blok ÅŸÉ™kli" class="w-full max-h-96 object-contain rounded-lg">
+                        <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
                     {% endif %}
                 </div>
             {% endif %}
@@ -973,11 +973,11 @@ NEWS_DETAIL_HTML = """
     {% endfor %}
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
-        <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">BÉ™yÉ™n ({{ news.likes }})</button></form>
+        <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
         {% else %}
-        <span class="px-4 py-2 bg-gray-700 rounded">BÉ™yÉ™nmÉ™: {{ news.likes }}</span>
+        <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
-        <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">Bu xÉ™bÉ™ri mÃ¼zakirÉ™ et</a>
+        <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">Bu xəbəri müzakirə et</a>
     </div>
 </div>
 {% endblock %}
@@ -988,11 +988,11 @@ MANGA_LIST_HTML = """
 {% block title %}{{ 'Kitabxana' if current_lang == 'az' else 'Library' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'Manhwa & Anime KitabxanasÄ±' if current_lang == 'az' else 'Manhwa & Anime Library' }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Manhwa & Anime Kitabxanası' if current_lang == 'az' else 'Manhwa & Anime Library' }}</h1>
     <form action="/manga" method="GET" class="mb-6 flex gap-2">
-        <input type="text" name="q" placeholder="{{ 'BaÅŸlÄ±q axtar...' if current_lang == 'az' else 'Search title...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
+        <input type="text" name="q" placeholder="{{ 'Başlıq axtar...' if current_lang == 'az' else 'Search title...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
         <select name="type" class="p-2 rounded bg-gray-800 text-white">
-            <option value="">{{ 'HamÄ±sÄ±' if current_lang == 'az' else 'All' }}</option>
+            <option value="">{{ 'Hamısı' if current_lang == 'az' else 'All' }}</option>
             <option value="anime">Anime</option>
             <option value="manga">Manga</option>
             <option value="manhwa">Manhwa</option>
@@ -1007,7 +1007,7 @@ MANGA_LIST_HTML = """
             <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-full h-64 object-cover rounded">
             <h3 class="font-bold mt-2">{{ m.title }}</h3>
             <p class="text-sm text-gray-400">{{ m.type }} | {{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }}</p>
-            <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} {{ 'bÃ¶lÃ¼m' if current_lang == 'az' else 'chapters' }}</p>
+            <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} {{ 'bölüm' if current_lang == 'az' else 'chapters' }}</p>
         </a>
         {% endfor %}
     </div>
@@ -1022,12 +1022,12 @@ ARCHIVE_HTML = """
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</h1>
 
-    <!-- AxtarÄ±ÅŸ vÉ™ FiltrlÉ™r -->
+    <!-- Axtarış və Filtrlər -->
     <form action="/archive" method="GET" class="mb-6 bg-gray-800 p-4 rounded space-y-3">
         <div class="flex flex-col md:flex-row gap-3">
             <input type="text" name="q" value="{{ q }}" placeholder="{{ 'Axtar...' if current_lang == 'az' else 'Search...' }}" class="flex-1 p-2 rounded bg-gray-700 text-white">
             <select name="category" class="p-2 rounded bg-gray-700 text-white">
-                <option value="">{{ 'BÃ¼tÃ¼n kateqoriyalar' if current_lang == 'az' else 'All categories' }}</option>
+                <option value="">{{ 'Bütün kateqoriyalar' if current_lang == 'az' else 'All categories' }}</option>
                 <option value="anime" {% if category_filter == 'anime' %}selected{% endif %}>Anime</option>
                 <option value="manga" {% if category_filter == 'manga' %}selected{% endif %}>Manga</option>
                 <option value="manhwa" {% if category_filter == 'manhwa' %}selected{% endif %}>Manhwa</option>
@@ -1039,7 +1039,7 @@ ARCHIVE_HTML = """
         </div>
     </form>
 
-    <!-- NÉ™ticÉ™lÉ™r -->
+    <!-- Nəticələr -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% if news_results %}
             {% for item in news_results %}
@@ -1067,7 +1067,7 @@ ARCHIVE_HTML = """
         {% endif %}
 
         {% if not news_results and not manga_results %}
-            <p class="col-span-full">{{ 'TapÄ±lmadÄ±.' if current_lang == 'az' else 'Not found.' }}</p>
+            <p class="col-span-full">{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>
         {% endif %}
     </div>
 </div>
@@ -1080,7 +1080,7 @@ MANGA_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ manga.title }}</h1>
-    <p class="text-gray-400">{{ manga.type }} | Status: {{ manga.status }} | BÃ¶lÃ¼m: {{ manga.chapters }} | Oxunma: {{ manga.views }}</p>
+    <p class="text-gray-400">{{ manga.type }} | Status: {{ manga.status }} | Bölüm: {{ manga.chapters }} | Oxunma: {{ manga.views }}</p>
     {% if manga.cover_url %}
     <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
@@ -1088,11 +1088,11 @@ MANGA_DETAIL_HTML = """
     <p class="text-yellow-400 mt-2">Reytinq: {{ manga.rating }}</p>
     <div class="mt-4 flex gap-3">
         {% if current_user.is_authenticated %}
-        <form action="/like-manga/{{ manga.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">BÉ™yÉ™n ({{ manga.likes }})</button></form>
+        <form action="/like-manga/{{ manga.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ manga.likes }})</button></form>
         {% else %}
-        <span class="px-4 py-2 bg-gray-700 rounded">BÉ™yÉ™nmÉ™: {{ manga.likes }}</span>
+        <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ manga.likes }}</span>
         {% endif %}
-        <a href="/community" class="inline-block px-4 py-2 bg-purple-500 rounded">Ä°cma mÃ¼zakirÉ™lÉ™ri</a>
+        <a href="/community" class="inline-block px-4 py-2 bg-purple-500 rounded">İcma müzakirələri</a>
     </div>
 </div>
 {% endblock %}
@@ -1100,38 +1100,38 @@ MANGA_DETAIL_HTML = """
 
 COMMUNITY_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'Ä°cma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'İcma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'Ä°cma MÃ¼zakirÉ™lÉ™ri' if current_lang == 'az' else 'Community Discussions' }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
     {% if current_user.is_authenticated %}
     <form action="/create-room" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <input type="text" name="room_name" placeholder="{{ 'MÃ¼zakirÉ™ otaÄŸÄ± adÄ±' if current_lang == 'az' else 'Discussion room name' }}" required class="w-full p-2 rounded bg-gray-700 text-white mb-2">
+        <input type="text" name="room_name" placeholder="{{ 'Müzakirə otağı adı' if current_lang == 'az' else 'Discussion room name' }}" required class="w-full p-2 rounded bg-gray-700 text-white mb-2">
         <select name="news_id" class="w-full p-2 rounded bg-gray-700 text-white mb-2">
-            <option value="">{{ 'XÉ™bÉ™r seÃ§ (istÉ™yÉ™ baÄŸlÄ±)' if current_lang == 'az' else 'Select news (optional)' }}</option>
+            <option value="">{{ 'Xəbər seç (istəyə bağlı)' if current_lang == 'az' else 'Select news (optional)' }}</option>
             {% for n in all_news %}<option value="{{ n.id }}">{{ n.title }}</option>{% endfor %}
         </select>
         <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Otaq yarat' if current_lang == 'az' else 'Create room' }}</button>
     </form>
     {% else %}
-    <p class="mb-4">{{ 'Otaq yaratmaq Ã¼Ã§Ã¼n' if current_lang == 'az' else 'To create a room' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriÅŸ edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
+    <p class="mb-4">{{ 'Otaq yaratmaq üçün' if current_lang == 'az' else 'To create a room' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
         <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
             <h3 class="font-bold 
-                {% if room.name == 'XÉ™ta OtaÄŸÄ±' %}text-red-500
-                {% elif room.name == 'TÉ™kliflÉ™r OtaÄŸÄ±' %}text-green-400
+                {% if room.name == 'Xəta Otağı' %}text-red-500
+                {% elif room.name == 'Təkliflər Otağı' %}text-green-400
                 {% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
-            <p class="text-sm text-gray-400">{{ 'YaradÄ±cÄ±:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
-            {% if room.news %}<p class="text-xs text-gray-500">{{ 'XÉ™bÉ™r:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
+            <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
+            {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
             <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
                 <a href="/room/{{ room.id }}" class="inline-block px-3 py-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm">{{ 'Daxil ol' if current_lang == 'az' else 'Enter' }}</a>
                 {% if current_user.is_authenticated and current_user.is_admin %}
-                    {% if room.name == 'XÉ™ta OtaÄŸÄ±' or room.name == 'TÉ™kliflÉ™r OtaÄŸÄ±' %}
-                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('{{ 'BÃ¼tÃ¼n mesajlarÄ± silmÉ™k istÉ™diyinizÉ™ É™minsiniz?' if current_lang == 'az' else 'Are you sure you want to delete all messages?' }}')">{{ 'MesajlarÄ± tÉ™mizlÉ™' if current_lang == 'az' else 'Clear messages' }}</a>
+                    {% if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı' %}
+                        <a href="/admin/clear-room-messages/{{ room.id }}" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm" onclick="return confirm('{{ 'Bütün mesajları silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete all messages?' }}')">{{ 'Mesajları təmizlə' if current_lang == 'az' else 'Clear messages' }}</a>
                     {% else %}
-                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('{{ 'OtaÄŸÄ± silmÉ™k istÉ™diyinizÉ™ É™minsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this room?' }}')">{{ 'OtaÄŸÄ± sil' if current_lang == 'az' else 'Delete room' }}</a>
+                        <a href="/admin/delete-room/{{ room.id }}" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm" onclick="return confirm('{{ 'Otağı silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this room?' }}')">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
                     {% endif %}
                 {% endif %}
             </div>
@@ -1148,29 +1148,29 @@ ROOM_HTML = """"
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-4">
-        {% if room.name == 'XÉ™ta OtaÄŸÄ±' %}
-            {{ 'XÉ™ta OtaÄŸÄ±' if current_lang == 'az' else 'Error Room' }}
+        {% if room.name == 'Xəta Otağı' %}
+            {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
         {% else %}
             {{ room.name }}
         {% endif %}
     </h1>
     {% if current_user.is_authenticated %}
     <form action="/post/{{ room.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-        <textarea name="content" placeholder="{{ 'MesajÄ±nÄ±z...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-        <label class="flex items-center mt-2"><input type="checkbox" name="is_spoiler" value="1" class="mr-2"> {{ 'Spoiler olaraq iÅŸarÉ™lÉ™' if current_lang == 'az' else 'Mark as spoiler' }}</label>
-        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'GÃ¶ndÉ™r' if current_lang == 'az' else 'Send' }}</button>
+        <textarea name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+        <label class="flex items-center mt-2"><input type="checkbox" name="is_spoiler" value="1" class="mr-2"> {{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</label>
+        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
     </form>
     {% else %}
-    <p>{{ 'Yazmaq Ã¼Ã§Ã¼n' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriÅŸ edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
+    <p>{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
     <div class="space-y-4">
         {% for post in posts %}
 <div class="bg-gray-800 rounded p-3">
     <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
     {% if current_user.is_authenticated and current_user.is_admin %}
-        <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu ÅŸÉ™rhi silmÉ™k istÉ™diyinizÉ™ É™minsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'ÅžÉ™rhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
+        <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
     {% endif %}
-    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'ÅžikayÉ™t et' if current_lang == 'az' else 'Report' }}</button>
+    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
     {% if post.is_spoiler %}
         <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
     {% else %}
@@ -1184,11 +1184,11 @@ ROOM_HTML = """"
 """
 
 PROFILE_HTML = """
-{% set achievement_names = {'Ä°lk AddÄ±m': 'First Step', 'XÉ™bÉ™r CanavarÄ±': 'News Beast', 'BÉ™yÉ™nmÉ™ UstasÄ±': 'Like Master', 'ÅžÉ™rh MÃ¼tÉ™xÉ™ssisi': 'Comment Expert', 'Otaq Qurucusu': 'Room Builder', 'GÃ¼ndÉ™lik AsÄ±lÄ±lÄ±q': 'Daily Addiction', 'SÉ™ssiz QÉ™hrÉ™man': 'Silent Hero', 'ÆfsanÉ™vi KolleksiyaÃ§Ä±': 'Legendary Collector'} %}
+{% set achievement_names = {'İlk Addım': 'First Step', 'Xəbər Canavarı': 'News Beast', 'Bəyənmə Ustası': 'Like Master', 'Şərh Mütəxəssisi': 'Comment Expert', 'Otaq Qurucusu': 'Room Builder', 'Gündəlik Asılılıq': 'Daily Addiction', 'Səssiz Qəhrəman': 'Silent Hero', 'Əfsanəvi Kolleksiyaçı': 'Legendary Collector'} %}
 
-{% set achievement_descriptions = {'Ä°lk xÉ™bÉ™ri oxu': 'Read first news', '10 xÉ™bÉ™r oxu': 'Read 10 news', '5 bÉ™yÉ™nmÉ™ et': 'Give 5 likes', '5 ÅŸÉ™rh yaz': 'Write 5 comments', '3 mÃ¼zakirÉ™ otaÄŸÄ± yarat': 'Create 3 rooms', '7 gÃ¼n ardÄ±cÄ±l giriÅŸ': '7-day login streak', '50 XP topla': 'Collect 50 XP', '100 XP topla': 'Collect 100 XP'} %}
-{% set quest_descriptions = {'1 xÉ™bÉ™r oxu': 'Read 1 news', '1 bÉ™yÉ™nmÉ™ et': 'Like 1 item', '1 ÅŸÉ™rh yaz': 'Write 1 comment', '5 xÉ™bÉ™r oxu': 'Read 5 news', '5 bÉ™yÉ™nmÉ™ et': 'Like 5 items', '1 mÃ¼zakirÉ™ otaÄŸÄ± yarat': 'Create 1 discussion room'} %}
-{% set quest_names = {'GÃ¼ndÉ™lik Oxucu': 'Daily Reader', 'GÃ¼ndÉ™lik BÉ™yÉ™nÉ™n': 'Daily Liker', 'GÃ¼ndÉ™lik ÅžÉ™rhÃ§i': 'Daily Commenter', 'HÉ™ftÉ™lik MÉ™hsuldar': 'Weekly Producer', 'HÉ™ftÉ™lik BÉ™yÉ™nÉ™n': 'Weekly Liker', 'HÉ™ftÉ™lik Sosial': 'Weekly Social'} %}
+{% set achievement_descriptions = {'İlk xəbəri oxu': 'Read first news', '10 xəbər oxu': 'Read 10 news', '5 bəyənmə et': 'Give 5 likes', '5 şərh yaz': 'Write 5 comments', '3 müzakirə otağı yarat': 'Create 3 rooms', '7 gün ardıcıl giriş': '7-day login streak', '50 XP topla': 'Collect 50 XP', '100 XP topla': 'Collect 100 XP'} %}
+{% set quest_descriptions = {'1 xəbər oxu': 'Read 1 news', '1 bəyənmə et': 'Like 1 item', '1 şərh yaz': 'Write 1 comment', '5 xəbər oxu': 'Read 5 news', '5 bəyənmə et': 'Like 5 items', '1 müzakirə otağı yarat': 'Create 1 discussion room'} %}
+{% set quest_names = {'Gündəlik Oxucu': 'Daily Reader', 'Gündəlik Bəyənən': 'Daily Liker', 'Gündəlik Şərhçi': 'Daily Commenter', 'Həftəlik Məhsuldar': 'Weekly Producer', 'Həftəlik Bəyənən': 'Weekly Liker', 'Həftəlik Sosial': 'Weekly Social'} %}
 {% extends "base.html" %}
 {% block title %}{{ 'Profil' if current_lang == 'az' else 'Profile' }} - Mi Digital Verse{% endblock %}
 {% block content %}
@@ -1201,26 +1201,26 @@ PROFILE_HTML = """
         <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl mb-4">{{ current_user.username[0].upper() }}</div>
         {% endif %}
         <p>{{ 'Email' if current_lang == 'az' else 'Email' }}: {{ current_user.email }}</p>
-        <p>{{ 'SÉ™viyyÉ™' if current_lang == 'az' else 'Level' }}: {{ current_user.get_level() }}</p>
+        <p>{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ current_user.get_level() }}</p>
         <p>{{ 'XP' if current_lang == 'az' else 'XP' }}: {{ current_user.points }} / {{ current_user.get_next_level_xp() }}</p>
         <div class="w-full bg-gray-700 rounded-full h-3 mt-2">
             <div class="bg-cyan-500 h-3 rounded-full" style="width: {{ current_user.get_level_progress() }}%"></div>
         </div>
-        <p>{{ 'GÃ¼nlÃ¼k giriÅŸ seriyasÄ±' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gÃ¼n' if current_lang == 'az' else 'days' }}</p>
+        <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
         {% if current_user.title %}
-        <p>{{ 'Aktiv Ãœnvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.title.color }};">{{ current_user.title.name }}</span></p>
+        <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.title.color }};">{{ current_user.title.name }}</span></p>
         {% endif %}
         {% if not claimed_today %}
-        <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'GÃ¼nlÃ¼k Ã¶dÃ¼lÃ¼ al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
+        <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
         {% else %}
-	<p class="text-green-400 mt-2">{{ 'Bu gÃ¼n Ã¶dÃ¼lÃ¼ almÄ±sÄ±nÄ±z.' if current_lang == 'az' else "You have already claimed today's reward." }}</p>
+	<p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else "You have already claimed today's reward." }}</p>
         {% endif %}
-        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Profil ÅŸÉ™klini dÉ™yiÅŸ' if current_lang == 'az' else 'Change profile picture' }}</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Profil şəklini dəyiş' if current_lang == 'az' else 'Change profile picture' }}</h2>
         <form action="/upload-avatar" method="POST" enctype="multipart/form-data" class="space-y-3">
             <input type="file" name="avatar" accept="image/*" required class="w-full p-2 bg-gray-700 rounded">
-            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'YÃ¼klÉ™' if current_lang == 'az' else 'Upload' }}</button>
+            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yüklə' if current_lang == 'az' else 'Upload' }}</button>
         </form>
-        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Bio vÉ™ Sosial KeÃ§idlÉ™r' if current_lang == 'az' else 'Bio and Social Links' }}</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Bio və Sosial Keçidlər' if current_lang == 'az' else 'Bio and Social Links' }}</h2>
         <form action="/profile/update-bio" method="POST" class="space-y-3">
             <div>
                 <label class="text-sm text-gray-400">{{ 'Bio' if current_lang == 'az' else 'Bio' }}</label>
@@ -1240,18 +1240,18 @@ PROFILE_HTML = """
             </div>
             <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
         </form>
-        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'ÅžifrÉ™ni dÉ™yiÅŸ' if current_lang == 'az' else 'Change password' }}</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Şifrəni dəyiş' if current_lang == 'az' else 'Change password' }}</h2>
         <form action="/profile/change-password" method="POST" class="space-y-3">
-            <input type="password" name="current_password" placeholder="{{ 'HazÄ±rkÄ± ÅŸifrÉ™' if current_lang == 'az' else 'Current password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="new_password" placeholder="{{ 'Yeni ÅŸifrÉ™ (É™n az 8 simvol)' if current_lang == 'az' else 'New password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <input type="password" name="confirm_password" placeholder="{{ 'Yeni ÅŸifrÉ™ni tÉ™krar yaz' if current_lang == 'az' else 'Repeat new password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'ÅžifrÉ™ni yenilÉ™' if current_lang == 'az' else 'Update password' }}</button>
+            <input type="password" name="current_password" placeholder="{{ 'Hazırkı şifrə' if current_lang == 'az' else 'Current password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="new_password" placeholder="{{ 'Yeni şifrə (ən az 8 simvol)' if current_lang == 'az' else 'New password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <input type="password" name="confirm_password" placeholder="{{ 'Yeni şifrəni təkrar yaz' if current_lang == 'az' else 'Repeat new password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Şifrəni yenilə' if current_lang == 'az' else 'Update password' }}</button>
         </form>
     </div>
 
-    <!-- Ãœnvanlar bÃ¶lmÉ™si -->
+    <!-- Ünvanlar bölməsi -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">{{ 'QazandÄ±ÄŸÄ±n Ãœnvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
+        <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             {% for user_title in earned_titles %}
             <div class="bg-gray-700 p-3 rounded text-center">
@@ -1265,16 +1265,16 @@ PROFILE_HTML = """
         </div>
     </div>
 
-    <!-- Vitrin bÃ¶lmÉ™si -->
+    <!-- Vitrin bölməsi -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">{{ 'Vitrin (3 seÃ§im)' if current_lang == 'az' else 'Showcase (3 choices)' }}</h2>
+        <h2 class="text-xl font-bold mb-4">{{ 'Vitrin (3 seçim)' if current_lang == 'az' else 'Showcase (3 choices)' }}</h2>
         <form action="/profile/set-showcase" method="POST" class="space-y-3">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {% for i in range(1, 4) %}
                 <div>
                     <label class="text-sm">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }} {{ i }}</label>
                     <select name="showcase{{ i }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                        <option value="">{{ 'BoÅŸ' if current_lang == 'az' else 'Empty' }}</option>
+                        <option value="">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</option>
                         {% for ut in earned_titles %}
                         <option value="{{ ut.title.id }}" {% if (i==1 and current_user.showcase1_id == ut.title.id) or (i==2 and current_user.showcase2_id == ut.title.id) or (i==3 and current_user.showcase3_id == ut.title.id) %}selected{% endif %}>{{ ut.title.name }}</option>
                         {% endfor %}
@@ -1286,9 +1286,9 @@ PROFILE_HTML = """
         </form>
     </div>
 
-    <!-- GÃ¶rÉ™vlÉ™r vÉ™ NailiyyÉ™tlÉ™r -->
+    <!-- Görəvlər və Nailiyyətlər -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-3">{{ 'GÃ¶rÉ™vlÉ™r' if current_lang == 'az' else 'Quests' }}</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Görəvlər' if current_lang == 'az' else 'Quests' }}</h2>
         <div class="space-y-2">
             {% for quest in daily_quests %}
             <div class="bg-gray-700 p-3 rounded">
@@ -1299,7 +1299,7 @@ PROFILE_HTML = """
                 <p class="text-sm text-gray-400">{{ quest_descriptions.get(quest.description, quest.description) if current_lang == 'en' else quest.description }}</p>
                 {% set progress = user_quests.get(quest.id) %}
                 {% if progress and progress.completed %}
-                <span class="text-green-400">TamamlandÄ± âœ”</span>
+                <span class="text-green-400">Tamamlandı ✔</span>
                 {% else %}
                 <div class="w-full bg-gray-600 rounded-full h-2 mt-1">
                     <div class="bg-cyan-500 h-2 rounded-full" style="width: {{ (progress.progress / quest.target_value) * 100 if progress else 0 }}%"></div>
@@ -1317,7 +1317,7 @@ PROFILE_HTML = """
                 <p class="text-sm text-gray-400">{{ quest_descriptions.get(quest.description, quest.description) if current_lang == 'en' else quest.description }}</p>
                 {% set progress = user_quests.get(quest.id) %}
                 {% if progress and progress.completed %}
-                <span class="text-green-400">TamamlandÄ± âœ”</span>
+                <span class="text-green-400">Tamamlandı ✔</span>
                 {% else %}
                 <div class="w-full bg-gray-600 rounded-full h-2 mt-1">
                     <div class="bg-cyan-500 h-2 rounded-full" style="width: {{ (progress.progress / quest.target_value) * 100 if progress else 0 }}%"></div>
@@ -1330,7 +1330,7 @@ PROFILE_HTML = """
     </div>
 
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-3">{{ 'NailiyyÉ™tlÉ™r' if current_lang == 'az' else 'Achievements' }}</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Nailiyyətlər' if current_lang == 'az' else 'Achievements' }}</h2>
         <div class="space-y-2">
             {% for ach in all_achievements %}
             <div class="bg-gray-700 p-3 rounded flex items-center gap-3 {% if ach.hidden and not earned_achievements[ach.id] %}opacity-50{% endif %}">
@@ -1339,9 +1339,9 @@ PROFILE_HTML = """
                     <span class="font-bold">{{ achievement_names.get(ach.name, ach.name) if current_lang == 'en' else ach.name }}</span>
                     <p class="text-sm text-gray-400">{{ achievement_descriptions.get(ach.description, ach.description) if current_lang == 'en' else ach.description }}</p>
                     {% if earned_achievements[ach.id] %}
-                    <span class="text-green-400">{{ 'QazanÄ±lÄ±b' if current_lang == 'az' else 'Earned' }} âœ”</span>
+                    <span class="text-green-400">{{ 'Qazanılıb' if current_lang == 'az' else 'Earned' }} ✔</span>
                     {% else %}
-                    <span class="text-gray-500">{{ 'HÉ™lÉ™ qazanÄ±lmayÄ±b' if current_lang == 'az' else 'Not earned yet' }}</span>
+                    <span class="text-gray-500">{{ 'Hələ qazanılmayıb' if current_lang == 'az' else 'Not earned yet' }}</span>
                     {% endif %}
                 </div>
             </div>
@@ -1364,10 +1364,10 @@ USER_PROFILE_HTML = """
         <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl mb-4">{{ profile_user.username[0].upper() }}</div>
         {% endif %}
         <p>Email: {{ profile_user.email }}</p>
-        <p>SÉ™viyyÉ™: {{ profile_user.get_level() }}</p>
+        <p>Səviyyə: {{ profile_user.get_level() }}</p>
         <p>XP: {{ profile_user.points }}</p>
         {% if profile_user.title %}
-        <p>Ãœnvan: <span style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</span></p>
+        <p>Ünvan: <span style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</span></p>
         {% endif %}
         {% if profile_user.bio %}
         <p class="mt-2">Bio: {{ profile_user.bio }}</p>
@@ -1380,7 +1380,7 @@ USER_PROFILE_HTML = """
         </p>
         {% endif %}
         <p class="mt-2">
-            {% if profile_user.is_banned %}<span class="text-red-400">BanlÄ±</span>{% else %}<span class="text-green-400">Aktiv</span>{% endif %}
+            {% if profile_user.is_banned %}<span class="text-red-400">Banlı</span>{% else %}<span class="text-green-400">Aktiv</span>{% endif %}
             {% if profile_user.is_muted %}<span class="text-yellow-400"> | Susdurulub</span>{% endif %}
         </p>
     </div>
@@ -1388,23 +1388,23 @@ USER_PROFILE_HTML = """
     {% if current_user.is_admin and profile_user.id != current_user.id %}
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
         <h2 class="text-xl font-bold mb-3">Moderasiya</h2>
-        <p class="text-sm text-gray-400 mb-2">Ban mÃ¼ddÉ™tlÉ™ri:</p>
+        <p class="text-sm text-gray-400 mb-2">Ban müddətləri:</p>
         <div class="flex flex-wrap gap-2">
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-red-500 text-white rounded">1 gÃ¼n</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-red-500 text-white rounded">7 gÃ¼n</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-red-500 text-white rounded">30 gÃ¼n</a>
+            <a href="/admin/ban-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-red-500 text-white rounded">1 gün</a>
+            <a href="/admin/ban-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-red-500 text-white rounded">7 gün</a>
+            <a href="/admin/ban-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-red-500 text-white rounded">30 gün</a>
             <a href="/admin/ban-user/{{ profile_user.id }}?duration=90" class="px-3 py-1 bg-red-500 text-white rounded">3 ay</a>
             <a href="/admin/ban-user/{{ profile_user.id }}?duration=180" class="px-3 py-1 bg-red-500 text-white rounded">6 ay</a>
             <a href="/admin/ban-user/{{ profile_user.id }}?duration=365" class="px-3 py-1 bg-red-500 text-white rounded">12 ay</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=forever" class="px-3 py-1 bg-red-700 text-white rounded">Ã–mÃ¼rlÃ¼k</a>
-            {% if profile_user.is_banned %}<a href="/admin/unban-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">BanÄ± aÃ§</a>{% endif %}
+            <a href="/admin/ban-user/{{ profile_user.id }}?duration=forever" class="px-3 py-1 bg-red-700 text-white rounded">Ömürlük</a>
+            {% if profile_user.is_banned %}<a href="/admin/unban-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">Banı aç</a>{% endif %}
         </div>
-        <p class="text-sm text-gray-400 mt-4 mb-2">Susdurma mÃ¼ddÉ™tlÉ™ri:</p>
+        <p class="text-sm text-gray-400 mt-4 mb-2">Susdurma müddətləri:</p>
         <div class="flex flex-wrap gap-2">
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-yellow-500 text-white rounded">1 gÃ¼n</a>
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-yellow-500 text-white rounded">7 gÃ¼n</a>
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-yellow-500 text-white rounded">30 gÃ¼n</a>
-            {% if profile_user.is_muted %}<a href="/admin/unmute-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">SusturmanÄ± aÃ§</a>{% endif %}
+            <a href="/admin/mute-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-yellow-500 text-white rounded">1 gün</a>
+            <a href="/admin/mute-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-yellow-500 text-white rounded">7 gün</a>
+            <a href="/admin/mute-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-yellow-500 text-white rounded">30 gün</a>
+            {% if profile_user.is_muted %}<a href="/admin/unmute-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">Susturmanı aç</a>{% endif %}
         </div>
     </div>
     {% endif %}
@@ -1420,42 +1420,42 @@ ADMIN_HTML = """
     <h1 class="text-3xl font-bold mb-6">{{ 'Admin Panel' if current_lang == 'az' else 'Admin Panel' }}</h1>
     
     <div class="mb-6 bg-gray-800 p-4 rounded">
-        <h2 class="text-xl font-bold mb-3">{{ 'SiyahÄ± MÉ™qalÉ™si Yarat' if current_lang == 'az' else 'Create List Article' }}</h2>
+        <h2 class="text-xl font-bold mb-3">{{ 'Siyahı Məqaləsi Yarat' if current_lang == 'az' else 'Create List Article' }}</h2>
         <form action="/admin/generate-listicle" method="POST" class="space-y-3">
-            <input type="text" name="topic" placeholder="{{ 'MÉ™sÉ™lÉ™n:' if current_lang == 'az' else 'Example:' }} best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'SiyahÄ± yarat' if current_lang == 'az' else 'Create list' }}</button>
+            <input type="text" name="topic" placeholder="{{ 'Məsələn:' if current_lang == 'az' else 'Example:' }} best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
+            <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Siyahı yarat' if current_lang == 'az' else 'Create list' }}</button>
         </form>
     </div>
     
     <div class="mb-6">
-        <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xÉ™bÉ™rlÉ™ri avtomatik Ã§É™k' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
+        <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xəbərləri avtomatik çək' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-bold mb-3">{{ 'Yeni XÉ™bÉ™r ÆlavÉ™ Et' if current_lang == 'az' else 'Add New News' }}</h2>
+            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Xəbər Əlavə Et' if current_lang == 'az' else 'Add New News' }}</h2>
             <form action="/admin/add-news" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title_az" placeholder="{{ 'AzÉ™rbaycanca BaÅŸlÄ±q' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="title_en" placeholder="{{ 'Ä°ngilis BaÅŸlÄ±q (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="content_az" placeholder="{{ 'AzÉ™rbaycanca MÉ™zmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <textarea name="content_en" placeholder="{{ 'Ä°ngilis MÉ™zmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Games' }}, {{ 'Ãœmumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="image_url" placeholder="{{ 'ÅžÉ™kil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_az" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="content_az" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <textarea name="content_en" placeholder="{{ 'İngilis Məzmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
+                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Games' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <div id="blocksContainer"></div>
-                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ MÉ™tn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
-                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ ÅžÉ™kil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
+                <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
+                <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'ÆlavÉ™ et' if current_lang == 'az' else 'Add' }}</button>
+                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
         
         <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Manqa/Anime ÆlavÉ™ Et' if current_lang == 'az' else 'Add New Manga/Anime' }}</h2>
+            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Manqa/Anime Əlavə Et' if current_lang == 'az' else 'Add New Manga/Anime' }}</h2>
             <form action="/admin/add-manga" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="{{ 'AzÉ™rbaycanca BaÅŸlÄ±q' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="title_en" placeholder="{{ 'Ä°ngilis BaÅŸlÄ±q (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="description" placeholder="{{ 'AzÉ™rbaycanca AÃ§Ä±qlama' if current_lang == 'az' else 'Azerbaijani Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-                <textarea name="description_en" placeholder="{{ 'Ä°ngilis AÃ§Ä±qlama (optional)' if current_lang == 'az' else 'English Description (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+                <input type="text" name="title" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <textarea name="description" placeholder="{{ 'Azərbaycanca Açıqlama' if current_lang == 'az' else 'Azerbaijani Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+                <textarea name="description_en" placeholder="{{ 'İngilis Açıqlama (optional)' if current_lang == 'az' else 'English Description (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
                 <select name="type" class="w-full p-2 rounded bg-gray-700 text-white">
                     <option value="anime">Anime</option>
                     <option value="manga">Manga</option>
@@ -1463,12 +1463,12 @@ ADMIN_HTML = """
                     <option value="manhua">Manhua</option>
                     <option value="webtoon">Webtoon</option>
                 </select>
-                <input type="text" name="cover_url" placeholder="{{ 'Ãœz ÅŸÉ™kli URL' if current_lang == 'az' else 'Cover image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="cover_url" placeholder="{{ 'Üz şəkli URL' if current_lang == 'az' else 'Cover image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="cover_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (mÉ™s. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="status" placeholder="{{ 'Status' if current_lang == 'az' else 'Status' }}" value="{{ 'Davam edir' if current_lang == 'az' else 'Ongoing' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="number" name="chapters" placeholder="{{ 'BÃ¶lÃ¼m sayÄ±' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'ÆlavÉ™ et' if current_lang == 'az' else 'Add' }}</button>
+                <input type="number" name="chapters" placeholder="{{ 'Bölüm sayı' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
+                <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
     </div>
@@ -1479,67 +1479,67 @@ ADMIN_HTML = """
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ draft.title }}</span>
             <div>
-                <a href="/admin/publish-news/{{ draft.id }}" class="text-green-400 mr-3">{{ 'YayÄ±mla' if current_lang == 'az' else 'Publish' }}</a>
-                <a href="/admin/edit-news/{{ draft.id }}" class="text-cyan-400 mr-3">{{ 'RedaktÉ™ et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/publish-news/{{ draft.id }}" class="text-green-400 mr-3">{{ 'Yayımla' if current_lang == 'az' else 'Publish' }}</a>
+                <a href="/admin/edit-news/{{ draft.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
                 <a href="/admin/delete-news/{{ draft.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
             </div>
         </div>
         {% endfor %}
     </div>
     
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'MÃ¶vcud XÉ™bÉ™rlÉ™r' if current_lang == 'az' else 'Existing News' }}</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Xəbərlər' if current_lang == 'az' else 'Existing News' }}</h2>
     <div class="space-y-2">
         {% for news in all_news %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ news.title }}</span>
             <div>
-                <a href="/admin/edit-news/{{ news.id }}" class="text-cyan-400 mr-3">{{ 'RedaktÉ™ et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/edit-news/{{ news.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
                 <a href="/admin/delete-news/{{ news.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
             </div>
         </div>
         {% endfor %}
     </div>
     
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'MÃ¶vcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
     <div class="space-y-2">
         {% for m in all_manga %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <span>{{ m.title }} ({{ m.type }})</span>
             <div>
-                <a href="/admin/edit-manga/{{ m.id }}" class="text-cyan-400 mr-3">{{ 'RedaktÉ™ et' if current_lang == 'az' else 'Edit' }}</a>
+                <a href="/admin/edit-manga/{{ m.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
                 <a href="/admin/delete-manga/{{ m.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
             </div>
         </div>
         {% endfor %}
     </div>
     
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Ä°stifadÉ™Ã§ilÉ™r' if current_lang == 'az' else 'Users' }}</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'İstifadəçilər' if current_lang == 'az' else 'Users' }}</h2>
     <div class="space-y-2">
         {% for user in all_users %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
             <a href="/user/{{ user.id }}" class="text-cyan-400">{{ user.username }}</a>
             <div>
-                {% if user.is_banned %}<span class="text-red-400"> ({{ 'BanlÄ±' if current_lang == 'az' else 'Banned' }})</span>{% endif %}
+                {% if user.is_banned %}<span class="text-red-400"> ({{ 'Banlı' if current_lang == 'az' else 'Banned' }})</span>{% endif %}
                 {% if user.is_muted %}<span class="text-yellow-400"> ({{ 'Susturulub' if current_lang == 'az' else 'Muted' }})</span>{% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
     
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'ÅžikayÉ™tlÉ™r' if current_lang == 'az' else 'Reports' }}</h2>
+    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Şikayətlər' if current_lang == 'az' else 'Reports' }}</h2>
     <div class="space-y-2">
         {% for item in report_details %}
         <div class="bg-gray-800 p-3 rounded">
             <div class="flex justify-between items-start">
                 <div>
-                    <p><strong>{{ item.report.reporter.username }}</strong> {{ 'tÉ™rÉ™findÉ™n ÅŸikayÉ™t' if current_lang == 'az' else 'reported' }}</p>
-                    <p class="text-sm text-gray-400">{{ 'NÃ¶v' if current_lang == 'az' else 'Type' }}: {{ item.report.target_type }} #{{ item.report.target_id }}</p>
-                    <p class="text-sm text-gray-400">{{ 'SÉ™bÉ™b' if current_lang == 'az' else 'Reason' }}: {{ item.report.reason }}</p>
-                    <p class="text-xs text-gray-500 mt-2">{{ 'MÉ™zmun' if current_lang == 'az' else 'Content' }}: {{ item.snippet }}</p>
-                    <a href="{{ item.link }}" class="text-blue-400 text-xs" target="_blank">{{ 'MÉ™zmuna bax' if current_lang == 'az' else 'View content' }}</a>
+                    <p><strong>{{ item.report.reporter.username }}</strong> {{ 'tərəfindən şikayət' if current_lang == 'az' else 'reported' }}</p>
+                    <p class="text-sm text-gray-400">{{ 'Növ' if current_lang == 'az' else 'Type' }}: {{ item.report.target_type }} #{{ item.report.target_id }}</p>
+                    <p class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}: {{ item.report.reason }}</p>
+                    <p class="text-xs text-gray-500 mt-2">{{ 'Məzmun' if current_lang == 'az' else 'Content' }}: {{ item.snippet }}</p>
+                    <a href="{{ item.link }}" class="text-blue-400 text-xs" target="_blank">{{ 'Məzmuna bax' if current_lang == 'az' else 'View content' }}</a>
                 </div>
                 <div class="flex gap-2">
-                    <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'HÉ™ll et' if current_lang == 'az' else 'Resolve' }}</a>
+                    <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'Həll et' if current_lang == 'az' else 'Resolve' }}</a>
                     <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
                 </div>
             </div>
@@ -1555,21 +1555,21 @@ function addTextBlock() {
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
-            <span class="font-bold">{{ 'MÉ™tn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
+            <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="text">
         
-        <label class="text-xs text-gray-400">{{ 'BaÅŸlÄ±q (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
         <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         
-        <label class="text-xs text-gray-400">{{ 'MÉ™tn (AZ)' if current_lang == 'az' else 'Text (AZ)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Mətn (AZ)' if current_lang == 'az' else 'Text (AZ)' }}</label>
         <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white mb-3" rows="4"></textarea>
 
-        <label class="text-xs text-gray-400">{{ 'BaÅŸlÄ±q (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
         <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         
-        <label class="text-xs text-gray-400">{{ 'MÉ™tn (EN)' if current_lang == 'az' else 'Text (EN)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Mətn (EN)' if current_lang == 'az' else 'Text (EN)' }}</label>
         <textarea name="block_text_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2" rows="4"></textarea>
 
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
@@ -1586,21 +1586,21 @@ function addImageBlock() {
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
-            <span class="font-bold">{{ 'ÅžÉ™kil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
+            <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
         
-        <label class="text-xs text-gray-400">{{ 'BaÅŸlÄ±q (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
         <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
 
-        <label class="text-xs text-gray-400">{{ 'BaÅŸlÄ±q (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
         <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-3">
 
-        <label class="text-xs text-gray-400">{{ 'ÅžÉ™kil URL' if current_lang == 'az' else 'Image URL' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         
-        <label class="text-xs text-gray-400">{{ 'VÉ™ ya fayl yÃ¼klÉ™' if current_lang == 'az' else 'Or upload file' }}</label>
+        <label class="text-xs text-gray-400">{{ 'Və ya fayl yüklə' if current_lang == 'az' else 'Or upload file' }}</label>
         <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mb-2">
 
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
@@ -1616,65 +1616,65 @@ function addImageBlock() {
 
 EDIT_NEWS_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'XÉ™bÉ™ri RedaktÉ™ Et' if current_lang == 'az' else 'Edit News' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'XÉ™bÉ™ri RedaktÉ™ Et' if current_lang == 'az' else 'Edit News' }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }}</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
-        <!-- Dil seÃ§imi (tab) -->
+        <!-- Dil seçimi (tab) -->
         <div class="flex gap-3 mb-4">
             <button type="button" id="azTab" class="px-4 py-2 rounded bg-cyan-600 text-white" onclick="switchLang('az')">AZ</button>
             <button type="button" id="enTab" class="px-4 py-2 rounded bg-gray-600 text-white" onclick="switchLang('en')">EN</button>
         </div>
 
-        <!-- AZ mÉ™zmun -->
+        <!-- AZ məzmun -->
         <div id="azFields">
-            <label class="text-sm text-gray-400">{{ 'AzÉ™rbaycanca BaÅŸlÄ±q' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
+            <label class="text-sm text-gray-400">{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
             <input type="text" name="title_az" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-            <label class="text-sm text-gray-400">{{ 'AzÉ™rbaycanca MÉ™zmun' if current_lang == 'az' else 'Azerbaijani Content' }}</label>
+            <label class="text-sm text-gray-400">{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}</label>
             <textarea name="content_az" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
         </div>
 
-        <!-- EN mÉ™zmun -->
+        <!-- EN məzmun -->
         <div id="enFields" class="hidden">
-            <label class="text-sm text-gray-400">{{ 'Ä°ngilis BaÅŸlÄ±q' if current_lang == 'az' else 'English Title' }}</label>
+            <label class="text-sm text-gray-400">{{ 'İngilis Başlıq' if current_lang == 'az' else 'English Title' }}</label>
             <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-            <label class="text-sm text-gray-400">{{ 'Ä°ngilis MÉ™zmun' if current_lang == 'az' else 'English Content' }}</label>
+            <label class="text-sm text-gray-400">{{ 'İngilis Məzmun' if current_lang == 'az' else 'English Content' }}</label>
             <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         </div>
 
         <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
 
-        <label class="text-sm text-gray-400">{{ 'ÅžÉ™kil URL' if current_lang == 'az' else 'Image URL' }}</label>
+        <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <label class="text-sm text-gray-400">{{ 'ÅžÉ™kil faylÄ± yÃ¼klÉ™' if current_lang == 'az' else 'Upload image file' }}</label>
+        <label class="text-sm text-gray-400">{{ 'Şəkil faylı yüklə' if current_lang == 'az' else 'Upload image file' }}</label>
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
 
         <!-- Dinamik Bloklar -->
-        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'ÆlavÉ™ Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h2>
+        <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h2>
         <div id="blocksContainer"></div>
-        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ MÉ™tn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
-        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ ÅžÉ™kil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
+        <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
+        <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
 
         <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
     </form>
 </div>
 
 <script>
-let currentEditLang = '{{ current_lang }}'; // serverdÉ™n gÉ™lÉ™n cari dil
+let currentEditLang = '{{ current_lang }}'; // serverdən gələn cari dil
 
 function switchLang(lang) {
     currentEditLang = lang;
-    // AZ/EN sahÉ™lÉ™rini gÃ¶stÉ™r/gizlÉ™
+    // AZ/EN sahələrini göstər/gizlə
     document.getElementById('azFields').style.display = lang === 'az' ? 'block' : 'none';
     document.getElementById('enFields').style.display = lang === 'en' ? 'block' : 'none';
-    // Tab stillÉ™ri
+    // Tab stilləri
     document.getElementById('azTab').classList.toggle('bg-cyan-600', lang === 'az');
     document.getElementById('azTab').classList.toggle('bg-gray-600', lang !== 'az');
     document.getElementById('enTab').classList.toggle('bg-cyan-600', lang === 'en');
     document.getElementById('enTab').classList.toggle('bg-gray-600', lang !== 'en');
-    // Blok konteynerindÉ™ dilÉ™ uyÄŸun sahÉ™lÉ™ri gÃ¶stÉ™r/gizlÉ™
+    // Blok konteynerində dilə uyğun sahələri göstər/gizlə
     document.querySelectorAll('#blocksContainer .block-az').forEach(el => {
         el.style.display = lang === 'az' ? 'block' : 'none';
     });
@@ -1689,14 +1689,14 @@ function addTextBlock() {
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
-            <span class="font-bold">{{ 'MÉ™tn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
+            <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
         </div>
         <input type="hidden" name="block_type" value="text">
         <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
-            <label class="text-xs text-gray-400">BaÅŸlÄ±q (AZ)</label>
+            <label class="text-xs text-gray-400">Başlıq (AZ)</label>
             <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white">
-            <label class="text-xs text-gray-400">MÉ™tn (AZ)</label>
+            <label class="text-xs text-gray-400">Mətn (AZ)</label>
             <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white" rows="4"></textarea>
         </div>
         <div class="block-en" style="display:${currentEditLang === 'en' ? 'block' : 'none'};">
@@ -1719,21 +1719,21 @@ function addImageBlock() {
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
-            <span class="font-bold">{{ 'ÅžÉ™kil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
+            <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
         </div>
         <input type="hidden" name="block_type" value="image">
         <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
-            <label class="text-xs text-gray-400">BaÅŸlÄ±q (AZ)</label>
+            <label class="text-xs text-gray-400">Başlıq (AZ)</label>
             <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white">
         </div>
         <div class="block-en" style="display:${currentEditLang === 'en' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">Title (EN)</label>
             <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white">
         </div>
-        <label class="text-xs text-gray-400">ÅžÉ™kil URL</label>
+        <label class="text-xs text-gray-400">Şəkil URL</label>
         <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white">
-        <label class="text-xs text-gray-400">VÉ™ ya fayl yÃ¼klÉ™</label>
+        <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
         <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
             <option value="stack">Alt-alta</option>
@@ -1743,7 +1743,7 @@ function addImageBlock() {
     container.appendChild(div);
 }
 
-// MÃ¶vcud bloklarÄ± yÃ¼klÉ™
+// Mövcud blokları yüklə
 window.onload = function() {
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
@@ -1751,14 +1751,14 @@ window.onload = function() {
             textDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
             textDiv{{ block.id }}.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold">MÉ™tn Bloku</span>
+                    <span class="font-bold">Mətn Bloku</span>
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="text">
                 <div class="block-az">
-                    <label class="text-xs text-gray-400">BaÅŸlÄ±q (AZ)</label>
+                    <label class="text-xs text-gray-400">Başlıq (AZ)</label>
                     <input type="text" name="block_title_az" value="{{ block.title_az }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                    <label class="text-xs text-gray-400">MÉ™tn (AZ)</label>
+                    <label class="text-xs text-gray-400">Mətn (AZ)</label>
                     <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white" rows="4">{{ block.text_content_az }}</textarea>
                 </div>
                 <div class="block-en">
@@ -1778,21 +1778,21 @@ window.onload = function() {
             imgDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
             imgDiv{{ block.id }}.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold">ÅžÉ™kil Bloku</span>
+                    <span class="font-bold">Şəkil Bloku</span>
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="image">
                 <div class="block-az">
-                    <label class="text-xs text-gray-400">BaÅŸlÄ±q (AZ)</label>
+                    <label class="text-xs text-gray-400">Başlıq (AZ)</label>
                     <input type="text" name="block_title_az" value="{{ block.title_az }}" class="w-full p-2 rounded bg-gray-800 text-white">
                 </div>
                 <div class="block-en">
                     <label class="text-xs text-gray-400">Title (EN)</label>
                     <input type="text" name="block_title_en" value="{{ block.title_en }}" class="w-full p-2 rounded bg-gray-800 text-white">
                 </div>
-                <label class="text-xs text-gray-400">ÅžÉ™kil URL</label>
+                <label class="text-xs text-gray-400">Şəkil URL</label>
                 <input type="text" name="block_image_url" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
-                <label class="text-xs text-gray-400">VÉ™ ya fayl yÃ¼klÉ™</label>
+                <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
                 <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
                     <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
@@ -1802,7 +1802,7 @@ window.onload = function() {
             document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
         {% endif %}
     {% endfor %}
-    // Cari dilÉ™ uyÄŸun sahÉ™lÉ™ri gÃ¶stÉ™r
+    // Cari dilə uyğun sahələri göstər
     switchLang(currentEditLang);
 };
 
@@ -1812,10 +1812,10 @@ window.onload = function() {
 
 EDIT_MANGA_HTML = """
 {% extends "base.html" %}
-{% block title %}ManqanÄ± RedaktÉ™ Et - Mi Digital Verse{% endblock %}
+{% block title %}Manqanı Redaktə Et - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">ManqanÄ± RedaktÉ™ Et</h1>
+    <h1 class="text-3xl font-bold mb-6">Manqanı Redaktə Et</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
         <input type="text" name="title" value="{{ manga.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
         <textarea name="description" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5">{{ manga.description }}</textarea>
@@ -1839,27 +1839,27 @@ EDIT_MANGA_HTML = """
 
 ABOUT_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'HaqqÄ±mÄ±zda' if current_lang == 'az' else 'About Us' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Haqqımızda' if current_lang == 'az' else 'About Us' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'HaqqÄ±mÄ±zda' if current_lang == 'az' else 'About Us' }}</h1>
+    <h1 class="text-3xl font-bold mb-6">{{ 'Haqqımızda' if current_lang == 'az' else 'About Us' }}</h1>
     <p class="text-lg leading-relaxed">
         {% if current_lang == 'az' %}
-            Mi Digital Verse, anime, manhwa, manhua vÉ™ manga hÉ™vÉ™skarlarÄ± Ã¼Ã§Ã¼n yaradÄ±lmÄ±ÅŸ mÃ¼asir rÉ™qÉ™msal mÉ™kandÄ±r. MÉ™qsÉ™dimiz pÉ™rÉ™stiÅŸkarlara É™n son xÉ™bÉ™rlÉ™ri, keyfiyyÉ™tli analizlÉ™ri vÉ™ interaktiv icma tÉ™crÃ¼bÉ™sini bir araya gÉ™tirmÉ™kdir.
+            Mi Digital Verse, anime, manhwa, manhua və manga həvəskarları üçün yaradılmış müasir rəqəmsal məkandır. Məqsədimiz pərəstişkarlara ən son xəbərləri, keyfiyyətli analizləri və interaktiv icma təcrübəsini bir araya gətirməkdir.
         {% else %}
             Mi Digital Verse is a modern digital space created for anime, manhwa, manhua, and manga enthusiasts. Our goal is to bring fans together with the latest news, quality analysis, and interactive community experience.
         {% endif %}
     </p>
     <p class="text-lg leading-relaxed">
         {% if current_lang == 'az' %}
-            Biz inanÄ±rÄ±q ki, hÉ™r bir pÉ™rÉ™stiÅŸkarÄ±n sÉ™si burada eÅŸidilmÉ™lidir. Ona gÃ¶rÉ™ dÉ™ saytÄ±mÄ±zda mÃ¼zakirÉ™ otaqlarÄ±, nailiyyÉ™tlÉ™r vÉ™ Ã¼nvan sistemi qurmuÅŸuq. GÉ™lÉ™cÉ™kdÉ™ daha Ã§ox funksiya vÉ™ mÉ™zmun É™lavÉ™ edÉ™rÉ™k bÃ¶yÃ¼mÉ™yÉ™ davam edÉ™cÉ™yik.
+            Biz inanırıq ki, hər bir pərəstişkarın səsi burada eşidilməlidir. Ona görə də saytımızda müzakirə otaqları, nailiyyətlər və ünvan sistemi qurmuşuq. Gələcəkdə daha çox funksiya və məzmun əlavə edərək böyüməyə davam edəcəyik.
         {% else %}
             We believe that every fan's voice should be heard here. That's why we have built discussion rooms, achievements, and a title system on our site. We will continue to grow by adding more features and content in the future.
         {% endif %}
     </p>
     <p class="text-lg leading-relaxed">
         {% if current_lang == 'az' %}
-            Mi Digital Verse ailÉ™sinÉ™ qoÅŸulun vÉ™ rÉ™qÉ™msal dÃ¼nyada Ã¶z yerinizi alÄ±n!
+            Mi Digital Verse ailəsinə qoşulun və rəqəmsal dünyada öz yerinizi alın!
         {% else %}
             Join the Mi Digital Verse family and take your place in the digital world!
         {% endif %}
@@ -1870,28 +1870,28 @@ ABOUT_HTML = """
 
 SEARCH_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ 'AxtarÄ±ÅŸ' if current_lang == 'az' else 'Search' }} - Mi Digital Verse{% endblock %}
+{% block title %}{{ 'Axtarış' if current_lang == 'az' else 'Search' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-2xl mb-4">{{ 'AxtarÄ±ÅŸ:' if current_lang == 'az' else 'Search:' }} "{{ q }}"</h1>
-    <h2 class="text-xl mb-3">{{ 'XÉ™bÉ™rlÉ™r' if current_lang == 'az' else 'News' }}</h2>
+    <h1 class="text-2xl mb-4">{{ 'Axtarış:' if current_lang == 'az' else 'Search:' }} "{{ q }}"</h1>
+    <h2 class="text-xl mb-3">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</h2>
     {% for n in news_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/news/{{ n.id }}" class="text-cyan-300">{{ n.title }}</a></div>
-    {% else %}<p>{{ 'TapÄ±lmadÄ±.' if current_lang == 'az' else 'Not found.' }}</p>{% endfor %}
+    {% else %}<p>{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>{% endfor %}
     <h2 class="text-xl mb-3 mt-6">{{ 'Manqa/Anime' if current_lang == 'az' else 'Manga/Anime' }}</h2>
     {% for m in manga_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/manga/{{ m.id }}" class="text-cyan-300">{{ m.title }} ({{ m.type }})</a></div>
-    {% else %}<p>TapÄ±lmadÄ±.</p>{% endfor %}
+    {% else %}<p>Tapılmadı.</p>{% endfor %}
 </div>
 {% endblock %}
 """
 
 NOTIFICATIONS_HTML = """
 {% extends "base.html" %}
-{% block title %}BildiriÅŸlÉ™r - Mi Digital Verse{% endblock %}
+{% block title %}Bildirişlər - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">BildiriÅŸlÉ™r</h1>
+    <h1 class="text-3xl font-bold mb-6">Bildirişlər</h1>
     <div class="space-y-2">
         {% for n in notifications %}
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center {% if not n.is_read %}border-l-4 border-cyan-400{% endif %}">
@@ -1899,26 +1899,26 @@ NOTIFICATIONS_HTML = """
             <div class="text-sm text-gray-400">
                 {{ n.created_at.strftime('%d.%m.%Y %H:%M') }}
                 {% if not n.is_read %}
-                <a href="/notifications/mark-read/{{ n.id }}" class="ml-2 text-cyan-400">OxunmuÅŸ iÅŸarÉ™lÉ™</a>
+                <a href="/notifications/mark-read/{{ n.id }}" class="ml-2 text-cyan-400">Oxunmuş işarələ</a>
                 {% endif %}
             </div>
         </div>
         {% else %}
-        <p>BildiriÅŸ yoxdur.</p>
+        <p>Bildiriş yoxdur.</p>
         {% endfor %}
     </div>
-    <a href="/notifications/mark-all-read" class="mt-4 inline-block px-4 py-2 bg-cyan-500 rounded">HamÄ±sÄ±nÄ± oxunmuÅŸ et</a>
+    <a href="/notifications/mark-all-read" class="mt-4 inline-block px-4 py-2 bg-cyan-500 rounded">Hamısını oxunmuş et</a>
 </div>
 {% endblock %}
 """
 
 QUESTS_HTML = """
 {% extends "base.html" %}
-{% block title %}GÃ¶rÉ™vlÉ™r - Mi Digital Verse{% endblock %}
+{% block title %}Görəvlər - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">GÃ¶rÉ™vlÉ™r</h1>
-    <h2 class="text-2xl font-semibold mb-3">GÃ¼ndÉ™lik</h2>
+    <h1 class="text-3xl font-bold mb-6">Görəvlər</h1>
+    <h2 class="text-2xl font-semibold mb-3">Gündəlik</h2>
     <div class="space-y-3">
         {% for quest in daily_quests %}
         <div class="bg-gray-800 p-4 rounded">
@@ -1930,7 +1930,7 @@ QUESTS_HTML = """
             {% set progress = user_quests.get(quest.id) %}
             {% if progress %}
                 {% if progress.completed %}
-                <p class="text-green-400">TamamlandÄ± âœ”</p>
+                <p class="text-green-400">Tamamlandı ✔</p>
                 {% else %}
                 <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
                     <div class="bg-cyan-500 h-2 rounded-full" style="width: {{ (progress.progress / quest.target_value) * 100 }}%"></div>
@@ -1944,7 +1944,7 @@ QUESTS_HTML = """
         {% endfor %}
     </div>
 
-    <h2 class="text-2xl font-semibold mt-8 mb-3">HÉ™ftÉ™lik</h2>
+    <h2 class="text-2xl font-semibold mt-8 mb-3">Həftəlik</h2>
     <div class="space-y-3">
         {% for quest in weekly_quests %}
         <div class="bg-gray-800 p-4 rounded">
@@ -1956,7 +1956,7 @@ QUESTS_HTML = """
             {% set progress = user_quests.get(quest.id) %}
             {% if progress %}
                 {% if progress.completed %}
-                <p class="text-green-400">TamamlandÄ± âœ”</p>
+                <p class="text-green-400">Tamamlandı ✔</p>
                 {% else %}
                 <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
                     <div class="bg-cyan-500 h-2 rounded-full" style="width: {{ (progress.progress / quest.target_value) * 100 }}%"></div>
@@ -1975,10 +1975,10 @@ QUESTS_HTML = """
 
 ACHIEVEMENTS_HTML = """
 {% extends "base.html" %}
-{% block title %}NailiyyÉ™tlÉ™r - Mi Digital Verse{% endblock %}
+{% block title %}Nailiyyətlər - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">NailiyyÉ™tlÉ™r</h1>
+    <h1 class="text-3xl font-bold mb-6">Nailiyyətlər</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% for ach in all_achievements %}
         <div class="bg-gray-800 p-4 rounded flex items-center gap-3 {% if ach.hidden and not earned_achievements[ach.id] %}opacity-50{% endif %}">
@@ -1987,9 +1987,9 @@ ACHIEVEMENTS_HTML = """
                 <p class="font-bold">{{ ach.name }}</p>
                 <p class="text-sm text-gray-400">{{ ach.description }}</p>
                 {% if earned_achievements[ach.id] %}
-                <p class="text-green-400">QazanÄ±lÄ±b âœ”</p>
+                <p class="text-green-400">Qazanılıb ✔</p>
                 {% else %}
-                <p class="text-gray-500">HÉ™lÉ™ qazanÄ±lmayÄ±b</p>
+                <p class="text-gray-500">Hələ qazanılmayıb</p>
                 {% endif %}
             </div>
         </div>
@@ -2082,7 +2082,7 @@ def archive():
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
         elif category_filter == 'oyun':
             news_query = news_query.filter(News.category.ilike('%oyun%'))
-            manga_query = manga_query.filter(Manga.id == -1)  # oyun manqasÄ± yoxdur
+            manga_query = manga_query.filter(Manga.id == -1)  # oyun manqası yoxdur
         else:
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
 
@@ -2144,7 +2144,7 @@ def like_manga(manga_id):
     add_xp(current_user, 1)
     update_quest_progress(current_user, 'like', 1)
     check_achievements(current_user)
-    add_notification(current_user, f"Siz {manga.title} É™sÉ™rini bÉ™yÉ™ndiniz.")
+    add_notification(current_user, f"Siz {manga.title} əsərini bəyəndiniz.")
     return redirect(url_for('manga_detail', manga_id=manga.id))
 
 @app.route('/search')
@@ -2166,8 +2166,8 @@ def about():
 
 @app.route('/community')
 def community():
-    special_rooms = Room.query.filter(Room.name.in_(['XÉ™ta OtaÄŸÄ±', 'TÉ™kliflÉ™r OtaÄŸÄ±'])).order_by(Room.id).all()
-    normal_rooms = Room.query.filter(Room.name.notin_(['XÉ™ta OtaÄŸÄ±', 'TÉ™kliflÉ™r OtaÄŸÄ±'])).order_by(Room.created_at.desc()).all()
+    special_rooms = Room.query.filter(Room.name.in_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.id).all()
+    normal_rooms = Room.query.filter(Room.name.notin_(['Xəta Otağı', 'Təkliflər Otağı'])).order_by(Room.created_at.desc()).all()
     rooms = special_rooms + normal_rooms
     all_news = News.query.all()
     return render_template('community.html', rooms=rooms, all_news=all_news)
@@ -2182,16 +2182,16 @@ def create_room():
         {% extends "base.html" %}
         {% block content %}
         <div class="max-w-4xl mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold mb-6">Yeni MÃ¼zakirÉ™ OtaÄŸÄ±</h1>
+            <h1 class="text-3xl font-bold mb-6">Yeni Müzakirə Otağı</h1>
             <form method="POST" class="bg-gray-800 p-4 rounded space-y-3">
-                <input type="text" name="room_name" placeholder="Otaq adÄ±" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="room_name" placeholder="Otaq adı" required class="w-full p-2 rounded bg-gray-700 text-white">
                 <select name="news_id" class="w-full p-2 rounded bg-gray-700 text-white">
-                    <option value="">XÉ™bÉ™r seÃ§ (istÉ™yÉ™ baÄŸlÄ±)</option>
+                    <option value="">Xəbər seç (istəyə bağlı)</option>
                     {% for n in all_news %}
                     <option value="{{ n.id }}" {% if n.id == selected_news_id %}selected{% endif %}>{{ n.title }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">OtaÄŸÄ± yarat</button>
+                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">Otağı yarat</button>
             </form>
         </div>
         {% endblock %}
@@ -2200,20 +2200,20 @@ def create_room():
         name = request.form.get('room_name', '').strip()
         news_id = request.form.get('news_id', '')
         if not name:
-            flash(_t('Otaq adÄ± boÅŸ ola bilmÉ™z', 'Room name cannot be empty'))
+            flash(_t('Otaq adı boş ola bilməz', 'Room name cannot be empty'))
             return redirect(url_for('community'))
         room = Room(name=name, news_id=int(news_id) if news_id else None, creator_id=current_user.id)
         db.session.add(room)
         db.session.commit()
         update_quest_progress(current_user, 'room_create', 1)
         check_achievements(current_user)
-        # BildiriÅŸ: yalnÄ±z xÉ™bÉ™r sahibinÉ™ (É™gÉ™r xÉ™bÉ™rÉ™ baÄŸlÄ±dÄ±rsa)
+        # Bildiriş: yalnız xəbər sahibinə (əgər xəbərə bağlıdırsa)
         if room.news_id:
             news = News.query.get(room.news_id)
             if news and news.author_id and news.author_id != current_user.id:
                 author = User.query.get(news.author_id)
                 if author:
-                    add_notification(author, f"{current_user.username} '{news.title}' xÉ™bÉ™ri Ã¼Ã§Ã¼n mÃ¼zakirÉ™ otaÄŸÄ± yaratdÄ±.")
+                    add_notification(author, f"{current_user.username} '{news.title}' xəbəri üçün müzakirə otağı yaratdı.")
         return redirect(url_for('community'))
 
 @app.route('/room/<int:room_id>')
@@ -2235,12 +2235,12 @@ def add_post(room_id):
     add_xp(current_user, 5)
     update_quest_progress(current_user, 'post', 1)
     check_achievements(current_user)
-        # YalnÄ±z otaq sahibinÉ™ bildiriÅŸ gÃ¶ndÉ™r (Ã¶zÃ¼ deyilsÉ™)
+        # Yalnız otaq sahibinə bildiriş göndər (özü deyilsə)
     room = Room.query.get(room_id)
     if room and room.creator_id != current_user.id:
         room_owner = User.query.get(room.creator_id)
         if room_owner:
-            add_notification(room_owner, f"{current_user.username} '{room.name}' otaÄŸÄ±nda yeni mesaj yazdÄ±.")
+            add_notification(room_owner, f"{current_user.username} '{room.name}' otağında yeni mesaj yazdı.")
     return redirect(url_for('room', room_id=room_id))
 
 @app.route('/report/submit', methods=['POST'])
@@ -2250,19 +2250,19 @@ def report_submit():
     target_id = int(request.form.get('target_id'))
     reason = request.form.get('reason', '')
 
-    if reason == 'digÉ™r':
+    if reason == 'digər':
         other_reason = request.form.get('other_reason', '').strip()
         if other_reason:
             reason = other_reason
 
     if target_type not in ['post', 'room']:
-        flash(_t('SÉ™hv ÅŸikayÉ™t nÃ¶vÃ¼.', 'Invalid report type.'))
+        flash(_t('Səhv şikayət növü.', 'Invalid report type.'))
         return redirect(request.referrer or url_for('index'))
 
     report = Report(reporter_id=current_user.id, target_type=target_type, target_id=target_id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash(_t('ÅžikayÉ™t gÃ¶ndÉ™rildi.', 'Report submitted.'))
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/report/post/<int:post_id>', methods=['POST'])
@@ -2273,7 +2273,7 @@ def report_post(post_id):
     report = Report(reporter_id=current_user.id, target_type='post', target_id=post.id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash(_t('ÅžikayÉ™t gÃ¶ndÉ™rildi.', 'Report submitted.'))
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/report/room/<int:room_id>', methods=['POST'])
@@ -2284,7 +2284,7 @@ def report_room(room_id):
     report = Report(reporter_id=current_user.id, target_type='room', target_id=room.id, reason=reason)
     db.session.add(report)
     db.session.commit()
-    flash(_t('ÅžikayÉ™t gÃ¶ndÉ™rildi.', 'Report submitted.'))
+    flash(_t('Şikayət göndərildi.', 'Report submitted.'))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/like-news/<int:news_id>', methods=['POST'])
@@ -2293,28 +2293,28 @@ def like_news(news_id):
     news = News.query.get_or_404(news_id)
     existing_like = NewsLike.query.filter_by(user_id=current_user.id, news_id=news.id).first()
     if existing_like:
-        # BÉ™yÉ™nmÉ™ni geri al
+        # Bəyənməni geri al
         db.session.delete(existing_like)
         news.likes = max(0, news.likes - 1)
         db.session.commit()
-        flash(_t('BÉ™yÉ™nmÉ™ geri alÄ±ndÄ±.', 'Like removed.'))
+        flash(_t('Bəyənmə geri alındı.', 'Like removed.'))
     else:
-        # Yeni bÉ™yÉ™nmÉ™
+        # Yeni bəyənmə
         like = NewsLike(user_id=current_user.id, news_id=news.id)
         db.session.add(like)
         news.likes += 1
         db.session.commit()
-        # XP vÉ™ gÃ¶rÉ™vlÉ™r
+        # XP və görəvlər
         add_xp(current_user, 1)
         update_quest_progress(current_user, 'like', 1)
         check_achievements(current_user)
-        # BildiriÅŸ: yalnÄ±z xÉ™bÉ™r sahibinÉ™ (É™gÉ™r admin deyilsÉ™ vÉ™ xÉ™bÉ™rin mÃ¼É™llifi varsa)
+        # Bildiriş: yalnız xəbər sahibinə (əgər admin deyilsə və xəbərin müəllifi varsa)
         if news.author_id and news.author_id != current_user.id:
             author = User.query.get(news.author_id)
             if author:
-                add_notification(author, f"{current_user.username} sizin '{news.title}' xÉ™bÉ™rinizi bÉ™yÉ™ndi.")
+                add_notification(author, f"{current_user.username} sizin '{news.title}' xəbərinizi bəyəndi.")
         else:
-            # Ã–z xÉ™bÉ™rini bÉ™yÉ™nÉ™ndÉ™ bildiriÅŸ getmÉ™sin
+            # Öz xəbərini bəyənəndə bildiriş getməsin
             pass
     return redirect(url_for('news_detail', news_id=news.id))
 
@@ -2333,25 +2333,25 @@ def register():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         if not username or not password:
-            flash(_t('Ä°stifadÉ™Ã§i adÄ± vÉ™ ÅŸifrÉ™ mÉ™cburidir', 'Username and password are required'))
+            flash(_t('İstifadəçi adı və şifrə məcburidir', 'Username and password are required'))
             return redirect(url_for('register'))
         if not is_strong_password(password):
-            flash(_t('ÅžifrÉ™ É™n az 8 simvol, hÉ™rf vÉ™ rÉ™qÉ™m olmalÄ±dÄ±r', 'Password must be at least 8 characters long and contain letters and numbers'))
+            flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and numbers'))
             return redirect(url_for('register'))
         if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
-            flash(_t('Email formatÄ± dÃ¼zgÃ¼n deyil', 'Invalid email format'))
+            flash(_t('Email formatı düzgün deyil', 'Invalid email format'))
             return redirect(url_for('register'))
         if User.query.filter_by(username=username).first():
-            flash(_t('Bu istifadÉ™Ã§i adÄ± artÄ±q mÃ¶vcuddur', 'This username already exists'))
+            flash(_t('Bu istifadəçi adı artıq mövcuddur', 'This username already exists'))
             return redirect(url_for('register'))
         if email and User.query.filter_by(email=email).first():
-            flash(_t('Bu email artÄ±q qeydiyyatdan keÃ§ib', 'This email is already registered'))
+            flash(_t('Bu email artıq qeydiyyatdan keçib', 'This email is already registered'))
             return redirect(url_for('register'))
         user = User(username=username, email=email, password_hash=generate_password_hash(password))
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        start_title = Title.query.filter_by(name="BaÅŸlanÄŸÄ±c").first()
+        start_title = Title.query.filter_by(name="Başlanğıc").first()
         if start_title:
             user.title_id = start_title.id
             ut = UserTitle(user_id=user.id, title_id=start_title.id)
@@ -2365,10 +2365,10 @@ def register():
     <body>
         <h1>Qeydiyyat</h1>
         <form method="POST">
-            <input type="text" name="username" placeholder="Ä°stifadÉ™Ã§i adÄ±" required><br>
+            <input type="text" name="username" placeholder="İstifadəçi adı" required><br>
             <input type="email" name="email" placeholder="Email" required><br>
-            <input type="password" name="password" placeholder="ÅžifrÉ™ (É™n az 8 simvol)" required><br>
-            <button type="submit">Qeydiyyatdan keÃ§</button>
+            <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required><br>
+            <button type="submit">Qeydiyyatdan keç</button>
         </form>
     </body>
     </html>
@@ -2388,11 +2388,11 @@ def login():
                 user.banned_reason = ''
                 db.session.commit()
             else:
-                flash(_t('HesabÄ±nÄ±z banlandÄ±.', 'Your account has been banned.'))
+                flash(_t('Hesabınız banlandı.', 'Your account has been banned.'))
                 return redirect(url_for('index'))
         login_user(user)
         return redirect(url_for('index'))
-    flash(_t('Ä°stifadÉ™Ã§i adÄ± vÉ™ ya ÅŸifrÉ™ yanlÄ±ÅŸdÄ±r', 'Invalid username or password'))
+    flash(_t('İstifadəçi adı və ya şifrə yanlışdır', 'Invalid username or password'))
     return redirect(url_for('index'))
 
 @app.route('/logout')
@@ -2431,7 +2431,7 @@ def update_bio():
     current_user.instagram_link = request.form.get('instagram_link', '').strip()
     current_user.discord_link = request.form.get('discord_link', '').strip()
     db.session.commit()
-    flash(_t('Profil yenilÉ™ndi', 'Profile updated'))
+    flash(_t('Profil yeniləndi', 'Profile updated'))
     return redirect(url_for('profile'))
 
 @app.route('/profile/change-password', methods=['POST'])
@@ -2441,15 +2441,15 @@ def change_password():
     new_password = request.form.get('new_password', '')
     confirm_password = request.form.get('confirm_password', '')
     if not check_password_hash(current_user.password_hash, current_password):
-        flash(_t('HazÄ±rkÄ± ÅŸifrÉ™ yanlÄ±ÅŸdÄ±r', 'Current password is incorrect'))
+        flash(_t('Hazırkı şifrə yanlışdır', 'Current password is incorrect'))
     elif new_password != confirm_password:
-        flash(_t('Yeni ÅŸifrÉ™lÉ™r uyÄŸun gÉ™lmir', 'New passwords do not match'))
+        flash(_t('Yeni şifrələr uyğun gəlmir', 'New passwords do not match'))
     elif not is_strong_password(new_password):
-        flash(_t('ÅžifrÉ™ É™n az 8 simvol, hÉ™rf vÉ™ rÉ™qÉ™m olmalÄ±dÄ±r', 'Password must be at least 8 characters long and contain letters and and numbers'))
+        flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and and numbers'))
     else:
         current_user.password_hash = generate_password_hash(new_password)
         db.session.commit()
-        flash(_t('ÅžifrÉ™ yenilÉ™ndi', 'Password updated'))
+        flash(_t('Şifrə yeniləndi', 'Password updated'))
     return redirect(url_for('profile'))
 
 @app.route('/profile/set-active-title/<int:title_id>', methods=['POST'])
@@ -2459,9 +2459,9 @@ def set_active_title(title_id):
     if UserTitle.query.filter_by(user_id=current_user.id, title_id=title.id).first():
         current_user.title_id = title.id
         db.session.commit()
-        flash(f"Aktiv Ã¼nvan: {title.name}")
+        flash(f"Aktiv ünvan: {title.name}")
     else:
-        flash(_t("Bu Ã¼nvana sahib deyilsiniz.", "You do not own this address."))
+        flash(_t("Bu ünvana sahib deyilsiniz.", "You do not own this address."))
     return redirect(url_for('profile'))
 
 @app.route('/profile/set-showcase', methods=['POST'])
@@ -2474,38 +2474,38 @@ def set_showcase():
     current_user.showcase2_id = int(s2) if s2 else None
     current_user.showcase3_id = int(s3) if s3 else None
     db.session.commit()
-    flash(_t("Vitrin yenilÉ™ndi", "Showcase updated"))
+    flash(_t("Vitrin yeniləndi", "Showcase updated"))
     return redirect(url_for('profile'))
 
 @app.route('/claim-daily', methods=['POST'])
 @login_required
 def claim_daily():
     if daily_reward(current_user):
-        flash(_t('GÃ¼nlÃ¼k Ã¶dÃ¼l alÄ±ndÄ±!', 'Daily reward claimed!'))
+        flash(_t('Günlük ödül alındı!', 'Daily reward claimed!'))
     else:
-        flash('Bu gÃ¼n artÄ±q Ã¶dÃ¼l almÄ±sÄ±nÄ±z.')
+        flash('Bu gün artıq ödül almısınız.')
     return redirect(url_for('profile'))
 
 @app.route('/upload-avatar', methods=['POST'])
 @login_required
 def upload_avatar():
     if 'avatar' not in request.files:
-        flash(_t('Fayl seÃ§ilmÉ™yib', 'No file selected'))
+        flash(_t('Fayl seçilməyib', 'No file selected'))
         return redirect(url_for('profile'))
     file = request.files['avatar']
     if file.filename == '':
-        flash(_t('Fayl seÃ§ilmÉ™yib', 'No file selected'))
+        flash(_t('Fayl seçilməyib', 'No file selected'))
         return redirect(url_for('profile'))
     if file:
         ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
         if ext not in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
-            flash(_t('YalnÄ±z ÅŸÉ™kil fayllarÄ± yÃ¼klÉ™yÉ™ bilÉ™rsiniz', 'You can only upload image files'))
+            flash(_t('Yalnız şəkil faylları yükləyə bilərsiniz', 'You can only upload image files'))
             return redirect(url_for('profile'))
         filename = f"{current_user.id}_{datetime.utcnow().timestamp()}.{ext}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         current_user.avatar = filename
         db.session.commit()
-        flash(_t('Profil ÅŸÉ™kli yenilÉ™ndi', 'Profile picture updated'))
+        flash(_t('Profil şəkli yeniləndi', 'Profile picture updated'))
     return redirect(url_for('profile'))
 
 # ---------- NOTIFICATIONS ----------
@@ -2529,7 +2529,7 @@ def mark_read(notif_id):
 def mark_all_read():
     Notification.query.filter_by(user_id=current_user.id, is_read=False).update({'is_read': True})
     db.session.commit()
-    flash(_t("BÃ¼tÃ¼n bildiriÅŸlÉ™r oxunmuÅŸ iÅŸarÉ™lÉ™ndi", "All notifications marked as read"))
+    flash(_t("Bütün bildirişlər oxunmuş işarələndi", "All notifications marked as read"))
     return redirect(url_for('notifications'))
 
 # ---------- ADMIN ----------
@@ -2546,11 +2546,11 @@ def admin():
     for report in reports:
         if report.target_type == 'post':
             target = Post.query.get(report.target_id)
-            content_snippet = target.content[:100] if target else 'SilinmiÅŸ'
+            content_snippet = target.content[:100] if target else 'Silinmiş'
             link = url_for('room', room_id=target.room_id) if target else '#'
         elif report.target_type == 'room':
             target = Room.query.get(report.target_id)
-            content_snippet = target.name if target else 'SilinmiÅŸ'
+            content_snippet = target.name if target else 'Silinmiş'
             link = url_for('room', room_id=report.target_id) if target else '#'
         else:
             content_snippet = ''
@@ -2565,9 +2565,9 @@ def fetch_news():
     articles = fetch_and_generate_news()
     count = 0
     for art in articles:
-        title = art.get('title', 'XÉ™bÉ™r')
+        title = art.get('title', 'Xəbər')
         content = art.get('content', '')
-        category = art.get('category', 'Ãœmumi')
+        category = art.get('category', 'Ümumi')
         source_url = art.get('source_url', '')
         image_keywords = art.get('image_search_keywords', title)
         image_url = art.get('image_url', '')
@@ -2585,7 +2585,7 @@ def fetch_news():
             db.session.add(news)
             count += 1
     db.session.commit()
-    flash(_t(f"{count} xÉ™bÉ™r qaralama olaraq É™lavÉ™ edildi.", f"{count} news added as draft."))
+    flash(_t(f"{count} xəbər qaralama olaraq əlavə edildi.", f"{count} news added as draft."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/generate-listicle', methods=['POST'])
@@ -2594,13 +2594,13 @@ def fetch_news():
 def admin_generate_listicle():
     topic = request.form.get('topic', '').strip()
     if not topic:
-        flash(_t('MÃ¶vzu daxil edin', 'Please enter a subject'))
+        flash(_t('Mövzu daxil edin', 'Please enter a subject'))
         return redirect(url_for('admin'))
     article = generate_listicle(topic)
     if article:
         title = article.get('title', topic)
         content = article.get('content', '')
-        category = article.get('category', 'Ãœmumi')
+        category = article.get('category', 'Ümumi')
         image_keywords = article.get('image_search_keywords', title)
         image_url = get_image_url(image_keywords)
         news = News(
@@ -2613,9 +2613,9 @@ def admin_generate_listicle():
         )
         db.session.add(news)
         db.session.commit()
-        flash(_t('SiyahÄ± mÉ™qalÉ™si qaralama olaraq yaradÄ±ldÄ±.', 'List article created as draft.'))
+        flash(_t('Siyahı məqaləsi qaralama olaraq yaradıldı.', 'List article created as draft.'))
     else:
-        flash(_t('MÉ™qalÉ™ yaradÄ±la bilmÉ™di, agent boÅŸ nÉ™ticÉ™ qaytardÄ±.', 'Article could not be created, agent returned an empty result.'))
+        flash(_t('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.', 'Article could not be created, agent returned an empty result.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/add-news', methods=['POST'])
@@ -2626,7 +2626,7 @@ def add_news():
     content = request.form.get('content_az', '').strip()
     title_en = request.form.get('title_en', '').strip()
     content_en = request.form.get('content_en', '').strip()
-    category = request.form.get('category', 'Ãœmumi').strip()
+    category = request.form.get('category', 'Ümumi').strip()
     image_url = request.form.get('image_url', '').strip()
     image_file = request.files.get('image_file')
 
@@ -2652,7 +2652,7 @@ def add_news():
         db.session.add(news)
         db.session.commit()
 
-        # BloklarÄ± É™lavÉ™ et
+        # Blokları əlavə et
         process_blocks(request, news.id)
         db.session.commit()
 
@@ -2671,9 +2671,9 @@ def ban_user(user_id):
         days = int(duration)
         user.banned_until = datetime.now() + timedelta(days=days)
         user.is_banned = True
-    user.banned_reason = 'Admin tÉ™rÉ™findÉ™n banlandÄ±'
+    user.banned_reason = 'Admin tərəfindən banlandı'
     db.session.commit()
-    flash(_t(f"{user.username} banlandÄ±.", f"{user.username} has been banned."))
+    flash(_t(f"{user.username} banlandı.", f"{user.username} has been banned."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/mute-user/<int:user_id>')
@@ -2689,7 +2689,7 @@ def mute_user(user_id):
         days = int(duration)
         user.muted_until = datetime.now() + timedelta(days=days)
         user.is_muted = True
-    user.muted_reason = 'Admin tÉ™rÉ™findÉ™n susturuldu'
+    user.muted_reason = 'Admin tərəfindən susturuldu'
     db.session.commit()
     flash(_t(f"{user.username} susturuldu.", f"{user.username} has been muted."))
     return redirect(url_for('admin'))
@@ -2703,7 +2703,7 @@ def unban_user(user_id):
     user.banned_until = None
     user.banned_reason = ''
     db.session.commit()
-    flash(_t(f"{user.username} banÄ± aÃ§Ä±ldÄ±.", f"{user.username}'s ban has been lifted."))
+    flash(_t(f"{user.username} banı açıldı.", f"{user.username}'s ban has been lifted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/unmute-user/<int:user_id>')
@@ -2715,7 +2715,7 @@ def unmute_user(user_id):
     user.muted_until = None
     user.muted_reason = ''
     db.session.commit()
-    flash(_t(f"{user.username} susturma aÃ§Ä±ldÄ±.", f"{user.username}'s mute has been lifted."))
+    flash(_t(f"{user.username} susturma açıldı.", f"{user.username}'s mute has been lifted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/handle-report/<int:report_id>')
@@ -2725,7 +2725,7 @@ def handle_report(report_id):
     report = Report.query.get_or_404(report_id)
     report.handled = True
     db.session.commit()
-    flash(_t("ÅžikayÉ™t hÉ™ll edildi.", "Report resolved."))
+    flash(_t("Şikayət həll edildi.", "Report resolved."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-report/<int:report_id>')
@@ -2735,7 +2735,7 @@ def delete_report(report_id):
     report = Report.query.get_or_404(report_id)
     db.session.delete(report)
     db.session.commit()
-    flash(_t("ÅžikayÉ™t silindi.", "Report deleted."))
+    flash(_t("Şikayət silindi.", "Report deleted."))
     return redirect(url_for('admin'))
 
 @app.route('/admin/edit-news/<int:news_id>', methods=['GET', 'POST'])
@@ -2744,13 +2744,13 @@ def delete_report(report_id):
 def edit_news(news_id):
     news = News.query.get_or_404(news_id)
     if request.method == 'POST':
-        # Yeni É™lavÉ™ edilmiÅŸ Ã§oxdilli sahÉ™lÉ™r
+        # Yeni əlavə edilmiş çoxdilli sahələr
         news.title = request.form.get('title_az', '').strip()
         news.content = request.form.get('content_az', '').strip()
         news.title_en = request.form.get('title_en', '').strip()
         news.content_en = request.form.get('content_en', '').strip()
         
-        news.category = request.form.get('category', 'Ãœmumi').strip()
+        news.category = request.form.get('category', 'Ümumi').strip()
         news.image_url = request.form.get('image_url', '').strip()
         
         image_file = request.files.get('image_file')
@@ -2759,11 +2759,11 @@ def edit_news(news_id):
             if filename:
                 news.image_url = filename
 
-        # MÃ¶vcud bloklarÄ± sil
+        # Mövcud blokları sil
         process_blocks(request, news.id)
         db.session.commit()
 
-        # Yeni bloklarÄ± É™lavÉ™ et
+        # Yeni blokları əlavə et
         block_types = request.form.getlist('block_type')
         block_texts = request.form.getlist('block_text')
         block_image_urls = request.form.getlist('block_image_url')
@@ -2796,7 +2796,7 @@ def edit_news(news_id):
                 db.session.add(block)
                 
         db.session.commit()
-        flash(_t('XÉ™bÉ™r yenilÉ™ndi', 'News updated'))
+        flash(_t('Xəbər yeniləndi', 'News updated'))
         return redirect(url_for('admin'))
         
     return render_template('edit_news.html', news=news)
@@ -2820,7 +2820,7 @@ def edit_manga(manga_id):
         manga.status = request.form.get('status', 'Davam edir').strip()
         manga.chapters = int(request.form.get('chapters', 100))
         db.session.commit()
-        flash(_t('Manqa yenilÉ™ndi', 'Manga updated'))
+        flash(_t('Manqa yeniləndi', 'Manga updated'))
         return redirect(url_for('admin'))
     return render_template('edit_manga.html', manga=manga)
 
@@ -2841,7 +2841,7 @@ def add_manga():
         if filename:
             cover_url = filename
         else:
-            flash(_t('ÅžÉ™kil formatÄ± dÉ™stÉ™klÉ™nmir, URL istifadÉ™ edilÉ™cÉ™k', 'Image format not supported, URL will be used'))
+            flash(_t('Şəkil formatı dəstəklənmir, URL istifadə ediləcək', 'Image format not supported, URL will be used'))
     if title and description:
         if not cover_url:
             cover_url = get_image_url(title)
@@ -2857,7 +2857,7 @@ def publish_news(news_id):
     news = News.query.get_or_404(news_id)
     news.status = 'published'
     db.session.commit()
-    flash(_t('MÉ™qalÉ™ yayÄ±mlandÄ±.', 'Article published.'))
+    flash(_t('Məqalə yayımlandı.', 'Article published.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-news/<int:news_id>')
@@ -2865,13 +2865,13 @@ def publish_news(news_id):
 @admin_required
 def delete_news(news_id):
     news = News.query.get_or_404(news_id)
-    # Bu xÉ™bÉ™rÉ™ baÄŸlÄ± otaqlarÄ±n news_id-sini NULL et
+    # Bu xəbərə bağlı otaqların news_id-sini NULL et
     Room.query.filter_by(news_id=news.id).update({'news_id': None})
-    # XÉ™bÉ™rÉ™ baÄŸlÄ± hesabatlarÄ± sil (varsa)
+    # Xəbərə bağlı hesabatları sil (varsa)
     Report.query.filter_by(target_type='news', target_id=news.id).delete()
     db.session.delete(news)
     db.session.commit()
-    flash(_t('XÉ™bÉ™r silindi.', 'News deleted.'))
+    flash(_t('Xəbər silindi.', 'News deleted.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-post/<int:post_id>')
@@ -2881,11 +2881,11 @@ def admin_delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     user = post.user
     if user:
-        add_notification(user, f"Sizin '{post.room.name}' otaÄŸÄ±ndakÄ± ÅŸÉ™rhiniz admin tÉ™rÉ™findÉ™n silindi.")
+        add_notification(user, f"Sizin '{post.room.name}' otağındakı şərhiniz admin tərəfindən silindi.")
     room_id = post.room_id
     db.session.delete(post)
     db.session.commit()
-    flash(_t('ÅžÉ™rh silindi.', 'Comment deleted.'))
+    flash(_t('Şərh silindi.', 'Comment deleted.'))
     return redirect(request.referrer or url_for('room', room_id=room_id))
 
 @app.route('/admin/clear-room-messages/<int:room_id>')
@@ -2893,12 +2893,12 @@ def admin_delete_post(post_id):
 @admin_required
 def admin_clear_room_messages(room_id):
     room = Room.query.get_or_404(room_id)
-    if room.name == 'XÉ™ta OtaÄŸÄ±':
+    if room.name == 'Xəta Otağı':
         Post.query.filter_by(room_id=room.id).delete()
         db.session.commit()
-        flash(_t('XÉ™ta OtaÄŸÄ±ndakÄ± bÃ¼tÃ¼n mesajlar silindi.', 'All messages in the Error Room have been deleted.'))
+        flash(_t('Xəta Otağındakı bütün mesajlar silindi.', 'All messages in the Error Room have been deleted.'))
     else:
-        flash(_t('Bu É™mÉ™liyyat yalnÄ±z XÉ™ta OtaÄŸÄ± Ã¼Ã§Ã¼n keÃ§É™rlidir.', 'This operation is only valid for the Error Room.'))
+        flash(_t('Bu əməliyyat yalnız Xəta Otağı üçün keçərlidir.', 'This operation is only valid for the Error Room.'))
     return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/delete-room/<int:room_id>')
@@ -2906,12 +2906,12 @@ def admin_clear_room_messages(room_id):
 @admin_required
 def admin_delete_room(room_id):
     room = Room.query.get_or_404(room_id)
-    if room.name == 'XÉ™ta OtaÄŸÄ±' or room.name == 'TÉ™kliflÉ™r OtaÄŸÄ±':
-        flash(_t('Bu otaq silinÉ™ bilmÉ™z.', 'This room cannot be deleted.'))
+    if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı':
+        flash(_t('Bu otaq silinə bilməz.', 'This room cannot be deleted.'))
         return redirect(request.referrer or url_for('community'))
     creator = room.creator
     if creator:
-        add_notification(creator, f"Sizin '{room.name}' otaÄŸÄ±nÄ±z admin tÉ™rÉ™findÉ™n silindi.")
+        add_notification(creator, f"Sizin '{room.name}' otağınız admin tərəfindən silindi.")
     Post.query.filter_by(room_id=room.id).delete()
     db.session.delete(room)
     db.session.commit()
@@ -2924,7 +2924,7 @@ def admin_delete_room(room_id):
 def clear_all_posts():
     Post.query.delete()
     db.session.commit()
-    flash(_t('BÃ¼tÃ¼n ÅŸÉ™rhlÉ™r silindi.', 'All comments deleted.'))
+    flash(_t('Bütün şərhlər silindi.', 'All comments deleted.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/delete-manga/<int:manga_id>')
@@ -2943,13 +2943,13 @@ def ensure_columns():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # title cÉ™dvÉ™li
+    # title cədvəli
     try:
         cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
     except:
         pass
 
-    # news cÉ™dvÉ™li
+    # news cədvəli
     try:
         cursor.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
     except:
@@ -2963,7 +2963,7 @@ def ensure_columns():
     except:
         pass
 
-    # manga cÉ™dvÉ™li
+    # manga cədvəli
     try:
         cursor.execute("ALTER TABLE manga ADD COLUMN title_en VARCHAR(200) DEFAULT ''")
     except:
@@ -2992,20 +2992,20 @@ def init_db():
             admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
             db.session.commit()
-            print("Admin istifadÉ™Ã§i yaradÄ±ldÄ±: admin / MiriMID26&")
+            print("Admin istifadəçi yaradıldı: admin / MiriMID26&")
         admin = User.query.filter_by(username='admin').first()
         admin_title = Title.query.filter_by(name="Admin").first()
         if admin_title:
             admin.title_id = admin_title.id
             db.session.commit()
         if News.query.count() == 0 and Manga.query.count() == 0:
-            print("Ä°lkin mÉ™zmun yaradÄ±lÄ±r...")
+            print("İlkin məzmun yaradılır...")
             news_items = generate_news_content()
             for item in news_items:
                 image_url = item.get('image_url', '')
                 if not image_url:
                     image_url = get_image_url(item.get('title', ''))
-                news = News(title=item.get('title', 'XÉ™bÉ™r'), content=item.get('content', ''), category=item.get('category', 'Ãœmumi'), image_url=image_url)
+                news = News(title=item.get('title', 'Xəbər'), content=item.get('content', ''), category=item.get('category', 'Ümumi'), image_url=image_url)
                 db.session.add(news)
             manga_items = generate_manga_content()
             for item in manga_items:
@@ -3015,22 +3015,21 @@ def init_db():
                 manga = Manga(title=item.get('title', 'Manqa'), description=item.get('description', ''), type=item.get('type', 'anime'), cover_url=cover_url, rating=float(item.get('rating', 8.0)), status=item.get('status', 'Davam edir'), chapters=int(item.get('chapters', 100)))
                 db.session.add(manga)
             db.session.commit()
-            print("Ä°lkin mÉ™zmun bazaya yazÄ±ldÄ±.")
+            print("İlkin məzmun bazaya yazıldı.")
         seed_titles()
         seed_quests_and_achievements()
-        if Room.query.filter_by(name="XÉ™ta OtaÄŸÄ±").first() is None:
-            error_room = Room(name="XÉ™ta OtaÄŸÄ±", news_id=None, creator_id=admin.id)
+        if Room.query.filter_by(name="Xəta Otağı").first() is None:
+            error_room = Room(name="Xəta Otağı", news_id=None, creator_id=admin.id)
             db.session.add(error_room)
             db.session.commit()
-            print("XÉ™ta OtaÄŸÄ± yaradÄ±ldÄ±.")
+            print("Xəta Otağı yaradıldı.")
 
-        if Room.query.filter_by(name="TÉ™kliflÉ™r OtaÄŸÄ±").first() is None:
-            suggestion_room = Room(name="TÉ™kliflÉ™r OtaÄŸÄ±", news_id=None, creator_id=admin.id)
+        if Room.query.filter_by(name="Təkliflər Otağı").first() is None:
+            suggestion_room = Room(name="Təkliflər Otağı", news_id=None, creator_id=admin.id)
             db.session.add(suggestion_room)
             db.session.commit()
-            print("TÉ™kliflÉ™r OtaÄŸÄ± yaradÄ±ldÄ±.")
+            print("Təkliflər Otağı yaradıldı.")
 
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)
-
