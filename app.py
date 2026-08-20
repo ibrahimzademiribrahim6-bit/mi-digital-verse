@@ -1690,7 +1690,7 @@ function addTextBlock() {
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <span class="font-bold">{{ 'Mətn Bloku' if current_lang == 'az' else 'Text Block' }}</span>
-            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="text">
         <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
@@ -1720,7 +1720,7 @@ function addImageBlock() {
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
-            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
         <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
@@ -1752,7 +1752,7 @@ window.onload = function() {
             textDiv{{ block.id }}.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold">Mətn Bloku</span>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
                 </div>
                 <input type="hidden" name="block_type" value="text">
                 <div class="block-az">
@@ -1779,7 +1779,7 @@ window.onload = function() {
             imgDiv{{ block.id }}.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold">Şəkil Bloku</span>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
                 </div>
                 <input type="hidden" name="block_type" value="image">
                 <div class="block-az">
@@ -2363,12 +2363,12 @@ def register():
     <html>
     <head><title>Qeydiyyat</title></head>
     <body>
-        <h1>Qeydiyyat</h1>
+        <h1>{{ 'Qeydiyyat' if current_lang == 'az' else 'Register' }}</h1>
         <form method="POST">
             <input type="text" name="username" placeholder="İstifadəçi adı" required><br>
             <input type="email" name="email" placeholder="Email" required><br>
             <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required><br>
-            <button type="submit">Qeydiyyatdan keç</button>
+            <button type="submit">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
         </form>
     </body>
     </html>
