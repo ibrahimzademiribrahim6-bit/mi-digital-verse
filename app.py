@@ -1000,7 +1000,7 @@ NEWS_DETAIL_HTML = """
         {% else %}
         <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
-        <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">Bu xəbəri müzakirə et</a>
+    </div>
     <!-- Şərh bölməsi -->
     <div class="mt-8">
         <h2 class="text-2xl font-bold mb-4">{{ 'Şərhlər' if current_lang == 'az' else 'Comments' }}</h2>
