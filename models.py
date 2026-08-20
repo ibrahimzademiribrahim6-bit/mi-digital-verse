@@ -71,23 +71,6 @@ class News(db.Model):
     rooms = db.relationship('Room', backref='news', lazy=True)
     blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan")
 
-
-class Manga(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    title_en = db.Column(db.String(200), nullable=True)
-    description = db.Column(db.Text, nullable=False)
-    description_en = db.Column(db.Text, nullable=True)
-    type = db.Column(db.String(50), default='anime')
-    cover_url = db.Column(db.String(500), default='')
-    rating = db.Column(db.Float, default=0.0)
-    status = db.Column(db.String(50), default='Davam edir')
-    chapters = db.Column(db.Integer, default=0)
-    views = db.Column(db.Integer, default=0)
-    likes = db.Column(db.Integer, default=0)
-    published_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)

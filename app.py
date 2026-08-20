@@ -1001,8 +1001,90 @@ NEWS_DETAIL_HTML = """
         <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
         <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">Bu xəbəri müzakirə et</a>
+    <!-- Şərh bölməsi -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold mb-4">{{ 'Şərhlər' if current_lang == 'az' else 'Comments' }}</h2>
+
+        {% if current_user.is_authenticated %}
+        <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+            <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3" placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
+            <div class="flex items-center mt-2">
+                <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+                <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+            </div>
+            <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+        </form>
+        {% else %}
+        <p class="mb-4">{{ 'Şərh yazmaq üçün' if current_lang == 'az' else 'To comment' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
+        {% endif %}
+
+        <div class="space-y-4">
+            {% for comment in comments %}
+            <div class="bg-gray-800 rounded p-3">
+                <p class="text-sm text-gray-400">
+                    <strong>{{ comment.user.username }}</strong>
+                    {% if comment.user.title %}
+                        <span style="color: {{ comment.user.title.color }};">({{ comment.user.title.name }})</span>
+                    {% endif %}
+                    | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
+                </p>
+                {% if comment.is_spoiler %}
+                <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ comment.content }}</span>
+                {% else %}
+                <p class="text-gray-300 mt-1">{{ comment.content }}</p>
+                {% endif %}
+                <div class="mt-2 flex gap-2">
+                    {% if current_user.is_authenticated %}
+                    <button onclick="toggleReplyForm({{ comment.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
+                    {% endif %}
+                    <button onclick="openReportModal('comment', {{ comment.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="/admin/delete-comment/{{ comment.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                    {% endif %}
+                </div>
+                <div id="replyForm{{ comment.id }}" class="hidden mt-3">
+                    <form action="/news/comment/{{ news.id }}" method="POST" class="space-y-2">
+                        <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                        <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
+                        <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+                    </form>
+                </div>
+                {% if comment.replies %}
+                <div class="ml-4 mt-2 space-y-2">
+                    {% for reply in comment.replies %}
+                    <div class="bg-gray-700 rounded p-2">
+                        <p class="text-xs text-gray-400">
+                            <strong>{{ reply.user.username }}</strong>
+                            {% if reply.user.title %}
+                                <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
+                            {% endif %}
+                            | <time class="local-time" data-utc="{{ reply.created_at.isoformat() }}Z"></time>
+                        </p>
+                        {% if reply.is_spoiler %}
+                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
+                        {% else %}
+                        <p class="text-gray-300">{{ reply.content }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
     </div>
+    </div>
+    <!-- Əsas konteyner bağlanır -->
 </div>
+
+<script>
+function toggleReplyForm(commentId) {
+    const form = document.getElementById('replyForm' + commentId);
+    if (form) {
+        form.classList.toggle('hidden');
+    }
+}
+</script>
 {% endblock %}
 """
 
@@ -2074,7 +2156,44 @@ def news_detail(news_id):
             add_xp(current_user, 2)
             update_quest_progress(current_user, 'news_read', 1)
             check_achievements(current_user)
-    return render_template('news_detail.html', news=news)
+    comments = Comment.query.filter_by(news_id=news.id).order_by(Comment.created_at.asc()).all()
+    return render_template('news_detail.html', news=news, comments=comments)
+
+@app.route('/news/comment/<int:news_id>', methods=['POST'])
+@login_required
+def add_comment(news_id):
+    news = News.query.get_or_404(news_id)
+    content = request.form.get('content', '').strip()
+    parent_id = request.form.get('parent_id')
+    is_spoiler = request.form.get('is_spoiler') == '1'
+    if not content:
+        return redirect(url_for('news_detail', news_id=news.id))
+    parent = None
+    if parent_id:
+        parent = Comment.query.get(int(parent_id))
+    comment = Comment(
+        news_id=news.id,
+        user_id=current_user.id,
+        content=content,
+        parent_id=parent.id if parent else None,
+        is_spoiler=is_spoiler
+    )
+    db.session.add(comment)
+    db.session.commit()
+    add_xp(current_user, 5)
+    check_achievements(current_user)
+    return redirect(url_for('news_detail', news_id=news.id))
+
+@app.route('/admin/delete-comment/<int:comment_id>')
+@login_required
+@admin_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    news_id = comment.news_id
+    db.session.delete(comment)
+    db.session.commit()
+    flash(_t('Şərh silindi.', 'Comment deleted.'))
+    return redirect(url_for('news_detail', news_id=news_id))
 
 @app.route('/category/<string:cat>')
 def category(cat):
