@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from models import db, User, News, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
@@ -1954,30 +1954,22 @@ def archive():
     category_filter = request.args.get('category', '')
 
     news_query = News.query.filter_by(status='published')
-    manga_query = Manga.query
 
     if q:
         news_query = news_query.filter(News.title.contains(q) | News.content.contains(q))
-        manga_query = manga_query.filter(Manga.title.contains(q) | Manga.description.contains(q))
 
     if category_filter:
-        if category_filter in ['anime', 'manga', 'manhwa', 'manhua', 'webtoon']:
-            manga_query = manga_query.filter(Manga.type == category_filter)
-            news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
-        elif category_filter == 'oyun':
+        if category_filter == 'oyun':
             news_query = news_query.filter(News.category.ilike('%oyun%'))
-            manga_query = manga_query.filter(Manga.id == -1)  # oyun manqası yoxdur
         else:
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
 
     news_results = news_query.order_by(News.published_at.desc()).all()
-    manga_results = manga_query.order_by(Manga.rating.desc()).all()
 
     return render_template('archive.html',
                            q=q,
                            category_filter=category_filter,
-                           news_results=news_results,
-                           manga_results=manga_results)
+                           news_results=news_results)
 
 
 @app.route('/news/<int:news_id>')
