@@ -709,7 +709,7 @@ BASE_HTML = """
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
         <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
         <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
-        <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
+                <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
 <div>
