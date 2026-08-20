@@ -713,15 +713,15 @@ BASE_HTML = """
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
 <div>
-    <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
-    <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required>
-        <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
-        <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
-        <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
-        <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
-        <option value="spam">Spam</option>
-        <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
-    </select>
+    <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label><select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required
+        onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
+    <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
+    <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
+    <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
+    <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
+    <option value="spam">Spam</option>
+    <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
+</select>
 </div>
 <div id="otherReasonWrap" class="hidden mt-2">
     <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
@@ -1531,11 +1531,6 @@ ADMIN_HTML = """
                 <div class="flex gap-2">
                     <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'Həll et' if current_lang == 'az' else 'Resolve' }}</a>
                     <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-                    {% if item.report.target_type == 'post' %}
-                        <a href="/admin/delete-post/{{ item.report.target_id }}" class="text-red-500" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
-                    {% elif item.report.target_type == 'room' %}
-                        <a href="/admin/delete-room/{{ item.report.target_id }}" class="text-red-500">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
-                    {% endif %}
                 </div>
             </div>
         </div>
