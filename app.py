@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from models import db, User, News, Manga, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike, Comment
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
@@ -929,52 +929,53 @@ NEWS_LIST_HTML = """
 </div>
 {% endblock %}
 """
-
 NEWS_DETAIL_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ get_lang_field(news, 'title') }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | Oxunma: {{ news.views }}</p>
+    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
     <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
+
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
-                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{{ block.text_content }}</p></div>
+                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{{ block.text_content_az if current_lang == 'az' else block.text_content_en }}</p></div>
                 </div>
             {% else %}
-                <p class="text-lg my-4" style="white-space: pre-line;">{{ block.text_content }}</p>
+                <p class="text-lg my-4" style="white-space: pre-line;">{{ block.text_content_az if current_lang == 'az' else block.text_content_en }}</p>
             {% endif %}
         {% elif block.block_type == 'image' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
                     <div class="flex-1">
                         {% if block.image_url %}
-                            <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                            <img src="{{ block.image_url }}" alt="{{ block.title_az if current_lang == 'az' else block.title_en }}" class="w-full max-h-96 object-contain rounded-lg">
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <div class="my-4">
                     {% if block.image_url %}
-                        <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                        <img src="{{ block.image_url }}" alt="{{ block.title_az if current_lang == 'az' else block.title_en }}" class="w-full max-h-96 object-contain rounded-lg">
                     {% endif %}
                 </div>
             {% endif %}
         {% endif %}
     {% endfor %}
+
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
-        <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
+        <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">{{ 'Bəyən' if current_lang == 'az' else 'Like' }} ({{ news.likes }})</button></form>
         {% else %}
-        <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
+        <span class="px-4 py-2 bg-gray-700 rounded">{{ 'Bəyənmə' if current_lang == 'az' else 'Likes' }}: {{ news.likes }}</span>
         {% endif %}
-        <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">Bu xəbəri müzakirə et</a>
+        <a href="/create-room?news_id={{ news.id }}" class="px-4 py-2 bg-purple-500 rounded">{{ 'Bu xəbəri müzakirə et' if current_lang == 'az' else 'Discuss this news' }}</a>
     </div>
 
     <!-- Şərh bölməsi -->
@@ -982,8 +983,8 @@ NEWS_DETAIL_HTML = """
         <h2 class="text-2xl font-bold mb-4">{{ 'Şərhlər' if current_lang == 'az' else 'Comments' }}</h2>
 
         {% if current_user.is_authenticated %}
-        <form action="/add-comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
-            <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3" placeholder="{{ 'Şərh yaz...' if current_lang == 'az' else 'Write a comment...' }}"></textarea>
+        <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+            <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3" placeholder="{{ 'Şərhinizi yazın...' if current_lang == 'az' else 'Write your comment...' }}"></textarea>
             <div class="flex items-center mt-2">
                 <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
                 <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
@@ -997,29 +998,45 @@ NEWS_DETAIL_HTML = """
         <div class="space-y-4">
             {% for comment in comments %}
             <div class="bg-gray-800 rounded p-3">
-                <p class="text-sm text-gray-400"><strong>{{ comment.user.username }}</strong> | {{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p class="text-sm text-gray-400">
+                    <strong>{{ comment.user.username }}</strong>
+                    {% if comment.user.title %}
+                        <span style="color: {{ comment.user.title.color }};">({{ comment.user.title.name }})</span>
+                    {% endif %}
+                    | {{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}
+                </p>
                 {% if comment.is_spoiler %}
                 <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ comment.content }}</span>
                 {% else %}
                 <p class="text-gray-300 mt-1">{{ comment.content }}</p>
                 {% endif %}
-                <button onclick="toggleReplyForm({{ comment.id }})" class="text-xs text-cyan-400 mt-1">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
-                
-                <!-- Cavab forması -->
-                <div id="replyForm{{ comment.id }}" class="hidden mt-2">
-                    <form action="/add-comment/{{ news.id }}" method="POST" class="space-y-2">
+                <div class="mt-2 flex gap-2">
+                    {% if current_user.is_authenticated %}
+                    <button onclick="toggleReplyForm({{ comment.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
+                    {% endif %}
+                    <button onclick="openReportModal('comment', {{ comment.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="/admin/delete-comment/{{ comment.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                    {% endif %}
+                </div>
+                <div id="replyForm{{ comment.id }}" class="hidden mt-3">
+                    <form action="/news/comment/{{ news.id }}" method="POST" class="space-y-2">
                         <input type="hidden" name="parent_id" value="{{ comment.id }}">
                         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
                     </form>
                 </div>
-
-                <!-- Cavablar -->
                 {% if comment.replies %}
                 <div class="ml-4 mt-2 space-y-2">
                     {% for reply in comment.replies %}
                     <div class="bg-gray-700 rounded p-2">
-                        <p class="text-xs text-gray-400"><strong>{{ reply.user.username }}</strong> | {{ reply.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        <p class="text-xs text-gray-400">
+                            <strong>{{ reply.user.username }}</strong>
+                            {% if reply.user.title %}
+                                <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
+                            {% endif %}
+                            | {{ reply.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </p>
                         {% if reply.is_spoiler %}
                         <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
                         {% else %}
@@ -1043,7 +1060,6 @@ function toggleReplyForm(commentId) {
     }
 }
 </script>
-
 {% endblock %}
 """
 
@@ -2237,6 +2253,42 @@ def news_detail(news_id):
             check_achievements(current_user)
     comments = Comment.query.filter_by(news_id=news.id).order_by(Comment.created_at.asc()).all()
     return render_template('news_detail.html', news=news, comments=comments)
+
+@app.route('/news/comment/<int:news_id>', methods=['POST'])
+@login_required
+def add_comment(news_id):
+    news = News.query.get_or_404(news_id)
+    content = request.form.get('content', '').strip()
+    parent_id = request.form.get('parent_id')
+    is_spoiler = request.form.get('is_spoiler') == '1'
+    if not content:
+        return redirect(url_for('news_detail', news_id=news.id))
+    parent = None
+    if parent_id:
+        parent = Comment.query.get(int(parent_id))
+    comment = Comment(
+        news_id=news.id,
+        user_id=current_user.id,
+        content=content,
+        parent_id=parent.id if parent else None,
+        is_spoiler=is_spoiler
+    )
+    db.session.add(comment)
+    db.session.commit()
+    add_xp(current_user, 5)
+    check_achievements(current_user)
+    return redirect(url_for('news_detail', news_id=news.id))
+
+@app.route('/admin/delete-comment/<int:comment_id>')
+@login_required
+@admin_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    news_id = comment.news_id
+    db.session.delete(comment)
+    db.session.commit()
+    flash(_t('Şərh silindi.', 'Comment deleted.'))
+    return redirect(url_for('news_detail', news_id=news_id))
 
 @app.route('/category/<string:cat>')
 def category(cat):

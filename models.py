@@ -214,6 +214,7 @@ class NewsBlock(db.Model):
     layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
 
+
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
