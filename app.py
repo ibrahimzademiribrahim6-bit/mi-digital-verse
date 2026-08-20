@@ -709,19 +709,19 @@ BASE_HTML = """
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
         <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
         <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
-        <form action="/report/submit" method="POST" class="space-y-3">
+        <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
 <div>
-    <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label><select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" required
-        onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
-    <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
-    <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
-    <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
-    <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
-    <option value="spam">Spam</option>
-    <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
-</select>
+                <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
+                <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
+                    <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
+                    <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
+                    <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
+                    <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
+                    <option value="spam">Spam</option>
+                    <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
+                </select>
 </div>
 <div id="otherReasonWrap" class="hidden mt-2">
     <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
@@ -1795,6 +1795,16 @@ window.onload = function() {
     // Cari dilə uyğun sahələri göstər
     switchLang(currentEditLang);
 };
+
+function validateReportForm(form) {
+    const reasonSelect = document.getElementById('reportReasonSelect');
+    if (!reasonSelect || reasonSelect.value === '') {
+        alert("Zəhmət olmasa səbəb seçin.");
+        return false;
+    }
+    return true;
+}
+
 </script>
 {% endblock %}
 """
