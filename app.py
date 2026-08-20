@@ -985,38 +985,6 @@ NEWS_DETAIL_HTML = """
 {% endblock %}
 """
 
-MANGA_LIST_HTML = """
-{% extends "base.html" %}
-{% block title %}{{ 'Kitabxana' if current_lang == 'az' else 'Library' }} - Mi Digital Verse{% endblock %}
-{% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'Manhwa & Anime Kitabxanası' if current_lang == 'az' else 'Manhwa & Anime Library' }}</h1>
-    <form action="/manga" method="GET" class="mb-6 flex gap-2">
-        <input type="text" name="q" placeholder="{{ 'Başlıq axtar...' if current_lang == 'az' else 'Search title...' }}" class="flex-1 p-2 rounded bg-gray-800 text-white">
-        <select name="type" class="p-2 rounded bg-gray-800 text-white">
-            <option value="">{{ 'Hamısı' if current_lang == 'az' else 'All' }}</option>
-            <option value="anime">Anime</option>
-            <option value="manga">Manga</option>
-            <option value="manhwa">Manhwa</option>
-            <option value="manhua">Manhua</option>
-            <option value="webtoon">Webtoon</option>
-        </select>
-        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
-    </form>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {% for m in mangas %}
-        <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 card-glow">
-            <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-full h-64 object-cover rounded">
-            <h3 class="font-bold mt-2">{{ m.title }}</h3>
-            <p class="text-sm text-gray-400">{{ m.type }} | {{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }}</p>
-            <p class="text-xs text-gray-500">{{ m.status }} | {{ m.chapters }} {{ 'bölüm' if current_lang == 'az' else 'chapters' }}</p>
-        </a>
-        {% endfor %}
-    </div>
-</div>
-{% endblock %}
-"""
-
 ARCHIVE_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ 'Arxiv' if current_lang == 'az' else 'Archive' }} - Mi Digital Verse{% endblock %}
@@ -1053,51 +1021,6 @@ ARCHIVE_HTML = """
             </a>
             {% endfor %}
         {% endif %}
-
-        {% if manga_results %}
-            {% for m in manga_results %}
-            <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 card-glow">
-                {% if m.cover_url %}
-                <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-full h-48 object-cover rounded mb-3">
-                {% endif %}
-                <span class="chip chip-violet">{{ m.type }}</span>
-                <h3 class="font-bold mt-2">{{ m.title }}</h3>
-                <p class="text-sm text-gray-400">{{ m.description[:80] }}...</p>
-                <p class="text-xs text-gray-500 mt-1">{{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }} | {{ m.status }}</p>
-            </a>
-            {% endfor %}
-        {% endif %}
-
-        {% if not news_results and not manga_results %}
-            <p class="col-span-full">{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>
-        {% endif %}
-    </div>
-</div>
-{% endblock %}
-"""
-
-MANGA_DETAIL_HTML = """
-{% extends "base.html" %}
-{% block title %}{{ manga.title }} - Mi Digital Verse{% endblock %}
-{% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-4">{{ manga.title }}</h1>
-    <p class="text-gray-400">{{ manga.type }} | Status: {{ manga.status }} | Bölüm: {{ manga.chapters }} | Oxunma: {{ manga.views }}</p>
-    {% if manga.cover_url %}
-    <img src="{{ manga.cover_url }}" alt="{{ manga.title }}" class="w-full max-h-96 object-contain rounded-lg my-4">
-    {% endif %}
-    <p class="text-lg leading-relaxed">{{ manga.description }}</p>
-    <p class="text-yellow-400 mt-2">Reytinq: {{ manga.rating }}</p>
-    <div class="mt-4 flex gap-3">
-        {% if current_user.is_authenticated %}
-        <form action="/like-manga/{{ manga.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ manga.likes }})</button></form>
-        {% else %}
-        <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ manga.likes }}</span>
-        {% endif %}
-        <a href="/community" class="inline-block px-4 py-2 bg-purple-500 rounded">İcma müzakirələri</a>
-    </div>
-</div>
-{% endblock %}
 """
 
 COMMUNITY_HTML = """
@@ -1121,10 +1044,7 @@ COMMUNITY_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for room in rooms %}
         <div class="bg-gray-800 rounded-lg p-4 card-glow flex flex-col">
-            <h3 class="font-bold 
-                {% if room.name == 'Xəta Otağı' %}text-red-500
-                {% elif room.name == 'Təkliflər Otağı' %}text-green-400
-                {% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
+            <h3 class="font-bold {% if room.name == 'Xəta Otağı' %}text-red-500{% elif room.name == 'Təkliflər Otağı' %}text-green-400{% else %}text-cyan-300{% endif %}">{{ room.name }}</h3>
             <p class="text-sm text-gray-400">{{ 'Yaradıcı:' if current_lang == 'az' else 'Creator:' }} {{ room.creator.username }}</p>
             {% if room.news %}<p class="text-xs text-gray-500">{{ 'Xəbər:' if current_lang == 'az' else 'News:' }} {{ get_lang_field(room.news, 'title') }}</p>{% endif %}
             <div class="mt-auto pt-3 flex flex-wrap gap-2 items-center">
@@ -1849,10 +1769,6 @@ SEARCH_HTML = """
     {% for n in news_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/news/{{ n.id }}" class="text-cyan-300">{{ n.title }}</a></div>
     {% else %}<p>{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>{% endfor %}
-    <h2 class="text-xl mb-3 mt-6">{{ 'Manqa/Anime' if current_lang == 'az' else 'Manga/Anime' }}</h2>
-    {% for m in manga_results %}
-    <div class="bg-gray-800 p-3 rounded mb-2"><a href="/manga/{{ m.id }}" class="text-cyan-300">{{ m.title }} ({{ m.type }})</a></div>
-    {% else %}<p>Tapılmadı.</p>{% endfor %}
 </div>
 {% endblock %}
 """
@@ -1975,8 +1891,6 @@ templates = {
     'index.html': INDEX_HTML,
     'news_list.html': NEWS_LIST_HTML,
     'news_detail.html': NEWS_DETAIL_HTML,
-    'manga_list.html': MANGA_LIST_HTML,
-    'manga_detail.html': MANGA_DETAIL_HTML,
     'community.html': COMMUNITY_HTML,
     'room.html': ROOM_HTML,
     'profile.html': PROFILE_HTML,
@@ -2084,51 +1998,13 @@ def category(cat):
     all_news = News.query.filter(News.status == 'published', News.category.ilike(f'%{cat}%')).order_by(News.published_at.desc()).all()
     return render_template('news_list.html', all_news=all_news)
 
-@app.route('/manga')
-def manga_list():
-    type_filter = request.args.get('type', '')
-    q = request.args.get('q', '')
-    if q:
-        mangas = Manga.query.filter(Manga.title.contains(q) | Manga.description.contains(q)).all()
-    elif type_filter:
-        mangas = Manga.query.filter_by(type=type_filter).all()
-    else:
-        mangas = Manga.query.all()
-    return render_template('manga_list.html', mangas=mangas)
-
-@app.route('/manga/<int:manga_id>')
-def manga_detail(manga_id):
-    manga = Manga.query.get_or_404(manga_id)
-    if can_increment_view(manga.id, 'manga'):
-        manga.views += 1
-        db.session.commit()
-    return render_template('manga_detail.html', manga=manga)
-
-@app.route('/like-manga/<int:manga_id>', methods=['POST'])
-@login_required
-def like_manga(manga_id):
-    manga = Manga.query.get_or_404(manga_id)
-    manga.likes += 1
-    db.session.commit()
-    current_user.likes_count += 1
-    add_xp(current_user, 1)
-    update_quest_progress(current_user, 'like', 1)
-    check_achievements(current_user)
-    add_notification(current_user, f"Siz {manga.title} əsərini bəyəndiniz.")
-    return redirect(url_for('manga_detail', manga_id=manga.id))
-
 @app.route('/search')
 def search():
     q = request.args.get('q', '').strip()
-    type_filter = request.args.get('type', '')
     news_results = []
-    manga_results = []
     if q:
         news_results = News.query.filter(News.status == 'published', News.title.contains(q) | News.content.contains(q)).all()
-        manga_results = Manga.query.filter(Manga.title.contains(q) | Manga.description.contains(q)).all()
-        if type_filter:
-            manga_results = [m for m in manga_results if m.type == type_filter]
-    return render_template('search.html', q=q, news_results=news_results, manga_results=manga_results)
+    return render_template('search.html', q=q, news_results=news_results)
 
 @app.route('/about')
 def about():
@@ -2509,7 +2385,6 @@ def mark_all_read():
 def admin():
     all_news = News.query.filter_by(status='published').all()
     draft_news = News.query.filter_by(status='draft').all()
-    all_manga = Manga.query.all()
     all_users = User.query.all()
     reports = Report.query.filter_by(handled=False).all()
     report_details = []
@@ -2526,7 +2401,7 @@ def admin():
             content_snippet = ''
             link = '#'
         report_details.append({'report': report, 'snippet': content_snippet, 'link': link})
-    return render_template('admin.html', all_news=all_news, draft_news=draft_news, all_manga=all_manga, all_users=all_users, report_details=report_details)
+    return render_template('admin.html', all_news=all_news, draft_news=draft_news, all_users=all_users, report_details=report_details)
 
 @app.route('/admin/fetch-news')
 @login_required
@@ -2848,14 +2723,6 @@ def ensure_columns():
 
     # manga cədvəli
     try:
-        cursor.execute("ALTER TABLE manga ADD COLUMN title_en VARCHAR(200) DEFAULT ''")
-    except:
-        pass
-    try:
-        cursor.execute("ALTER TABLE manga ADD COLUMN description_en TEXT DEFAULT ''")
-    except:
-        pass
-    try:
         cursor.execute("ALTER TABLE news_block ADD COLUMN title_az VARCHAR(200) DEFAULT ''")
     except:
         pass
@@ -2882,7 +2749,7 @@ def init_db():
         if admin_title:
             admin.title_id = admin_title.id
             db.session.commit()
-        if News.query.count() == 0 and Manga.query.count() == 0:
+        if News.query.count() == 0:
             print("İlkin məzmun yaradılır...")
             news_items = generate_news_content()
             for item in news_items:
@@ -2891,13 +2758,6 @@ def init_db():
                     image_url = get_image_url(item.get('title', ''))
                 news = News(title=item.get('title', 'Xəbər'), content=item.get('content', ''), category=item.get('category', 'Ümumi'), image_url=image_url)
                 db.session.add(news)
-            manga_items = generate_manga_content()
-            for item in manga_items:
-                cover_url = item.get('cover_url', '')
-                if not cover_url:
-                    cover_url = get_image_url(item.get('title', ''))
-                manga = Manga(title=item.get('title', 'Manqa'), description=item.get('description', ''), type=item.get('type', 'anime'), cover_url=cover_url, rating=float(item.get('rating', 8.0)), status=item.get('status', 'Davam edir'), chapters=int(item.get('chapters', 100)))
-                db.session.add(manga)
             db.session.commit()
             print("İlkin məzmun bazaya yazıldı.")
         seed_titles()
