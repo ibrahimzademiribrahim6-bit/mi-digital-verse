@@ -1021,6 +1021,8 @@ ARCHIVE_HTML = """
             </a>
             {% endfor %}
         {% endif %}
+</div>
+{% endblock %}
 """
 
 COMMUNITY_HTML = """
