@@ -78,15 +78,12 @@ def check_banned_user():
                 return redirect(url_for('index'))
 
 @app.before_request
-def set_language():
-    lang = request.args.get('lang')
-    if lang in ['az', 'en']:
-        session['lang'] = lang
-    if 'lang' not in session:
-        session['lang'] = 'az'
+def set_user_title():
+    if current_user.is_authenticated:
+        update_user_title(current_user)
 
 @app.before_request
-def set_language_before():
+def set_language():
     lang = request.args.get('lang')
     if lang in ['az', 'en']:
         session['lang'] = lang
