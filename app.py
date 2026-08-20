@@ -708,7 +708,7 @@ BASE_HTML = """
 <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
         <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
-        <h3 class="text-xl font-bold mb-4">Şikayət et</h3>
+        <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
         <form action="/report/submit" method="POST" class="space-y-3">
             <input type="hidden" name="target_type" id="reportTargetType">
             <input type="hidden" name="target_id" id="reportTargetId">
@@ -821,20 +821,19 @@ BASE_HTML = """
     document.getElementById('langToggleMobile')?.addEventListener('click', toggleLanguage);
 
     // Şikayət bölməsində "Digər" seçimi
-    document.addEventListener('DOMContentLoaded', function() {
-        const select = document.getElementById('reportReasonSelect');
-        const otherWrap = document.getElementById('otherReasonWrap');
-        
-        if (select && otherWrap) {
-            select.addEventListener('change', function() {
-                if (this.value === 'digər') {
-                    otherWrap.classList.remove('hidden');
-                } else {
-                    otherWrap.classList.add('hidden');
-                }
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    const select = document.getElementById('reportReasonSelect');
+    const otherWrap = document.getElementById('otherReasonWrap');
+    if (select && otherWrap) {
+        select.addEventListener('change', function() {
+            if (this.value === 'digər') {
+                otherWrap.classList.remove('hidden');
+            } else {
+                otherWrap.classList.add('hidden');
+            }
+        });
+    }
+});
 </script>
 <script>
 (function() {
@@ -1156,18 +1155,18 @@ ROOM_HTML = """"
     {% endif %}
     <div class="space-y-4">
         {% for post in posts %}
-        <div class="bg-gray-800 rounded p-3">
-            <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-            {% if current_user.is_authenticated and current_user.is_admin %}
-            <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs">Şərhi sil</a>
-            {% endif %}
-<button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">Şikayət et</button>
-            {% if post.is_spoiler %}
-            <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
-            {% else %}
-            <p class="text-gray-300">{{ post.content }}</p>
-            {% endif %}
-        </div>
+<div class="bg-gray-800 rounded p-3">
+    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+    {% if current_user.is_authenticated and current_user.is_admin %}
+        <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
+    {% endif %}
+    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+    {% if post.is_spoiler %}
+        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
+    {% else %}
+        <p class="text-gray-300">{{ post.content }}</p>
+    {% endif %}
+</div>
         {% endfor %}
     </div>
 </div>
@@ -1533,7 +1532,7 @@ ADMIN_HTML = """
                     <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'Həll et' if current_lang == 'az' else 'Resolve' }}</a>
                     <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
                     {% if item.report.target_type == 'post' %}
-                        <a href="/admin/delete-post/{{ item.report.target_id }}" class="text-red-500">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
+                        <a href="/admin/delete-post/{{ item.report.target_id }}" class="text-red-500" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
                     {% elif item.report.target_type == 'room' %}
                         <a href="/admin/delete-room/{{ item.report.target_id }}" class="text-red-500">{{ 'Otağı sil' if current_lang == 'az' else 'Delete room' }}</a>
                     {% endif %}
