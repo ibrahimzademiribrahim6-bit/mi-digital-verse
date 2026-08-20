@@ -369,7 +369,7 @@ def seed_titles():
         all_titles.append(Title(name=name, description=desc, color=color, rarity="legendary", hidden=True, condition_type="xp", condition_value=cvalue, unique_legendary=True))
 
     # Admin ünvanı
-    all_titles.append(Title(name="Admin", description="Sayt rəhbəri", color="red", rarity="admin", hidden=False, condition_type="admin", condition_value=0))
+    all_titles.append(Title(name="Admin", description="Sayt rəhbəri", color="yellow", rarity="admin", hidden=False, condition_type="admin", condition_value=0))
     db.session.add_all(all_titles)
     db.session.commit()
 
@@ -1110,10 +1110,10 @@ COMMUNITY_HTML = """
         <a href="/community?tab=general" class="px-4 py-2 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
             {{ 'Ümumi Söhbət' if current_lang == 'az' else 'General Chat' }}
         </a>
-        <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+        <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-green-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
             {{ 'Təkliflər' if current_lang == 'az' else 'Suggestions' }}
         </a>
-        <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+        <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-red-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
             {{ 'Xəta Bildirişi' if current_lang == 'az' else 'Bug Reports' }}
         </a>
     </div>
@@ -3054,12 +3054,12 @@ def init_db():
     with app.app_context():
         ensure_columns()
         db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
+        if not User.query.filter_by(is_admin=True).first():
+            admin = User(username='Anuun', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
             db.session.add(admin)
             db.session.commit()
             print("Admin istifadəçi yaradıldı: admin / MiriMID26&")
-        admin = User.query.filter_by(username='admin').first()
+        admin = User.query.filter_by(is_admin=True).first()
         admin_title = Title.query.filter_by(name="Admin").first()
         if admin_title:
             admin.title_id = admin_title.id
