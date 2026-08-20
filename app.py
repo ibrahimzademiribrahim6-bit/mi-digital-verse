@@ -2254,31 +2254,6 @@ def news_detail(news_id):
     comments = Comment.query.filter_by(news_id=news.id).order_by(Comment.created_at.asc()).all()
     return render_template('news_detail.html', news=news, comments=comments)
 
-@app.route('/news/comment/<int:news_id>', methods=['POST'])
-@login_required
-def add_comment(news_id):
-    news = News.query.get_or_404(news_id)
-    content = request.form.get('content', '').strip()
-    parent_id = request.form.get('parent_id')
-    is_spoiler = request.form.get('is_spoiler') == '1'
-    if not content:
-        return redirect(url_for('news_detail', news_id=news.id))
-    parent = None
-    if parent_id:
-        parent = Comment.query.get(int(parent_id))
-    comment = Comment(
-        news_id=news.id,
-        user_id=current_user.id,
-        content=content,
-        parent_id=parent.id if parent else None,
-        is_spoiler=is_spoiler
-    )
-    db.session.add(comment)
-    db.session.commit()
-    add_xp(current_user, 5)
-    check_achievements(current_user)
-    return redirect(url_for('news_detail', news_id=news.id))
-
 @app.route('/admin/delete-comment/<int:comment_id>')
 @login_required
 @admin_required
