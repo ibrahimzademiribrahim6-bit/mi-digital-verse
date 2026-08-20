@@ -1136,7 +1136,7 @@ COMMUNITY_HTML = """
             <div class="flex items-start justify-between">
                 <div>
 <p class="text-sm text-gray-400">
-    <strong>{{ post.user.username }}</strong>
+    <strong style="{% if post.user.title and post.user.title.color in ['purple', 'yellow', 'red'] %}color: {{ post.user.title.color }};{% endif %}">{{ post.user.username }}</strong>
     {% if post.user.title %}
         <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
     {% endif %}
@@ -1222,7 +1222,7 @@ ROOM_HTML = """"
         {% for post in posts %}
 <div class="bg-gray-800 rounded p-3">
 <p class="text-sm text-gray-400">
-    <strong>{{ post.user.username }}</strong>
+    <strong style="{% if post.user.title and post.user.title.color in ['purple', 'yellow', 'red'] %}color: {{ post.user.title.color }};{% endif %}">{{ post.user.username }}</strong>
     {% if post.user.title %}
         <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
     {% endif %}
