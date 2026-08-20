@@ -852,7 +852,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function validateReportForm(form) {
     const reasonSelect = document.getElementById('reportReasonSelect');
     if (!reasonSelect || reasonSelect.value === '') {
-        alert("Zəhmət olmasa səbəb seçin.");
+        if (typeof currentLang !== 'undefined' && currentLang === 'en') {
+            alert("Please select a reason.");
+        } else {
+            alert("Zəhmət olmasa səbəb seçin.");
+        }
         return false;
     }
     return true;
