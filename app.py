@@ -971,24 +971,24 @@ NEWS_DETAIL_HTML = """
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
-                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{{ block.text_content }}</p></div>
+                    <div class="flex-1"><p class="text-lg" style="white-space: pre-line;">{% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}</p></div>
                 </div>
             {% else %}
-                <p class="text-lg my-4" style="white-space: pre-line;">{{ block.text_content }}</p>
+                <p class="text-lg my-4" style="white-space: pre-line;">{% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}</p>
             {% endif %}
         {% elif block.block_type == 'image' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
                     <div class="flex-1">
                         {% if block.image_url %}
-                            <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                            <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <div class="my-4">
                     {% if block.image_url %}
-                        <img src="{{ block.image_url }}" alt="Blok şəkli" class="w-full max-h-96 object-contain rounded-lg">
+                        <img src="{{ block.image_url }}" class="w-full max-h-96 object-contain rounded-lg">
                     {% endif %}
                 </div>
             {% endif %}
@@ -1095,7 +1095,6 @@ ARCHIVE_HTML = """
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</h1>
 
-    <!-- Axtarış və Filtrlər -->
     <form action="/archive" method="GET" class="mb-6 bg-gray-800 p-4 rounded space-y-3">
         <div class="flex flex-col md:flex-row gap-3">
             <input type="text" name="q" value="{{ q }}" placeholder="{{ 'Axtar...' if current_lang == 'az' else 'Search...' }}" class="flex-1 p-2 rounded bg-gray-700 text-white">
@@ -1107,23 +1106,24 @@ ARCHIVE_HTML = """
                 <option value="manhua" {% if category_filter == 'manhua' %}selected{% endif %}>Manhua</option>
                 <option value="webtoon" {% if category_filter == 'webtoon' %}selected{% endif %}>Webtoon</option>
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
+                <option value="umumi" {% if category_filter == 'umumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
             </select>
             <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
         </div>
     </form>
 
-    <!-- Nəticələr -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% if news_results %}
-            {% for item in news_results %}
-            <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
-                <span class="chip chip-pulse mb-2">{{ item.category }}</span>
-                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
-                <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
-                <p class="text-gray-500 text-xs mt-2"><time class="local-time" data-utc="{{ item.published_at.isoformat() }}Z"></time> | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
-            </a>
-            {% endfor %}
-        {% endif %}
+        {% for item in news_results %}
+        <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
+            <span class="chip chip-pulse mb-2">{{ item.category }}</span>
+            <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
+            <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
+            <p class="text-gray-500 text-xs mt-2"><time class="local-time" data-utc="{{ item.published_at.isoformat() }}Z"></time> | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
+        </a>
+        {% else %}
+        <p class="col-span-full">{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
 """
@@ -2132,18 +2132,15 @@ def archive():
         news_query = news_query.filter(News.title.contains(q) | News.content.contains(q))
 
     if category_filter:
-        if category_filter == 'oyun':
-            news_query = news_query.filter(News.category.ilike('%oyun%'))
-        else:
+        if category_filter in ['anime', 'manga', 'manhwa', 'manhua', 'webtoon']:
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
+        elif category_filter == 'oyun':
+            news_query = news_query.filter(News.category.ilike('%oyun%'))
+        elif category_filter == 'umumi':
+            news_query = news_query.filter(News.category.ilike('%ümumi%'))
 
     news_results = news_query.order_by(News.published_at.desc()).all()
-
-    return render_template('archive.html',
-                           q=q,
-                           category_filter=category_filter,
-                           news_results=news_results)
-
+    return render_template('archive.html', q=q, category_filter=category_filter, news_results=news_results)
 
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
