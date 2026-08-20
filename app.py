@@ -85,13 +85,6 @@ def set_language():
     if 'lang' not in session:
         session['lang'] = 'az'
 
-@app.before_request
-def set_language_before():
-    lang = request.args.get('lang')
-    if lang in ['az', 'en']:
-        session['lang'] = lang
-    if 'lang' not in session:
-        session['lang'] = 'az'
 
 def admin_required(f):
     @wraps(f)
@@ -138,8 +131,8 @@ def daily_reward(user):
     add_notification(user, f"Günlük giriş ödülü: +{bonus} XP")
     return True
 
-def can_increment_view(obj_id):
-    key = f"viewed_{obj_id}"
+def can_increment_view(obj_id, obj_type):
+    key = f"viewed_{obj_type}_{obj_id}"
     last_view = session.get(key)
     now = datetime.now().timestamp()
     if last_view is None or (now - last_view) > 60:
@@ -345,12 +338,30 @@ def seed_titles():
         ("İlk Toxum (Alternativ)", "Əsl əfsanə", "yellow", True, "xp", 99999),  # ehtiyat
     ]
     all_titles = []
+    # Ağ ünvanlar: 0-dan başlayır, hər addımda 10 XP artır
+    xp = 0
     for name, desc in white_titles:
-        all_titles.append(Title(name=name, description=desc, color="white", rarity="common", hidden=False, condition_type="xp", condition_value=0))
+        all_titles.append(Title(name=name, description=desc, color="white", rarity="common",
+                                hidden=False, condition_type="xp", condition_value=xp,
+                                required_xp=xp))
+        xp += 10
+
+    # Yaşıl ünvanlar: 200-dən başlayır, hər addımda 20 XP artır
+    xp = 200
     for name, desc in green_titles:
-        all_titles.append(Title(name=name, description=desc, color="green", rarity="uncommon", hidden=False, condition_type="xp", condition_value=0))
+        all_titles.append(Title(name=name, description=desc, color="green", rarity="uncommon",
+                                hidden=False, condition_type="xp", condition_value=xp,
+                                required_xp=xp))
+        xp += 20
+
+    # Mavi ünvanlar: 570-dən başlayır, hər addımda 30 XP artır
+    # (Yaşıl sonuncu 540 olur, mavi 570-dən başlayır)
+    xp = 570
     for name, desc in blue_titles:
-        all_titles.append(Title(name=name, description=desc, color="blue", rarity="rare", hidden=False, condition_type="xp", condition_value=0))
+        all_titles.append(Title(name=name, description=desc, color="blue", rarity="rare",
+                                hidden=False, condition_type="xp", condition_value=xp,
+                                required_xp=xp))
+        xp += 30
     for item in purple_titles:
         name = item[0]
         desc = item[1]
@@ -943,7 +954,7 @@ NEWS_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | Oxunma: </p>
+    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
@@ -1146,7 +1157,7 @@ COMMUNITY_HTML = """
 {% endblock %}
 """
 
-ROOM_HTML = """"
+ROOM_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ room.name }} - Mi Digital Verse{% endblock %}
 {% block content %}
@@ -1443,38 +1454,20 @@ ADMIN_HTML = """
                 <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <textarea name="content_az" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <textarea name="content_en" placeholder="{{ 'İngilis Məzmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, {{ 'Oyun' if current_lang == 'az' else 'Games' }}, {{ 'Ümumi' if current_lang == 'az' else 'General' }})" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, Oyun, Ümumi)" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
+
+                <!-- Dinamik bloklar -->
+                <h3 class="text-lg font-semibold mt-4">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h3>
                 <div id="blocksContainer"></div>
                 <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
                 <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
-                <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
+
+                <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
         
-        <div class="bg-gray-800 p-4 rounded">
-            <h2 class="text-xl font-bold mb-3">{{ 'Yeni Manqa/Anime Əlavə Et' if current_lang == 'az' else 'Add New Manga/Anime' }}</h2>
-            <form action="/admin/add-manga" method="POST" enctype="multipart/form-data" class="space-y-3">
-                <input type="text" name="title" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <textarea name="description" placeholder="{{ 'Azərbaycanca Açıqlama' if current_lang == 'az' else 'Azerbaijani Description' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-                <textarea name="description_en" placeholder="{{ 'İngilis Açıqlama (optional)' if current_lang == 'az' else 'English Description (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-                <select name="type" class="w-full p-2 rounded bg-gray-700 text-white">
-                    <option value="anime">Anime</option>
-                    <option value="manga">Manga</option>
-                    <option value="manhwa">Manhwa</option>
-                    <option value="manhua">Manhua</option>
-                    <option value="webtoon">Webtoon</option>
-                </select>
-                <input type="text" name="cover_url" placeholder="{{ 'Üz şəkli URL' if current_lang == 'az' else 'Cover image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="file" name="cover_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-                <input type="number" step="0.1" name="rating" placeholder="{{ 'Reytinq' if current_lang == 'az' else 'Rating' }} (məs. 8.5)" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="text" name="status" placeholder="{{ 'Status' if current_lang == 'az' else 'Status' }}" value="{{ 'Davam edir' if current_lang == 'az' else 'Ongoing' }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                <input type="number" name="chapters" placeholder="{{ 'Bölüm sayı' if current_lang == 'az' else 'Chapter count' }}" value="100" class="w-full p-2 rounded bg-gray-700 text-white">
-                <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
-            </form>
-        </div>
     </div>
     
     <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Qaralamalar' if current_lang == 'az' else 'Drafts' }}</h2>
@@ -1503,20 +1496,7 @@ ADMIN_HTML = """
         </div>
         {% endfor %}
     </div>
-    
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Mövcud Manqa/Anime' if current_lang == 'az' else 'Existing Manga/Anime' }}</h2>
-    <div class="space-y-2">
-        {% for m in all_manga %}
-        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
-            <span>{{ m.title }} ({{ m.type }})</span>
-            <div>
-                <a href="/admin/edit-manga/{{ m.id }}" class="text-cyan-400 mr-3">{{ 'Redaktə et' if current_lang == 'az' else 'Edit' }}</a>
-                <a href="/admin/delete-manga/{{ m.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
+        
     <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'İstifadəçilər' if current_lang == 'az' else 'Users' }}</h2>
     <div class="space-y-2">
         {% for user in all_users %}
@@ -2103,7 +2083,7 @@ def archive():
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
     news = News.query.get_or_404(news_id)
-    if can_increment_view(news.id):
+    if can_increment_view(news.id, 'news'):
         news.views += 1
         db.session.commit()
         if current_user.is_authenticated:
@@ -2133,7 +2113,7 @@ def manga_list():
 @app.route('/manga/<int:manga_id>')
 def manga_detail(manga_id):
     manga = Manga.query.get_or_404(manga_id)
-    if can_increment_view(manga.id):
+    if can_increment_view(manga.id, 'manga'):
         manga.views += 1
         db.session.commit()
     return render_template('manga_detail.html', manga=manga)
@@ -2764,95 +2744,17 @@ def edit_news(news_id):
                 news.image_url = filename
 
         # Mövcud blokları sil
+        NewsBlock.query.filter_by(news_id=news.id).delete()
+        # Yeni blokları əlavə et
         process_blocks(request, news.id)
         db.session.commit()
 
-        # Yeni blokları əlavə et
-        block_types = request.form.getlist('block_type')
-        block_texts = request.form.getlist('block_text')
-        block_image_urls = request.form.getlist('block_image_url')
-        block_image_files = request.files.getlist('block_image_file')
-        block_layouts = request.form.getlist('block_layout')
-
-        for i in range(len(block_types)):
-            btype = block_types[i]
-            text_content = block_texts[i] if i < len(block_texts) else ''
-            image_url = block_image_urls[i] if i < len(block_image_urls) else ''
-            layout = block_layouts[i] if i < len(block_layouts) else 'stack'
-            
-            if btype == 'image':
-                if i < len(block_image_files):
-                    file = block_image_files[i]
-                    if file and file.filename != '':
-                        fname = process_image(file, 800, 500)
-                        if fname:
-                            image_url = fname
-            
-            if btype in ['text', 'image']:
-                block = NewsBlock(
-                    news_id=news.id,
-                    block_type=btype,
-                    text_content=text_content,
-                    image_url=image_url,
-                    layout=layout,
-                    order=i
-                )
-                db.session.add(block)
                 
         db.session.commit()
         flash(_t('Xəbər yeniləndi', 'News updated'))
         return redirect(url_for('admin'))
         
     return render_template('edit_news.html', news=news)
-
-@app.route('/admin/edit-manga/<int:manga_id>', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def edit_manga(manga_id):
-    manga = Manga.query.get_or_404(manga_id)
-    if request.method == 'POST':
-        manga.title = request.form.get('title', '').strip()
-        manga.description = request.form.get('description', '').strip()
-        manga.type = request.form.get('type', 'anime').strip()
-        manga.cover_url = request.form.get('cover_url', '').strip()
-        cover_file = request.files.get('cover_file')
-        if cover_file and cover_file.filename != '':
-            filename = process_image(cover_file, 400, 600)
-            if filename:
-                manga.cover_url = filename
-        manga.rating = float(request.form.get('rating', 8.0))
-        manga.status = request.form.get('status', 'Davam edir').strip()
-        manga.chapters = int(request.form.get('chapters', 100))
-        db.session.commit()
-        flash(_t('Manqa yeniləndi', 'Manga updated'))
-        return redirect(url_for('admin'))
-    return render_template('edit_manga.html', manga=manga)
-
-@app.route('/admin/add-manga', methods=['POST'])
-@login_required
-@admin_required
-def add_manga():
-    title = request.form.get('title', '').strip()
-    description = request.form.get('description', '').strip()
-    type_ = request.form.get('type', 'anime').strip()
-    cover_url = request.form.get('cover_url', '').strip()
-    cover_file = request.files.get('cover_file')
-    rating = float(request.form.get('rating', 8.0))
-    status = request.form.get('status', 'Davam edir').strip()
-    chapters = int(request.form.get('chapters', 100))
-    if cover_file and cover_file.filename != '':
-        filename = process_image(cover_file, 400, 600)
-        if filename:
-            cover_url = filename
-        else:
-            flash(_t('Şəkil formatı dəstəklənmir, URL istifadə ediləcək', 'Image format not supported, URL will be used'))
-    if title and description:
-        if not cover_url:
-            cover_url = get_image_url(title)
-        manga = Manga(title=title, description=description, type=type_, cover_url=cover_url, rating=rating, status=status, chapters=chapters)
-        db.session.add(manga)
-        db.session.commit()
-    return redirect(url_for('admin'))
 
 @app.route('/admin/publish-news/<int:news_id>')
 @login_required
@@ -2931,15 +2833,6 @@ def clear_all_posts():
     flash(_t('Bütün şərhlər silindi.', 'All comments deleted.'))
     return redirect(url_for('admin'))
 
-@app.route('/admin/delete-manga/<int:manga_id>')
-@login_required
-@admin_required
-def delete_manga(manga_id):
-    manga = Manga.query.get_or_404(manga_id)
-    db.session.delete(manga)
-    db.session.commit()
-    return redirect(url_for('admin'))
-
 # ---------- INIT ----------
 def ensure_columns():
     import sqlite3
@@ -2990,6 +2883,7 @@ def ensure_columns():
 
 def init_db():
     with app.app_context():
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         ensure_columns()
         db.create_all()
         if not User.query.filter_by(username='admin').first():
