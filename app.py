@@ -3049,21 +3049,25 @@ def add_manga():
     type_ = request.form.get('type', 'anime').strip()
     cover_url = request.form.get('cover_url', '').strip()
     cover_file = request.files.get('cover_file')
-    rating = float(request.form.get('rating', 8.0))
+    rating_str = request.form.get('rating', '').strip()
+    rating = float(rating_str) if rating_str else 8.0
     status = request.form.get('status', 'Davam edir').strip()
     chapters = int(request.form.get('chapters', 100))
+
     if cover_file and cover_file.filename != '':
         filename = process_image(cover_file, 400, 600)
         if filename:
             cover_url = filename
         else:
             flash(_t('Şəkil formatı dəstəklənmir, URL istifadə ediləcək', 'Image format not supported, URL will be used'))
+
     if title and description:
         if not cover_url:
             cover_url = get_image_url(title)
         manga = Manga(title=title, description=description, type=type_, cover_url=cover_url, rating=rating, status=status, chapters=chapters)
         db.session.add(manga)
         db.session.commit()
+
     return redirect(url_for('admin'))
 
 @app.route('/admin/publish-news/<int:news_id>')
