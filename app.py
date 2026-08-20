@@ -907,19 +907,6 @@ INDEX_HTML = """
             </a>
             {% endfor %}
         </div>
-        <div>
-            <h2 class="text-2xl font-semibold mb-4">{{ 'Seçilmiş Manqa/Anime' if current_lang == 'az' else 'Featured Manga/Anime' }}</h2>
-            {% for m in featured %}
-            <a href="/manga/{{ m.id }}" class="block bg-gray-800 rounded-lg p-3 mb-3 card-glow flex items-center gap-3">
-                <img src="{{ m.cover_url }}" alt="{{ m.title }}" class="w-16 h-24 object-cover rounded">
-                <div>
-                    <h3 class="font-bold">{{ m.title }}</h3>
-                    <p class="text-sm text-gray-400">{{ m.type }}</p>
-                    <p class="text-yellow-400">{{ 'Rating:' if current_lang == 'az' else 'Rating:' }} {{ m.rating }}</p>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
     </div>
 </div>
 {% endblock %}
@@ -2040,8 +2027,7 @@ def set_language(lang):
 def index():
     latest_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).limit(5).all()
     most_read = News.query.filter_by(status='published').order_by(News.views.desc()).limit(5).all()
-    featured = Manga.query.order_by(Manga.rating.desc()).limit(4).all()
-    return render_template('index.html', latest_news=latest_news, most_read=most_read, featured=featured)
+    return render_template('index.html', latest_news=latest_news, most_read=most_read)
 
 @app.route('/news')
 def news_list():
