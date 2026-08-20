@@ -874,6 +874,20 @@ function validateReportForm(form) {
 }
 
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.local-time').forEach(function(el) {
+        const utcTime = el.getAttribute('data-utc');
+        if (utcTime) {
+            const date = new Date(utcTime);
+            if (!isNaN(date.getTime())) {
+                const lang = '{{ current_lang }}';
+                el.textContent = date.toLocaleString(lang === 'az' ? 'az-AZ' : 'en-US');
+            }
+        }
+    });
+});
+</script>
 </body>
 </html>
 """
@@ -894,7 +908,7 @@ INDEX_HTML = """
             {% for news in latest_news %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-                <p class="text-gray-400 text-sm">{{ news.published_at.strftime('%d.%m.%Y') }} | {{ news.category }}</p>
+                <p class="text-gray-400 text-sm"><time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ news.category }}</p>
             </a>
             {% else %}
             <p>{{ 'Hələ xəbər yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
@@ -903,7 +917,7 @@ INDEX_HTML = """
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-            <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
+            <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
             </a>
             {% endfor %}
         </div>
@@ -926,7 +940,7 @@ NEWS_LIST_HTML = """
         {% for news in all_news %}
         <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
             <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-            <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }}</p>
+            <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time></p>
             <p class="text-gray-300">{{ get_lang_field(news, 'content')[:150] }}...</p>
         </a>
         {% endfor %}
@@ -941,7 +955,7 @@ NEWS_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | {{ news.published_at.strftime('%d.%m.%Y') }} | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
+    <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
     {% endif %}
@@ -1017,7 +1031,7 @@ ARCHIVE_HTML = """
                 <span class="chip chip-pulse mb-2">{{ item.category }}</span>
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
                 <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
-                <p class="text-gray-500 text-xs mt-2">{{ item.published_at.strftime('%d.%m.%Y') }} | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
+                <p class="text-gray-500 text-xs mt-2"><time class="local-time" data-utc="{{ item.published_at.isoformat() }}Z"></time> | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
             </a>
             {% endfor %}
         {% endif %}
@@ -1090,7 +1104,7 @@ ROOM_HTML = """
     <div class="space-y-4">
         {% for post in posts %}
 <div class="bg-gray-800 rounded p-3">
-    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time></p>
     {% if current_user.is_authenticated and current_user.is_admin %}
         <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
     {% endif %}
@@ -1786,7 +1800,7 @@ NOTIFICATIONS_HTML = """
         <div class="bg-gray-800 p-3 rounded flex justify-between items-center {% if not n.is_read %}border-l-4 border-cyan-400{% endif %}">
             <p class="text-gray-300">{{ n.message }}</p>
             <div class="text-sm text-gray-400">
-                {{ n.created_at.strftime('%d.%m.%Y %H:%M') }}
+                <time class="local-time" data-utc="{{ n.created_at.isoformat() }}Z"></time>
                 {% if not n.is_read %}
                 <a href="/notifications/mark-read/{{ n.id }}" class="ml-2 text-cyan-400">Oxunmuş işarələ</a>
                 {% endif %}
@@ -1912,7 +1926,10 @@ app.jinja_loader = DictLoader(templates)
 
 @app.context_processor
 def inject_now():
-    return {'now': datetime.utcnow()}
+    # Bakı vaxtı (UTC+4)
+    baku_tz = timezone(timedelta(hours=4))
+    now = datetime.now(baku_tz)
+    return {'now': now}
 
 @app.context_processor
 def inject_lang():
