@@ -17,7 +17,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from models import db, User, News, Comment, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from models import db, User, News, Comment, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
 from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
@@ -1542,61 +1542,46 @@ PROFILE_HTML = """
 """
 USER_PROFILE_HTML = """
 {% extends "base.html" %}
-{% block title %}{{ profile_user.username }} - Profil{% endblock %}
+{% block title %}{{ profile_user.username }} - {{ 'Profil' if current_lang == 'az' else 'Profile' }}{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Profil: {{ profile_user.username }}</h1>
     <div class="bg-gray-800 rounded-lg p-6">
-        {% if profile_user.avatar %}
-        <img src="{{ url_for('static', filename='uploads/' + profile_user.avatar) }}" alt="Avatar" class="w-24 h-24 rounded-full mb-4">
-        {% else %}
-        <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl mb-4">{{ profile_user.username[0].upper() }}</div>
-        {% endif %}
-        <p>Email: {{ profile_user.email }}</p>
-        <p>Səviyyə: {{ profile_user.get_level() }}</p>
-        <p>XP: {{ profile_user.points }}</p>
-        {% if profile_user.title %}
-        <p>Ünvan: <span style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</span></p>
-        {% endif %}
-        {% if profile_user.bio %}
-        <p class="mt-2">Bio: {{ profile_user.bio }}</p>
-        {% endif %}
-        {% if profile_user.twitter_link or profile_user.instagram_link or profile_user.discord_link %}
-        <p class="mt-2">Sosial: 
-            {% if profile_user.twitter_link %}<a href="{{ profile_user.twitter_link }}" target="_blank" class="text-blue-400">Twitter</a>{% endif %}
-            {% if profile_user.instagram_link %} | <a href="{{ profile_user.instagram_link }}" target="_blank" class="text-pink-400">Instagram</a>{% endif %}
-            {% if profile_user.discord_link %} | <a href="{{ profile_user.discord_link }}" target="_blank" class="text-purple-400">Discord</a>{% endif %}
-        </p>
-        {% endif %}
-        <p class="mt-2">
-            {% if profile_user.is_banned %}<span class="text-red-400">Banlı</span>{% else %}<span class="text-green-400">Aktiv</span>{% endif %}
-            {% if profile_user.is_muted %}<span class="text-yellow-400"> | Susdurulub</span>{% endif %}
-        </p>
-    </div>
+        <div class="flex items-center gap-4">
+            {% if profile_user.avatar %}
+            <img src="{{ url_for('static', filename='uploads/' + profile_user.avatar) }}" alt="Avatar" class="w-24 h-24 rounded-full">
+            {% else %}
+            <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl">{{ profile_user.username[0].upper() }}</div>
+            {% endif %}
+            <div>
+                <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
+                {% if profile_user.title %}
+                <p style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</p>
+                {% endif %}
+                <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
+                <p class="text-gray-400">{{ 'Təqibçi' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'Təqib edilən' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
+            </div>
+        </div>
 
-    {% if current_user.is_admin and profile_user.id != current_user.id %}
-    <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-3">Moderasiya</h2>
-        <p class="text-sm text-gray-400 mb-2">Ban müddətləri:</p>
-        <div class="flex flex-wrap gap-2">
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-red-500 text-white rounded">1 gün</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-red-500 text-white rounded">7 gün</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-red-500 text-white rounded">30 gün</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=90" class="px-3 py-1 bg-red-500 text-white rounded">3 ay</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=180" class="px-3 py-1 bg-red-500 text-white rounded">6 ay</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=365" class="px-3 py-1 bg-red-500 text-white rounded">12 ay</a>
-            <a href="/admin/ban-user/{{ profile_user.id }}?duration=forever" class="px-3 py-1 bg-red-700 text-white rounded">Ömürlük</a>
-            {% if profile_user.is_banned %}<a href="/admin/unban-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">Banı aç</a>{% endif %}
+        {% if profile_user.bio %}
+        <p class="mt-4">{{ profile_user.bio }}</p>
+        {% endif %}
+
+        {% if profile_user.twitter_link or profile_user.instagram_link or profile_user.discord_link %}
+        <div class="mt-4 flex gap-3">
+            {% if profile_user.twitter_link %}<a href="{{ profile_user.twitter_link }}" target="_blank" class="text-blue-400">Twitter</a>{% endif %}
+            {% if profile_user.instagram_link %}<a href="{{ profile_user.instagram_link }}" target="_blank" class="text-pink-400">Instagram</a>{% endif %}
+            {% if profile_user.discord_link %}<a href="{{ profile_user.discord_link }}" target="_blank" class="text-purple-400">Discord</a>{% endif %}
         </div>
-        <p class="text-sm text-gray-400 mt-4 mb-2">Susdurma müddətləri:</p>
-        <div class="flex flex-wrap gap-2">
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=1" class="px-3 py-1 bg-yellow-500 text-white rounded">1 gün</a>
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=7" class="px-3 py-1 bg-yellow-500 text-white rounded">7 gün</a>
-            <a href="/admin/mute-user/{{ profile_user.id }}?duration=30" class="px-3 py-1 bg-yellow-500 text-white rounded">30 gün</a>
-            {% if profile_user.is_muted %}<a href="/admin/unmute-user/{{ profile_user.id }}" class="px-3 py-1 bg-green-500 text-white rounded">Susturmanı aç</a>{% endif %}
-        </div>
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.id != profile_user.id %}
+        <form action="/follow/{{ profile_user.id }}" method="POST" class="mt-6">
+            <button type="submit" class="px-4 py-2 {% if is_following %}bg-gray-500{% else %}bg-cyan-500{% endif %} rounded">
+                {% if is_following %}{{ 'Təqibi burax' if current_lang == 'az' else 'Unfollow' }}{% else %}{{ 'Təqib et' if current_lang == 'az' else 'Follow' }}{% endif %}
+            </button>
+        </form>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 """
@@ -2475,11 +2460,31 @@ def like_news(news_id):
 
 # ---------- AUTH ----------
 @app.route('/user/<int:user_id>')
-@login_required
-@admin_required
 def user_profile(user_id):
     user = User.query.get_or_404(user_id)
-    return render_template('user_profile.html', profile_user=user)
+    is_following = False
+    if current_user.is_authenticated and current_user.id != user.id:
+        is_following = Follow.query.filter_by(follower_id=current_user.id, followed_id=user.id).first() is not None
+    return render_template('user_profile.html', profile_user=user, is_following=is_following)
+
+@app.route('/follow/<int:user_id>', methods=['POST'])
+@login_required
+def follow_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash(_t('Özünüzü təqib edə bilməzsiniz.', 'You cannot follow yourself.'))
+        return redirect(url_for('user_profile', user_id=user.id))
+    existing = Follow.query.filter_by(follower_id=current_user.id, followed_id=user.id).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        flash(_t('Təqib buraxıldı.', 'Unfollowed.'))
+    else:
+        follow = Follow(follower_id=current_user.id, followed_id=user.id)
+        db.session.add(follow)
+        db.session.commit()
+        flash(_t('Təqib edildi.', 'Followed.'))
+    return redirect(url_for('user_profile', user_id=user.id))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
