@@ -149,6 +149,14 @@ class NewsLike(db.Model):
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Follow(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    follower_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    followed_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    follower = db.relationship('User', foreign_keys=[follower_id], backref='following')
+    followed = db.relationship('User', foreign_keys=[followed_id], backref='followers')
 
 class Quest(db.Model):
     id = db.Column(db.Integer, primary_key=True)

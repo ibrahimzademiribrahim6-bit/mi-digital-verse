@@ -3050,6 +3050,7 @@ def ensure_columns():
 
 def init_db():
     with app.app_context():
+        os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         ensure_columns()
         db.create_all()
