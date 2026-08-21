@@ -5,4 +5,4 @@ venv/
 output/
 site.db
 instance/
-static/uploads/
+static/uploads/".env" 
