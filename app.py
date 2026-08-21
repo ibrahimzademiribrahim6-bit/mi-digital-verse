@@ -1585,7 +1585,7 @@ USER_PROFILE_HTML = """
                 <p style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</p>
                 {% endif %}
                 <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
-                <p class="text-gray-400">{{ 'Təqibçi' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'Təqib edilən' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
+                <p class="text-gray-400">{{ 'İzləyicilər' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'İzlədikləri' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
             </div>
         </div>
 
@@ -1602,10 +1602,9 @@ USER_PROFILE_HTML = """
         {% endif %}
 
         {% if current_user.is_authenticated and current_user.id != profile_user.id %}
-        <form action="/follow/{{ profile_user.id }}" method="POST" class="mt-6">
-            <button type="submit" class="px-4 py-2 {% if is_following %}bg-gray-500{% else %}bg-cyan-500{% endif %} rounded">
-                {% if is_following %}{{ 'Təqibi burax' if current_lang == 'az' else 'Unfollow' }}{% else %}{{ 'Təqib et' if current_lang == 'az' else 'Follow' }}{% endif %}
-            </button>
+        <form action="/follow/{{ profile_user.id }}" method="POST" class="mt-6"><button type="submit" class="px-4 py-2 {% if is_following %}bg-gray-500{% else %}bg-cyan-500{% endif %} rounded">
+    {% if is_following %}{{ 'İzləməyi dayandır' if current_lang == 'az' else 'Unfollow' }}{% else %}{{ 'İzlə' if current_lang == 'az' else 'Follow' }}{% endif %}
+</button>
         </form>
         {% endif %}
     </div>
@@ -2499,18 +2498,18 @@ def user_profile(user_id):
 def follow_user(user_id):
     user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
-        flash(_t('Özünüzü təqib edə bilməzsiniz.', 'You cannot follow yourself.'))
+        flash(_t('Özünüzü izləyə bilməzsiniz.', 'You cannot follow yourself.'))
         return redirect(url_for('user_profile', user_id=user.id))
     existing = Follow.query.filter_by(follower_id=current_user.id, followed_id=user.id).first()
     if existing:
         db.session.delete(existing)
         db.session.commit()
-        flash(_t('Təqib buraxıldı.', 'Unfollowed.'))
+        flash(_t('İzləməyi dayandırdı.', 'Unfollowed.'))
     else:
         follow = Follow(follower_id=current_user.id, followed_id=user.id)
         db.session.add(follow)
         db.session.commit()
-        flash(_t('Təqib edildi.', 'Followed.'))
+        flash(_t('İzlədi.', 'Followed.'))
     return redirect(url_for('user_profile', user_id=user.id))
 
 @app.route('/register', methods=['GET', 'POST'])
