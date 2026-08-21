@@ -762,7 +762,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </form>
             <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
 <input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<input type="email" name="email" placeholder="{{ 'Email' if current_lang == 'az' else 'Email' }}" class="w-full p-2 rounded bg-gray-700 text-white">
 <input type="password" name="password" placeholder="{{ 'Şifrə (ən az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
 <button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
             </form>
@@ -958,6 +957,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('show') === 'auth') {
+        document.getElementById('authModal').classList.remove('hidden');
+        // Qeydiyyat tabını da aça bilərsən, istəsən 'register' parametri ilə
+    }
 });
 </script>
 </body>
@@ -2490,26 +2498,26 @@ def follow_user(user_id):
 def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower() or None
         password = request.form.get('password', '')
+        email = None  # email artıq qeydiyyatda yoxdur
+
         if not username or not password:
             flash(_t('İstifadəçi adı və şifrə məcburidir', 'Username and password are required'))
-            return redirect(url_for('register'))
+            return redirect(url_for('index') + '?show=auth')
         if not is_strong_password(password):
             flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and numbers'))
-            return redirect(url_for('register'))
-        if email and not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
-            flash(_t('Email formatı düzgün deyil', 'Invalid email format'))
-            return redirect(url_for('register'))
+            return redirect(url_for('index') + '?show=auth')
         if User.query.filter_by(username=username).first():
             flash(_t('Bu istifadəçi adı artıq mövcuddur', 'This username already exists'))
-            return redirect(url_for('register'))
-        if email and User.query.filter_by(email=email).first():
-            flash(_t('Bu email artıq qeydiyyatdan keçib', 'This email is already registered'))
-            return redirect(url_for('register'))
+            return redirect(url_for('index') + '?show=auth')
         user = User(username=username, email=email, password_hash=generate_password_hash(password))
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(_t('Xəta baş verdi, yenidən cəhd edin', 'An error occurred, please try again'))
+            return redirect(url_for('index') + '?show=auth')
         login_user(user)
         start_title = Title.query.filter_by(name="Başlanğıc").first()
         if start_title:
@@ -2518,6 +2526,7 @@ def register():
             db.session.add(ut)
             db.session.commit()
         return redirect(url_for('index'))
+    # GET sorğusu üçün sadə səhifə (əgər birbaşa /register açılarsa)
     return render_template_string('''
     <!DOCTYPE html>
     <html>
@@ -2526,7 +2535,6 @@ def register():
         <h1>Qeydiyyat</h1>
         <form method="POST">
             <input type="text" name="username" placeholder="İstifadəçi adı" required><br>
-            <input type="email" name="email" placeholder="Email" required><br>
             <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required><br>
             <button type="submit">Qeydiyyatdan keç</button>
         </form>
@@ -2553,7 +2561,7 @@ def login():
         login_user(user)
         return redirect(url_for('index'))
     flash(_t('İstifadəçi adı və ya şifrə yanlışdır', 'Invalid username or password'))
-    return redirect(url_for('index'))
+    return redirect(url_for('index') + '?show=auth')
 
 @app.route('/logout')
 @login_required
