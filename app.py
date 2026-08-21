@@ -496,12 +496,15 @@ def update_user_title(user):
 def check_user_titles(user):
     if not user or user.is_admin:
         return
+
+    # Normal başlıqlar
     normal_titles = Title.query.filter_by(hidden=False).all()
     for title in normal_titles:
         if title.rarity == 'admin':
             continue
         if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
             continue
+
         earned = False
         if title.condition_type == 'xp':
             earned = user.points >= title.condition_value
@@ -517,6 +520,7 @@ def check_user_titles(user):
         elif title.condition_type == 'post':
             post_count = Post.query.filter_by(user_id=user.id).count()
             earned = post_count >= title.condition_value
+
         if earned:
             user_title = UserTitle(user_id=user.id, title_id=title.id)
             db.session.add(user_title)
@@ -525,6 +529,32 @@ def check_user_titles(user):
             if user.active_title_id is None:
                 user.active_title_id = title.id
                 db.session.commit()
+            update_user_title(user)
+
+    # Gizli epik başlıqlar (bənövşəyi)
+    epic_titles = Title.query.filter_by(rarity="epic", hidden=True).all()
+    for title in epic_titles:
+        if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
+            continue
+        if user.points >= title.condition_value:
+            user_title = UserTitle(user_id=user.id, title_id=title.id)
+            db.session.add(user_title)
+            db.session.commit()
+            add_notification(user, f"Epik ünvan qazandın: {title.name}")
+            update_user_title(user)
+
+    # Gizli legendary başlıqlar (sarı)
+    legendary_titles = Title.query.filter_by(rarity="legendary", hidden=True).all()
+    for title in legendary_titles:
+        if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
+            continue
+        if title.unique_legendary and UserTitle.query.filter_by(title_id=title.id).first():
+            continue
+        if user.points >= title.condition_value and user.streak >= 100:
+            user_title = UserTitle(user_id=user.id, title_id=title.id)
+            db.session.add(user_title)
+            db.session.commit()
+            add_notification(user, f"Əfsanəvi ünvan qazandın: {title.name}")
             update_user_title(user)
 
 def get_earned_titles(user):
@@ -2488,12 +2518,14 @@ def like_news(news_id):
     if existing_like:
         db.session.delete(existing_like)
         news.likes = max(0, news.likes - 1)
+        current_user.likes_count = max(0, current_user.likes_count - 1)
         db.session.commit()
         flash(_t('Bəyənmə geri alındı.', 'Like removed.'))
     else:
         like = NewsLike(user_id=current_user.id, news_id=news.id)
         db.session.add(like)
         news.likes += 1
+        current_user.likes_count += 1
         db.session.commit()
         add_xp(current_user, 1)
         update_quest_progress(current_user, 'like', 1)
@@ -2634,6 +2666,25 @@ def profile():
                            all_achievements=all_achievements,
                            earned_achievements=earned_achievements,
                            earned_titles=earned_titles)
+
+@app.route('/quests')
+@login_required
+def quests_page():
+    reset_user_quests(current_user)
+    daily_quests = Quest.query.filter_by(is_daily=True).all()
+    weekly_quests = Quest.query.filter_by(is_weekly=True).all()
+    user_quests = {}
+    for uq in current_user.quests:
+        user_quests[uq.quest_id] = uq
+    return render_template('quests.html', daily_quests=daily_quests, weekly_quests=weekly_quests, user_quests=user_quests)
+
+@app.route('/achievements')
+@login_required
+def achievements_page():
+    all_achievements = Achievement.query.all()
+    earned_ids = [ua.achievement_id for ua in current_user.achievements]
+    earned_achievements = {ach.id: (ach.id in earned_ids) for ach in all_achievements}
+    return render_template('achievements.html', all_achievements=all_achievements, earned_achievements=earned_achievements)
 
 @app.route('/profile/update-bio', methods=['POST'])
 @login_required
@@ -2787,29 +2838,34 @@ def admin():
 @login_required
 @admin_required
 def fetch_news():
-    articles = fetch_and_generate_news()
-    count = 0
-    for art in articles:
-        title = art.get('title', 'Xəbər')
-        content = art.get('content', '')
-        category = art.get('category', 'Ümumi')
-        image_keywords = art.get('image_search_keywords', title)
-        image_url = art.get('image_url', '')
-        if not image_url:
-            image_url = get_image_url(image_keywords)
-        if title and content:
-            news = News(
-                title=title,
-                content=content,
-                category=category,
-                image_url=image_url,
-                author_id=current_user.id,
-                status='draft'
-            )
-            db.session.add(news)
-            count += 1
-    db.session.commit()
-    flash(_t(f"{count} xəbər qaralama olaraq əlavə edildi.", f"{count} news added as draft."))
+    try:
+        articles = fetch_and_generate_news()
+        count = 0
+        for art in articles:
+            title = art.get('title', 'Xəbər')
+            content = art.get('content', '')
+            category = art.get('category', 'Ümumi')
+            image_keywords = art.get('image_search_keywords', title)
+            image_url = art.get('image_url', '')
+            if not image_url:
+                image_url = get_image_url(image_keywords)
+            if title and content:
+                news = News(
+                    title=title,
+                    content=content,
+                    category=category,
+                    image_url=image_url,
+                    author_id=current_user.id,
+                    status='draft'
+                )
+                db.session.add(news)
+                count += 1
+        db.session.commit()
+        flash(_t(f"{count} xəbər qaralama olaraq əlavə edildi.", f"{count} news added as draft."))
+    except Exception as e:
+        db.session.rollback()
+        print(f"fetch_news xətası: {e}")
+        flash(_t('Xəbərlər çəkilərkən xəta baş verdi, yenidən cəhd edin.', 'An error occurred while fetching news, please try again.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/generate-listicle', methods=['POST'])
@@ -2820,26 +2876,31 @@ def admin_generate_listicle():
     if not topic:
         flash(_t('Mövzu daxil edin', 'Please enter a subject'))
         return redirect(url_for('admin'))
-    article = generate_listicle(topic)
-    if article:
-        title = article.get('title', topic)
-        content = article.get('content', '')
-        category = article.get('category', 'Ümumi')
-        image_keywords = article.get('image_search_keywords', title)
-        image_url = get_image_url(image_keywords)
-        news = News(
-            title=title,
-            content=content,
-            category=category,
-            image_url=image_url,
-            author_id=current_user.id,
-            status='draft'
-        )
-        db.session.add(news)
-        db.session.commit()
-        flash(_t('Siyahı məqaləsi qaralama olaraq yaradıldı.', 'List article created as draft.'))
-    else:
-        flash(_t('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.', 'Article could not be created, agent returned an empty result.'))
+    try:
+        article = generate_listicle(topic)
+        if article:
+            title = article.get('title', topic)
+            content = article.get('content', '')
+            category = article.get('category', 'Ümumi')
+            image_keywords = article.get('image_search_keywords', title)
+            image_url = get_image_url(image_keywords)
+            news = News(
+                title=title,
+                content=content,
+                category=category,
+                image_url=image_url,
+                author_id=current_user.id,
+                status='draft'
+            )
+            db.session.add(news)
+            db.session.commit()
+            flash(_t('Siyahı məqaləsi qaralama olaraq yaradıldı.', 'List article created as draft.'))
+        else:
+            flash(_t('Məqalə yaradıla bilmədi, agent boş nəticə qaytardı.', 'Article could not be created, agent returned an empty result.'))
+    except Exception as e:
+        db.session.rollback()
+        print(f"generate_listicle xətası: {e}")
+        flash(_t('Siyahı yaradılarkən xəta baş verdi, yenidən cəhd edin.', 'An error occurred while creating the list, please try again.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/add-news', methods=['POST'])
@@ -3148,12 +3209,13 @@ def init_db():
             for item in news_items:
                 image_url = item.get('image_url', '')
                 if not image_url:
-                    image_url = get_image_url(item.get('title', ''))
-                news = News(
+                    image_url = get_image_url(item.get('title', ''))                
+                    news = News(
                     title=item.get('title', 'Xəbər'),
                     content=item.get('content', ''),
                     category=item.get('category', 'Ümumi'),
-                    image_url=image_url
+                    image_url=image_url,
+                    status='published'
                 )
                 db.session.add(news)
             db.session.commit()
