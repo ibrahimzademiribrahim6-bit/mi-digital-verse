@@ -15,7 +15,8 @@ class User(UserMixin, db.Model):
     last_login_date = db.Column(db.String(20), default='')
     avatar = db.Column(db.String(200), default='')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    title_id = db.Column(db.Integer, db.ForeignKey('title.id'), nullable=True)
+    active_title_id = db.Column(db.Integer, db.ForeignKey('title.id'), nullable=True)
+    level_title_color = db.Column(db.String(20), default='white')
     news_read_count = db.Column(db.Integer, default=0)
     likes_count = db.Column(db.Integer, default=0)
     showcase1_id = db.Column(db.Integer, db.ForeignKey('title.id'), nullable=True)
@@ -32,7 +33,7 @@ class User(UserMixin, db.Model):
     muted_until = db.Column(db.DateTime, nullable=True)
     muted_reason = db.Column(db.String(200), default='')
 
-    title = db.relationship('Title', foreign_keys=[title_id])
+    active_title = db.relationship('Title', foreign_keys=[active_title_id])
     showcase1 = db.relationship('Title', foreign_keys=[showcase1_id])
     showcase2 = db.relationship('Title', foreign_keys=[showcase2_id])
     showcase3 = db.relationship('Title', foreign_keys=[showcase3_id])

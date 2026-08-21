@@ -127,6 +127,7 @@ def daily_reward(user):
     update_quest_progress(user, 'daily_login', 1)
     update_quest_progress(user, 'points', bonus)
     check_achievements(user)
+    check_user_titles(user)
     update_user_title(user)
     add_notification(user, f"Günlük giriş ödülü: +{bonus} XP")
     return True
@@ -233,7 +234,6 @@ def get_bonus_percent(user):
     return 0
 
 def add_xp(user, amount):
-    update_user_title(user)
     if user.is_admin:
         return 0
     bonus_percent = get_bonus_percent(user)
@@ -242,7 +242,8 @@ def add_xp(user, amount):
         total = 1
     user.points += total
     db.session.commit()
-    update_user_title(user)
+    check_user_titles(user)   # Yeni ünvanları yoxla
+    update_user_title(user)   # Səviyyə rəngini yenilə
     return total
 
 # ---------- Ünvan sisteminin yenilənməsi ----------
@@ -483,62 +484,93 @@ def check_achievements(user):
 def update_user_title(user):
     if not user:
         return
+
+    # Admin üçün sabit qırmızı admin ünvanı
     if user.is_admin:
         admin_title = Title.query.filter_by(name="Admin").first()
-        if admin_title and user.title_id != admin_title.id:
-            user.title_id = admin_title.id
+        if admin_title and user.active_title_id != admin_title.id:
+            user.active_title_id = admin_title.id
             db.session.commit()
+        user.level_title_color = 'red'
+        db.session.commit()
         return
 
-    # Qeyri-gizli ünvanları XP-yə görə sırala
-    normal_titles = Title.query.filter_by(hidden=False).order_by(Title.required_xp.desc()).all()
+    # Qazanılmış ünvanlar
+    earned_titles = UserTitle.query.filter_by(user_id=user.id).all()
+    if not earned_titles:
+        return
+
+    # Ən yüksək rəngi tap (ağ=0, yaşıl=1, mavi=2, bənövşəyi=3, sarı=4)
+    max_rank = 0
+    for ut in earned_titles:
+        color = ut.title.color
+        if color == 'yellow':
+            rank = 4
+        elif color == 'purple':
+            rank = 3
+        elif color == 'blue':
+            rank = 2
+        elif color == 'green':
+            rank = 1
+        else:
+            rank = 0
+        if rank > max_rank:
+            max_rank = rank
+
+    color_map = {0: 'white', 1: 'green', 2: 'blue', 3: 'purple', 4: 'yellow'}
+    user.level_title_color = color_map[max_rank]
+
+    # Aktiv ünvan boşdursa, ən yüksək rəngli ünvandan birini seç
+    if user.active_title_id is None:
+        highest_title = Title.query.filter(
+            Title.color == color_map[max_rank]
+        ).first()
+        if highest_title:
+            user.active_title_id = highest_title.id
+
+    db.session.commit()
+
+def check_user_titles(user):
+    if not user or user.is_admin:
+        return
+
+    # Bütün gizli olmayan normal ünvanları götür
+    normal_titles = Title.query.filter_by(hidden=False).all()
     for title in normal_titles:
-        if title.rarity in ('common', 'uncommon', 'rare'):
-            if user.points >= title.required_xp:
-                # Uyğun ünvanı qazanmadısa əlavə et
-                if not UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
-                    user_title = UserTitle(user_id=user.id, title_id=title.id)
-                    db.session.add(user_title)
-                    db.session.commit()
-                    add_notification(user, f"Yeni ünvan qazandın: {title.name}")
-                # Aktiv ünvana təyin et (ən yüksək)
-                if user.title_id != title.id:
-                    user.title_id = title.id
-                    db.session.commit()
-                break
-
-    # Gizli Epik ünvanlar üçün şərtlər (sadələşdirilmiş: yalnız XP + bəzi şərtlər)
-    epic_titles = Title.query.filter_by(rarity="epic", hidden=True).all()
-    for title in epic_titles:
+        # Admin ünvanı deyilsə və istifadəçi hələ qazanmayıbsa
+        if title.rarity == 'admin':
+            continue
         if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
             continue
-        # Müvəqqəti sadə şərt: XP-yə görə
-        if user.points >= title.condition_value:
+
+        earned = False
+        # Şərtlərə uyğun yoxlama
+        if title.condition_type == 'xp':
+            earned = user.points >= title.condition_value
+        elif title.condition_type == 'news_read':
+            earned = user.news_read_count >= title.condition_value
+        elif title.condition_type == 'like':
+            earned = user.likes_count >= title.condition_value
+        elif title.condition_type == 'streak':
+            earned = user.streak >= title.condition_value
+        elif title.condition_type == 'room_create':
+            room_count = Room.query.filter_by(creator_id=user.id).count()
+            earned = room_count >= title.condition_value
+        elif title.condition_type == 'post':
+            post_count = Post.query.filter_by(user_id=user.id).count()
+            earned = post_count >= title.condition_value
+
+        if earned:
             user_title = UserTitle(user_id=user.id, title_id=title.id)
             db.session.add(user_title)
             db.session.commit()
-            add_notification(user, f"Epik ünvan qazandın: {title.name}")
-            if user.title_id != title.id:
-                user.title_id = title.id
+            add_notification(user, f"Yeni ünvan qazandın: {title.name}")
+            # Aktiv ünvan hələ boşdursa, bu ünvanı aktiv et
+            if user.active_title_id is None:
+                user.active_title_id = title.id
                 db.session.commit()
-
-    # Əfsanəvi ünvanlar (unique)
-    legendaries = Title.query.filter_by(rarity="legendary", hidden=True).all()
-    for title in legendaries:
-        if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
-            continue
-        # Əgər başqası alıbsa, keç
-        if title.unique_legendary and UserTitle.query.filter_by(title_id=title.id).first():
-            continue
-        # Şərtlər (sadələşdirilmiş)
-        if (user.points >= title.condition_value and user.streak >= 100):
-            user_title = UserTitle(user_id=user.id, title_id=title.id)
-            db.session.add(user_title)
-            db.session.commit()
-            add_notification(user, f"Əfsanəvi ünvan qazandın: {title.name}")
-            if user.title_id != title.id:
-                user.title_id = title.id
-                db.session.commit()
+            # Səviyyə rəngini yenilə
+            update_user_title(user)
 
 def get_earned_titles(user):
     return user.user_titles
@@ -1401,7 +1433,7 @@ PROFILE_HTML = """
         </div>
         <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
         {% if current_user.title %}
-        <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.title.color }};">{{ current_user.title.name }}</span></p>
+        <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</span></p>
         {% endif %}
         {% if not claimed_today %}
         <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
@@ -2517,7 +2549,8 @@ def register():
         login_user(user)
         start_title = Title.query.filter_by(name="Başlanğıc").first()
         if start_title:
-            user.title_id = start_title.id
+            user.active_title_id = start_title.id
+            user.level_title_color = 'white'
             ut = UserTitle(user_id=user.id, title_id=start_title.id)
             db.session.add(ut)
             db.session.commit()
@@ -3022,6 +3055,14 @@ def ensure_columns():
     # title cədvəli
     try:
         cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE user ADD COLUMN active_title_id INTEGER DEFAULT NULL")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE user ADD COLUMN level_title_color VARCHAR(20) DEFAULT 'white'")
     except:
         pass
 
