@@ -2331,7 +2331,7 @@ def community():
         room = Room.query.first()
     posts = []
     if room:
-        posts = Post.query.filter_by(room_id=room.id).order_by(Post.created_at.asc()).all()
+        posts = Post.query.filter_by(room_id=room.id).filter(Post.parent_id.is_(None)).order_by(Post.created_at.asc()).all()
     return render_template('community.html', room=room, posts=posts, tab=tab)
 
 @app.route('/create-room', methods=['GET', 'POST'])
@@ -2509,6 +2509,7 @@ def follow_user(user_id):
         follow = Follow(follower_id=current_user.id, followed_id=user.id)
         db.session.add(follow)
         db.session.commit()
+        add_notification(user, f"{current_user.username} sizi izləməyə başladı.")
         flash(_t('İzlədi.', 'Followed.'))
     return redirect(url_for('user_profile', user_id=user.id))
 
