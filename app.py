@@ -75,8 +75,9 @@ def check_banned_user():
                 current_user.banned_reason = ''
                 db.session.commit()
             else:
+                reason = current_user.banned_reason or _t('Göstərilməyib', 'Not specified')
                 logout_user()
-                flash(_t('Hesabınız banlandı. Səbəb: ', 'Your account has been banned. Reason: ') + (current_user.banned_reason or _t('Göstərilməyib', 'Not specified')))
+                flash(_t('Hesabınız banlandı. Səbəb: ', 'Your account has been banned. Reason: ') + reason)
                 return redirect(url_for('index'))
 
 @app.before_request
@@ -152,22 +153,22 @@ def process_image(file, max_width, max_height):
         img = Image.open(file)
         if img.mode in ('RGBA', 'P'):
             img = img.convert('RGB')
+        # Yalnız thumbnail istifadə et, nisbəti qoruyur və kiçik ölçüyə salır
         img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+        # Mərkəzdən kəsmə üçün (əgər lazımdırsa) ayrıca məntiq, amma indi sadəcə thumbnail
+        # Kəsmə etmək istəyiriksə, thumbnail-dən sonra crop edək
         width, height = img.size
         if width / height > max_width / max_height:
             new_width = int(height * max_width / max_height)
             left = (width - new_width) // 2
-            right = left + new_width
-            img = img.crop((left, 0, right, height))
+            img = img.crop((left, 0, left + new_width, height))
         else:
             new_height = int(width * max_height / max_width)
             top = (height - new_height) // 2
-            bottom = top + new_height
-            img = img.crop((0, top, width, bottom))
-        img = img.resize((max_width, max_height), Image.Resampling.LANCZOS)
+            img = img.crop((0, top, width, top + new_height))
         filename = f"upload_{datetime.utcnow().timestamp()}_{random.randint(1000,9999)}.jpg"
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        img.save(save_path, "JPEG", quality=85)
+        img.save(save_path, "JPEG", quality=90)  # keyfiyyəti artırdıq
         return filename
     except Exception as e:
         print(f"Şəkil emalı xətası: {e}")
@@ -183,36 +184,58 @@ def process_blocks(request, news_id):
     block_image_files = request.files.getlist('block_image_file')
     block_layouts = request.form.getlist('block_layout')
 
+    text_idx = 0   # mətn sahələri üçün ayrıca sayğac
+    image_idx = 0  # şəkil URL/fayl üçün ayrıca sayğac
+
     for i in range(len(block_types)):
         btype = block_types[i]
-        title_az = block_titles_az[i] if i < len(block_titles_az) else ''
-        title_en = block_titles_en[i] if i < len(block_titles_en) else ''
-        text_az = block_texts_az[i] if i < len(block_texts_az) else ''
-        text_en = block_texts_en[i] if i < len(block_texts_en) else ''
-        image_url = block_image_urls[i] if i < len(block_image_urls) else ''
         layout = block_layouts[i] if i < len(block_layouts) else 'stack'
 
-        if btype == 'image':
-            if i < len(block_image_files):
-                file = block_image_files[i]
+        title_az = ''
+        title_en = ''
+        text_az = ''
+        text_en = ''
+        image_url = ''
+
+        if btype == 'text':
+            if text_idx < len(block_titles_az):
+                title_az = block_titles_az[text_idx]
+            if text_idx < len(block_titles_en):
+                title_en = block_titles_en[text_idx]
+            if text_idx < len(block_texts_az):
+                text_az = block_texts_az[text_idx]
+            if text_idx < len(block_texts_en):
+                text_en = block_texts_en[text_idx]
+            text_idx += 1
+
+        elif btype == 'image':
+            if image_idx < len(block_titles_az):
+                title_az = block_titles_az[image_idx]
+            if image_idx < len(block_titles_en):
+                title_en = block_titles_en[image_idx]
+            if image_idx < len(block_image_urls):
+                image_url = block_image_urls[image_idx]
+            if image_idx < len(block_image_files):
+                file = block_image_files[image_idx]
                 if file and file.filename != '':
                     fname = process_image(file, 800, 500)
                     if fname:
                         image_url = fname
+            image_idx += 1
 
-        if btype in ['text', 'image']:
-            block = NewsBlock(
-                news_id=news_id,
-                block_type=btype,
-                title_az=title_az,
-                title_en=title_en,
-                text_content_az=text_az,
-                text_content_en=text_en,
-                image_url=image_url,
-                layout=layout,
-                order=i
-            )
-            db.session.add(block)
+        # Bloku yarat
+        block = NewsBlock(
+            news_id=news_id,
+            block_type=btype,
+            title_az=title_az,
+            title_en=title_en,
+            text_content_az=text_az,
+            text_content_en=text_en,
+            image_url=image_url,
+            layout=layout,
+            order=i
+        )
+        db.session.add(block)
 
 def get_bonus_percent(user):
     if user.is_admin:
@@ -949,6 +972,39 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('authModal').classList.remove('hidden');
     }
 });
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('show') === 'auth') {
+        document.getElementById('authModal').classList.remove('hidden');
+    }
+});
+</script>
+
+<script>
+function toggleTheme() {
+    const html = document.documentElement;
+    if (html.classList.contains('light')) {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+// Səhifə yüklənəndə yadda qalan temanı tətbiq et
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const html = document.documentElement;
+    html.classList.remove('dark', 'light');
+    html.classList.add(savedTheme);
+});
+</script>
+
 </script>
 </body>
 </html>
@@ -963,25 +1019,24 @@ INDEX_HTML = """
         <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 neon-text">{{ 'Xoş gəldiniz!' if current_lang == 'az' else 'Welcome!' }}</h1>
         <p class="text-gray-300 mt-2">{{ 'Anime, manhwa, manhua və oyun dünyasının ən son xəbərləri' if current_lang == 'az' else 'The latest news from the world of anime, manhwa, manhua and games' }}</p>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="col-span-2">
-            <h2 class="text-2xl font-semibold mb-4">{{ 'Son Xəbərlər' if current_lang == 'az' else 'Latest News' }}</h2>
-            {% for news in latest_news %}
-            <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
-                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-                <p class="text-gray-400 text-sm"><time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ news.category }}</p>
-            </a>
-            {% else %}
-            <p>{{ 'Hələ xəbər yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
-            {% endfor %}
-            <h2 class="text-2xl font-semibold mt-8 mb-4">{{ 'Ən Çox Oxunanlar' if current_lang == 'az' else 'Most Read' }}</h2>
-            {% for news in most_read %}
-            <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
-                <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-                <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
-            </a>
-            {% endfor %}
-        </div>
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl font-semibold mb-4">{{ 'Son Xəbərlər' if current_lang == 'az' else 'Latest News' }}</h2>
+        {% for news in latest_news %}
+        <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
+            <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
+            <p class="text-gray-400 text-sm"><time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ news.category }}</p>
+        </a>
+        {% else %}
+        <p>{{ 'Hələ xəbər yoxdur.' if current_lang == 'az' else 'No news yet.' }}</p>
+        {% endfor %}
+
+        <h2 class="text-2xl font-semibold mt-8 mb-4">{{ 'Ən Çox Oxunanlar' if current_lang == 'az' else 'Most Read' }}</h2>
+        {% for news in most_read %}
+        <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
+            <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
+            <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
+        </a>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}
@@ -1732,32 +1787,31 @@ ADMIN_HTML = """
     <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'İstifadəçilər' if current_lang == 'az' else 'Users' }}</h2>
     <div class="space-y-2">
         {% for user in all_users %}
-        <div class="bg-gray-800 p-3 rounded flex justify-between items-center">
-            <a href="/user/{{ user.id }}" class="text-cyan-400">{{ user.username }}</a>
-            <div>
+        <div class="bg-gray-800 p-3 rounded">
+            <div class="flex justify-between items-center">
+                <a href="/user/{{ user.id }}" class="text-cyan-400">{{ user.username }}</a>
+                <div class="flex gap-2">
+                    {% if not user.is_admin %}
+                    {% if not user.is_banned %}
+                    <a href="/admin/ban-user/{{ user.id }}?duration=1" class="text-xs bg-red-500 text-white px-2 py-1 rounded">1 gün ban</a>
+                    <a href="/admin/ban-user/{{ user.id }}?duration=7" class="text-xs bg-red-500 text-white px-2 py-1 rounded">7 gün ban</a>
+                    <a href="/admin/ban-user/{{ user.id }}?duration=forever" class="text-xs bg-red-700 text-white px-2 py-1 rounded">Ömürlük ban</a>
+                    {% else %}
+                    <a href="/admin/unban-user/{{ user.id }}" class="text-xs bg-green-500 text-white px-2 py-1 rounded">Banı aç</a>
+                    {% endif %}
+
+                    {% if not user.is_muted %}
+                    <a href="/admin/mute-user/{{ user.id }}?duration=1" class="text-xs bg-yellow-500 text-white px-2 py-1 rounded">1 gün susdur</a>
+                    <a href="/admin/mute-user/{{ user.id }}?duration=7" class="text-xs bg-yellow-500 text-white px-2 py-1 rounded">7 gün susdur</a>
+                    {% else %}
+                    <a href="/admin/unmute-user/{{ user.id }}" class="text-xs bg-gray-400 text-black px-2 py-1 rounded">Susturmanı aç</a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-1">
                 {% if user.is_banned %}<span class="text-red-400"> ({{ 'Banlı' if current_lang == 'az' else 'Banned' }})</span>{% endif %}
                 {% if user.is_muted %}<span class="text-yellow-400"> ({{ 'Susturulub' if current_lang == 'az' else 'Muted' }})</span>{% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Şikayətlər' if current_lang == 'az' else 'Reports' }}</h2>
-    <div class="space-y-2">
-        {% for item in report_details %}
-        <div class="bg-gray-800 p-3 rounded">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p><strong>{{ item.report.reporter.username }}</strong> {{ 'tərəfindən şikayət' if current_lang == 'az' else 'reported' }}</p>
-                    <p class="text-sm text-gray-400">{{ 'Növ' if current_lang == 'az' else 'Type' }}: {{ item.report.target_type }} #{{ item.report.target_id }}</p>
-                    <p class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}: {{ item.report.reason }}</p>
-                    <p class="text-xs text-gray-500 mt-2">{{ 'Məzmun' if current_lang == 'az' else 'Content' }}: {{ item.snippet }}</p>
-                    <a href="{{ item.link }}" class="text-blue-400 text-xs" target="_blank">{{ 'Məzmuna bax' if current_lang == 'az' else 'View content' }}</a>
-                </div>
-                <div class="flex gap-2">
-                    <a href="/admin/handle-report/{{ item.report.id }}" class="text-green-400">{{ 'Həll et' if current_lang == 'az' else 'Resolve' }}</a>
-                    <a href="/admin/delete-report/{{ item.report.id }}" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-                </div>
             </div>
         </div>
         {% endfor %}
