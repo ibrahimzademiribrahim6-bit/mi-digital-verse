@@ -16,9 +16,10 @@ from PIL import Image
 from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect
 
-from models import db, User, News, Comment, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
-from content_generator import generate_news_content, generate_manga_content, get_image_url, fetch_and_generate_news, generate_listicle
+from models import db, User, News, Comment, CommentLike, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from content_generator import generate_news_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
 
@@ -30,7 +31,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1024 * 1024  # 8 MB
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = True   # PythonAnywhere HTTPS olduğu üçün təhlükəsizdir
+app.config['SESSION_COOKIE_SECURE'] = True   # PythonAnywhere HTTPS
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 app.config['REMEMBER_COOKIE_SECURE'] = True
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
@@ -41,10 +42,7 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Zəhmət olmasa giriş edin.'
 
-@login_manager.unauthorized_handler
-def unauthorized():
-    flash(_t('Zəhmət olmasa giriş edin.', 'Please log in.'))
-    return redirect(url_for('index'))
+csrf = CSRFProtect(app)
 
 Talisman(app, content_security_policy=None, force_https=True)
 limiter = Limiter(
@@ -53,6 +51,11 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    flash(_t('Zəhmət olmasa giriş edin.', 'Please log in.'))
+    return redirect(url_for('index'))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -67,7 +70,6 @@ def check_banned_user():
     if current_user.is_authenticated:
         if current_user.is_banned:
             if current_user.banned_until and current_user.banned_until < datetime.now():
-                # Ban müddəti bitib, azad et
                 current_user.is_banned = False
                 current_user.banned_until = None
                 current_user.banned_reason = ''
@@ -84,7 +86,6 @@ def set_language():
         session['lang'] = lang
     if 'lang' not in session:
         session['lang'] = 'az'
-
 
 def admin_required(f):
     @wraps(f)
@@ -213,7 +214,6 @@ def process_blocks(request, news_id):
             )
             db.session.add(block)
 
-# ---------- Bonus hesablanması ----------
 def get_bonus_percent(user):
     if user.is_admin:
         return 100
@@ -242,15 +242,13 @@ def add_xp(user, amount):
         total = 1
     user.points += total
     db.session.commit()
-    check_user_titles(user)   # Yeni ünvanları yoxla
-    update_user_title(user)   # Səviyyə rəngini yenilə
+    check_user_titles(user)
+    update_user_title(user)
     return total
 
-# ---------- Ünvan sisteminin yenilənməsi ----------
 def seed_titles():
     if Title.query.count() > 0:
         return
-    # Ağ (20)
     white_titles = [
         ("Başlanğıc", "İlk addım"),
         ("İlk Addım", "Saytda ilk fəaliyyət"),
@@ -273,7 +271,6 @@ def seed_titles():
         ("İlk Vitrin", "İlk ünvanı vitrinə əlavə et"),
         ("Sadiq Oxucu", "30 xəbər oxu"),
     ]
-    # Yaşıl (18)
     green_titles = [
         ("Təcrübəli", "100 XP topla"),
         ("Bilikli", "50 xəbər oxu"),
@@ -294,7 +291,6 @@ def seed_titles():
         ("Ulduz", "3 nailiyyət qazan"),
         ("Veteran", "400 XP topla"),
     ]
-    # Mavi (16)
     blue_titles = [
         ("Usta", "500 XP topla"),
         ("Veteran", "700 XP topla"),
@@ -313,7 +309,6 @@ def seed_titles():
         ("Xəbər Canavarı", "200 xəbər oxu"),
         ("İşıq Sürəti", "500 bəyənmə et"),
     ]
-    # Bənövşəyi (12) - gizli, xüsusi şərtlər
     purple_titles = [
         ("Epik Qəhrəman", "3000 XP + 50 xəbər + 5 nailiyyət", "purple", True, "xp", 3000),
         ("Əfsanəvi Gözətçi", "3500 XP + 100 xəbər + 7 nailiyyət", "purple", True, "xp", 3500),
@@ -328,7 +323,6 @@ def seed_titles():
         ("Ölümsüz", "8000 XP + 600 bəyənmə", "purple", True, "xp", 8000),
         ("Kosmik Səyyah", "8500 XP + 100 müxtəlif otaqda şərh", "purple", True, "xp", 8500),
     ]
-    # Sarı (7) - əfsanəvi, hər biri yalnız bir nəfərə
     legendary_titles = [
         ("İlk Toxum", "10000 XP + 100 günlük seriya + 10 nailiyyət + 200 xəbər + 100 bəyənmə", "yellow", True, "xp", 10000),
         ("Tanrı Səviyyəsi", "12000 XP + 120 günlük seriya + 12 nailiyyət + 300 xəbər + 200 bəyənmə", "yellow", True, "xp", 12000),
@@ -336,10 +330,9 @@ def seed_titles():
         ("Kainat Hökmdarı", "16000 XP + 180 günlük seriya + 20 nailiyyət + 800 xəbər + 1000 bəyənmə", "yellow", True, "xp", 16000),
         ("Son Ümid", "18000 XP + 200 günlük seriya + 25 nailiyyət + 1000 xəbər + 2000 bəyənmə", "yellow", True, "xp", 18000),
         ("Əbədi Əfsanə", "20000 XP + 250 günlük seriya + 30 nailiyyət + 1500 xəbər + 5000 bəyənmə", "yellow", True, "xp", 20000),
-        ("İlk Toxum (Alternativ)", "Əsl əfsanə", "yellow", True, "xp", 99999),  # ehtiyat
+        ("İlk Toxum (Alternativ)", "Əsl əfsanə", "yellow", True, "xp", 99999),
     ]
     all_titles = []
-    # Ağ ünvanlar: 0-dan başlayır, hər addımda 10 XP artır
     xp = 0
     for name, desc in white_titles:
         all_titles.append(Title(name=name, description=desc, color="white", rarity="common",
@@ -347,7 +340,6 @@ def seed_titles():
                                 required_xp=xp))
         xp += 10
 
-    # Yaşıl ünvanlar: 200-dən başlayır, hər addımda 20 XP artır
     xp = 200
     for name, desc in green_titles:
         all_titles.append(Title(name=name, description=desc, color="green", rarity="uncommon",
@@ -355,8 +347,6 @@ def seed_titles():
                                 required_xp=xp))
         xp += 20
 
-    # Mavi ünvanlar: 570-dən başlayır, hər addımda 30 XP artır
-    # (Yaşıl sonuncu 540 olur, mavi 570-dən başlayır)
     xp = 570
     for name, desc in blue_titles:
         all_titles.append(Title(name=name, description=desc, color="blue", rarity="rare",
@@ -364,23 +354,9 @@ def seed_titles():
                                 required_xp=xp))
         xp += 30
     for item in purple_titles:
-        name = item[0]
-        desc = item[1]
-        color = item[2]
-        hidden = item[3]
-        ctype = item[4]
-        cvalue = item[5]
-        all_titles.append(Title(name=name, description=desc, color=color, rarity="epic", hidden=True, condition_type="xp", condition_value=cvalue))
+        all_titles.append(Title(name=item[0], description=item[1], color=item[2], rarity="epic", hidden=True, condition_type="xp", condition_value=item[5]))
     for item in legendary_titles:
-        name = item[0]
-        desc = item[1]
-        color = item[2]
-        hidden = item[3]
-        ctype = item[4]
-        cvalue = item[5]
-        all_titles.append(Title(name=name, description=desc, color=color, rarity="legendary", hidden=True, condition_type="xp", condition_value=cvalue, unique_legendary=True))
-
-    # Admin ünvanı
+        all_titles.append(Title(name=item[0], description=item[1], color=item[2], rarity="legendary", hidden=True, condition_type="xp", condition_value=item[5], unique_legendary=True))
     all_titles.append(Title(name="Admin", description="Sayt rəhbəri", color="red", rarity="admin", hidden=False, condition_type="admin", condition_value=0))
     db.session.add_all(all_titles)
     db.session.commit()
@@ -396,7 +372,6 @@ def seed_quests_and_achievements():
             Quest(name="Həftəlik Sosial", description="1 müzakirə otağı yarat", requirement_type="room_create", target_value=1, reward_xp=25, is_weekly=True),
         ]
         db.session.add_all(quests)
-
     if Achievement.query.count() == 0:
         achievements = [
             Achievement(name="İlk Addım", description="İlk xəbəri oxu", badge_icon="📰", requirement_type="news_read", requirement_value=1),
@@ -484,8 +459,6 @@ def check_achievements(user):
 def update_user_title(user):
     if not user:
         return
-
-    # Admin üçün sabit qırmızı admin ünvanı
     if user.is_admin:
         admin_title = Title.query.filter_by(name="Admin").first()
         if admin_title and user.active_title_id != admin_title.id:
@@ -494,13 +467,9 @@ def update_user_title(user):
         user.level_title_color = 'red'
         db.session.commit()
         return
-
-    # Qazanılmış ünvanlar
     earned_titles = UserTitle.query.filter_by(user_id=user.id).all()
     if not earned_titles:
         return
-
-    # Ən yüksək rəngi tap (ağ=0, yaşıl=1, mavi=2, bənövşəyi=3, sarı=4)
     max_rank = 0
     for ut in earned_titles:
         color = ut.title.color
@@ -516,35 +485,24 @@ def update_user_title(user):
             rank = 0
         if rank > max_rank:
             max_rank = rank
-
     color_map = {0: 'white', 1: 'green', 2: 'blue', 3: 'purple', 4: 'yellow'}
     user.level_title_color = color_map[max_rank]
-
-    # Aktiv ünvan boşdursa, ən yüksək rəngli ünvandan birini seç
     if user.active_title_id is None:
-        highest_title = Title.query.filter(
-            Title.color == color_map[max_rank]
-        ).first()
+        highest_title = Title.query.filter(Title.color == color_map[max_rank]).first()
         if highest_title:
             user.active_title_id = highest_title.id
-
     db.session.commit()
 
 def check_user_titles(user):
     if not user or user.is_admin:
         return
-
-    # Bütün gizli olmayan normal ünvanları götür
     normal_titles = Title.query.filter_by(hidden=False).all()
     for title in normal_titles:
-        # Admin ünvanı deyilsə və istifadəçi hələ qazanmayıbsa
         if title.rarity == 'admin':
             continue
         if UserTitle.query.filter_by(user_id=user.id, title_id=title.id).first():
             continue
-
         earned = False
-        # Şərtlərə uyğun yoxlama
         if title.condition_type == 'xp':
             earned = user.points >= title.condition_value
         elif title.condition_type == 'news_read':
@@ -559,23 +517,20 @@ def check_user_titles(user):
         elif title.condition_type == 'post':
             post_count = Post.query.filter_by(user_id=user.id).count()
             earned = post_count >= title.condition_value
-
         if earned:
             user_title = UserTitle(user_id=user.id, title_id=title.id)
             db.session.add(user_title)
             db.session.commit()
             add_notification(user, f"Yeni ünvan qazandın: {title.name}")
-            # Aktiv ünvan hələ boşdursa, bu ünvanı aktiv et
             if user.active_title_id is None:
                 user.active_title_id = title.id
                 db.session.commit()
-            # Səviyyə rəngini yenilə
             update_user_title(user)
 
 def get_earned_titles(user):
     return user.user_titles
 
-# ---------- HTML ŞABLONLARI (əvvəlki kimi, lakin profilə ünvan idarəsi əlavə olundu) ----------
+# ---------- ŞABLONLAR ----------
 BASE_HTML = """
 <!DOCTYPE html>
 <html lang="az" class="dark">
@@ -593,7 +548,6 @@ BASE_HTML = """
         .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
         .spoiler.revealed { background: transparent; color: inherit; }
 
-        /* ===== IŞIQLI REJIM (LIGHT MODE) ===== */
         html.light body {
             background: #f4f6f9;
             color: #111827;
@@ -604,12 +558,12 @@ BASE_HTML = """
             color: #111827;
         }
         html.light .bg-gray-800 {
-            background-color: #1f2937; /* Tünd boz - düymələr və kartlar */
+            background-color: #1f2937;
             color: #ffffff;
             border: 1px solid #374151;
         }
         html.light .bg-gray-700 {
-            background-color: #e5e7eb; /* Açıq boz - inputlar */
+            background-color: #e5e7eb;
             color: #111827;
         }
         html.light .text-gray-300 { color: #374151; }
@@ -622,9 +576,7 @@ BASE_HTML = """
         html.light .text-yellow-400 { color: #ca8a04; }
         html.light .text-red-400 { color: #dc2626; }
         html.light .text-red-500 { color: #b91c1c; }
-        html.light input,
-        html.light textarea,
-        html.light select {
+        html.light input, html.light textarea, html.light select {
             background-color: #ffffff;
             color: #111827;
             border: 1px solid #d1d5db;
@@ -643,7 +595,6 @@ BASE_HTML = """
         html.light .hero-section p {
             color: #1e293b;
         }
-        /* Mobil menyu və düymələr üçün */
         html.light #mobileMenu {
             background-color: #ffffff;
             border-bottom: 1px solid #e5e7eb;
@@ -660,73 +611,66 @@ BASE_HTML = """
             background-color: #1f2937;
             color: #ffffff;
         }
-
-/* Chat görünüşü */
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 180px); /* Təxmini: header+tabs+boşluqlar */
-    max-height: calc(100vh - 180px);
-    min-height: 0;
-}
-.chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 0.75rem;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-.chat-messages::-webkit-scrollbar {
-    display: none;
-}
-.chat-message {
-    margin-bottom: 1rem;
-}
-.chat-input-area {
-    flex-shrink: 0;
-}
-.chat-input-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-.chat-textarea {
-    flex: 1;
-    resize: none;
-    overflow-y: auto;
-    max-height: 200px;
-}
-
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            max-height: calc(100vh - 180px);
+            min-height: 0;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 0.75rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .chat-messages::-webkit-scrollbar {
+            display: none;
+        }
+        .chat-message {
+            margin-bottom: 1rem;
+        }
+        .chat-input-area {
+            flex-shrink: 0;
+        }
+        .chat-input-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        .chat-textarea {
+            flex: 1;
+            resize: none;
+            overflow-y: auto;
+            max-height: 200px;
+        }
     </style>
-</head>
-<script>
-// Chat mesajlarını aşağı sürüşdür
-function scrollChatToBottom() {
-    const chat = document.getElementById('chatMessages');
-    if (chat) {
-        chat.scrollTop = chat.scrollHeight;
-    }
-}
-
-// Mətn qutusunu avtomatik böyüt
-function autoResizeChat(el) {
-    el.style.height = 'auto';
-    el.style.height = (el.scrollHeight) + 'px';
-    if (el.scrollHeight > 200) {
-        el.style.height = '200px';
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    scrollChatToBottom();
-    const chatTextarea = document.getElementById('chatTextarea');
-    if (chatTextarea) {
-        chatTextarea.addEventListener('input', function() {
-            autoResizeChat(this);
+    <script>
+        function scrollChatToBottom() {
+            const chat = document.getElementById('chatMessages');
+            if (chat) {
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+        function autoResizeChat(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+            if (el.scrollHeight > 200) {
+                el.style.height = '200px';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            scrollChatToBottom();
+            const chatTextarea = document.getElementById('chatTextarea');
+            if (chatTextarea) {
+                chatTextarea.addEventListener('input', function() {
+                    autoResizeChat(this);
+                });
+            }
         });
-    }
-});
-</script>
+    </script>
+</head>
 <body>
 <div class="min-h-screen flex flex-col">
     <nav class="bg-gray-900 bg-opacity-90 backdrop-blur sticky top-0 z-50 border-b border-gray-700">
@@ -736,10 +680,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
                 </div>
                 <div class="hidden md:flex space-x-4">
-<a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
-<a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
-<a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
-<a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
+                    <a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+                    <a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
+                    <a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
+                    <a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
                     {% if current_user.is_authenticated %}
                     <a href="/profile" class="text-gray-300 hover:text-cyan-400">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
                     {% if current_user.is_admin %}
@@ -751,23 +695,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
-                    <!-- Axtarış yalnız masaüstü -->
                     <a href="/archive" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block">🔍</a>
-                    <!-- Bildiriş zəngi həmişə -->
                     <a href="/notifications" class="p-2 rounded bg-gray-800 text-white relative">
                         🔔
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full px-1 text-xs {% if unread_notifications_count == 0 %}hidden{% endif %}">{{ unread_notifications_count }}</span>
                     </a>
-                    <!-- Dil və tema yalnız masaüstü -->
                     <button id="langToggle" class="p-2 rounded bg-gray-800 text-white hidden md:inline-block" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                     <button id="langToggleMobile" class="p-2 rounded bg-gray-800 text-white md:hidden" onclick="window.location.href='/set-language/{{ 'en' if current_lang == 'az' else 'az' }}'">{{ 'EN' if current_lang == 'az' else 'AZ' }}</button>
                     <button id="themeToggle" style="display:none;" class="p-2 rounded-full bg-gray-800 text-yellow-400 hidden md:inline-block">🌙</button>
-                    <!-- Mobil menyu düyməsi -->
                     <button id="mobileMenuBtn" class="md:hidden p-2 rounded bg-gray-800 text-white" onclick="var m=document.getElementById('mobileMenu'); m.style.display = (m.style.display === 'block' ? 'none' : 'block');">☰</button>
                 </div>
             </div>
         </div>
-        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4 flex flex-col">            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+        <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4 flex flex-col">
+            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
             <a href="/archive" class="block py-2 text-gray-300">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
             <a href="/community" class="block py-2 text-gray-300">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
             <a href="/about" class="block py-2 text-gray-300">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
@@ -784,60 +725,62 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
             <button onclick="document.getElementById('authModal').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
             <div class="flex justify-center mb-4 space-x-4">
-<button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">{{ 'Giriş' if current_lang == 'az' else 'Login' }}</button>
-<button id="registerTabBtn" onclick="document.getElementById('registerForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); this.classList.add('text-purple-400','border-purple-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('loginTabBtn').classList.remove('text-cyan-400','border-cyan-400'); document.getElementById('loginTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">{{ 'Qeydiyyat' if current_lang == 'az' else 'Register' }}</button>
+                <button id="loginTabBtn" onclick="document.getElementById('loginForm').classList.remove('hidden'); document.getElementById('registerForm').classList.add('hidden'); this.classList.add('text-cyan-400','border-cyan-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('registerTabBtn').classList.remove('text-purple-400','border-purple-400'); document.getElementById('registerTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-cyan-400 border-b-2 border-cyan-400">{{ 'Giriş' if current_lang == 'az' else 'Login' }}</button>
+                <button id="registerTabBtn" onclick="document.getElementById('registerForm').classList.remove('hidden'); document.getElementById('loginForm').classList.add('hidden'); this.classList.add('text-purple-400','border-purple-400'); this.classList.remove('text-gray-400','border-transparent'); document.getElementById('loginTabBtn').classList.remove('text-cyan-400','border-cyan-400'); document.getElementById('loginTabBtn').classList.add('text-gray-400','border-transparent');" class="px-4 py-2 text-gray-400 border-b-2 border-transparent">{{ 'Qeydiyyat' if current_lang == 'az' else 'Register' }}</button>
             </div>
             <form id="loginForm" action="/login" method="POST" class="space-y-3">
-<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<input type="password" name="password" placeholder="{{ 'Şifrə' if current_lang == 'az' else 'Password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">{{ 'Daxil ol' if current_lang == 'az' else 'Sign In' }}</button>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="password" name="password" placeholder="{{ 'Şifrə' if current_lang == 'az' else 'Password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <button type="submit" class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded">{{ 'Daxil ol' if current_lang == 'az' else 'Sign In' }}</button>
             </form>
             <form id="registerForm" action="/register" method="POST" class="space-y-3 hidden">
-<input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<input type="password" name="password" placeholder="{{ 'Şifrə (ən az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-<button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="username" placeholder="{{ 'İstifadəçi adı' if current_lang == 'az' else 'Username' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <input type="password" name="password" placeholder="{{ 'Şifrə (ən az 8 simvol)' if current_lang == 'az' else 'Password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
+                <button type="submit" class="w-full py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Qeydiyyatdan keç' if current_lang == 'az' else 'Register' }}</button>
             </form>
         </div>
     </div>
 
     <main class="flex-grow">
-<div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-</div>
+        <div id="flash-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-cyan-500 text-white px-4 py-2 rounded mb-3 flash-item">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
 
-<!-- Report Modal -->
-<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
-        <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
-        <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
-        <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
-            <input type="hidden" name="target_type" id="reportTargetType">
-            <input type="hidden" name="target_id" id="reportTargetId">
-            <div>
-                <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
-                <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
-                    <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
-                    <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
-                    <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
-                    <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
-                    <option value="spam">Spam</option>
-                    <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
-                </select>
+        <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md relative">
+                <button onclick="closeReportModal()" class="absolute top-3 right-3 text-gray-400 text-2xl">&times;</button>
+                <h3 class="text-xl font-bold mb-4">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</h3>
+                <form action="/report/submit" method="POST" class="space-y-3" onsubmit="return validateReportForm(this)" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="target_type" id="reportTargetType">
+                    <input type="hidden" name="target_id" id="reportTargetId">
+                    <div>
+                        <label class="text-sm text-gray-400">{{ 'Səbəb' if current_lang == 'az' else 'Reason' }}</label>
+                        <select id="reportReasonSelect" name="reason" class="w-full p-2 rounded bg-gray-700 text-white" onchange="document.getElementById('otherReasonWrap').classList.toggle('hidden', this.value !== 'digər');">
+                            <option value="">{{ 'Səbəb seçin' if current_lang == 'az' else 'Select reason' }}</option>
+                            <option value="söyüş">{{ 'Söyüş' if current_lang == 'az' else 'Swearing' }}</option>
+                            <option value="spoiler">{{ 'Spoiler paylaşır' if current_lang == 'az' else 'Shares spoiler' }}</option>
+                            <option value="təhqir">{{ 'Təhqir edici' if current_lang == 'az' else 'Insulting' }}</option>
+                            <option value="spam">Spam</option>
+                            <option value="digər">{{ 'Digər' if current_lang == 'az' else 'Other' }}</option>
+                        </select>
+                    </div>
+                    <div id="otherReasonWrap" class="hidden mt-2">
+                        <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
+                        <textarea name="other_reason" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">{{ 'Göndər' if current_lang == 'az' else 'Submit' }}</button>
+                </form>
             </div>
-            <div id="otherReasonWrap" class="hidden mt-2">
-                <label class="text-sm text-gray-400">{{ 'Əlavə açıqlama' if current_lang == 'az' else 'Additional details' }}</label>
-                <textarea name="other_reason" class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
-            </div>
-            <button type="submit" class="w-full py-2 bg-red-500 hover:bg-red-600 text-white rounded">{{ 'Göndər' if current_lang == 'az' else 'Submit' }}</button>
-        </form>
-    </div>
-</div>
+        </div>
         {% block content %}{% endblock %}
     </main>
 
@@ -852,29 +795,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const html = document.documentElement;
     html.classList.add('dark');
     html.classList.remove('light');
-    
-    // Tema və Menyu
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
     document.getElementById('themeToggleMobile')?.addEventListener('click', toggleTheme);
     document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
         document.getElementById('mobileMenu').classList.toggle('hidden');
     });
-
-    // Modallar
     function openModal() { document.getElementById('authModal').classList.remove('hidden'); }
     function closeModal() { document.getElementById('authModal').classList.add('hidden'); }
-
     function openReportModal(type, id) {
         document.getElementById('reportTargetType').value = type;
         document.getElementById('reportTargetId').value = id;
         document.getElementById('reportModal').classList.remove('hidden');
     }
-    
     function closeReportModal() {
         document.getElementById('reportModal').classList.add('hidden');
     }
-
-    // Giriş / Qeydiyyat Tabları
     function showLogin() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
@@ -883,7 +818,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('registerTabBtn').classList.add('text-gray-400', 'border-transparent');
         document.getElementById('registerTabBtn').classList.remove('text-purple-400', 'border-purple-400');
     }
-    
     function showRegister() {
         document.getElementById('registerForm').classList.remove('hidden');
         document.getElementById('loginForm').classList.add('hidden');
@@ -892,55 +826,44 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
         document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
     }
-
-    // Dil sistemi
     const translations = {
         az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
         en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
     };
-    
     let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     applyLanguage(currentLang);
-    
     function applyLanguage(lang) {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (translations[lang] && translations[lang][key]) el.textContent = translations[lang][key];
         });
-        
         const langBtn = document.getElementById('langToggle');
         if (langBtn) langBtn.textContent = lang === 'az' ? 'EN' : 'AZ';
-        
         const langBtnMobile = document.getElementById('langToggleMobile');
         if (langBtnMobile) langBtnMobile.textContent = lang === 'az' ? 'EN' : 'AZ';
-        
         currentLang = lang;
         localStorage.setItem('lang', lang);
     }
-    
     function toggleLanguage() {
         const newLang = currentLang === 'az' ? 'en' : 'az';
         localStorage.setItem('lang', newLang);
         window.location.href = '/set-language/' + newLang;
     }
-    
     document.getElementById('langToggle')?.addEventListener('click', toggleLanguage);
     document.getElementById('langToggleMobile')?.addEventListener('click', toggleLanguage);
-
-    // Şikayət bölməsində "Digər" seçimi
-document.addEventListener('DOMContentLoaded', function() {
-    const select = document.getElementById('reportReasonSelect');
-    const otherWrap = document.getElementById('otherReasonWrap');
-    if (select && otherWrap) {
-        select.addEventListener('change', function() {
-            if (this.value === 'digər') {
-                otherWrap.classList.remove('hidden');
-            } else {
-                otherWrap.classList.add('hidden');
-            }
-        });
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('reportReasonSelect');
+        const otherWrap = document.getElementById('otherReasonWrap');
+        if (select && otherWrap) {
+            select.addEventListener('change', function() {
+                if (this.value === 'digər') {
+                    otherWrap.classList.remove('hidden');
+                } else {
+                    otherWrap.classList.add('hidden');
+                }
+            });
+        }
+    });
 </script>
 <script>
 (function() {
@@ -955,7 +878,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }, 5000);
 })();
-
 function validateReportForm(form) {
     const reasonSelect = document.getElementById('reportReasonSelect');
     if (!reasonSelect || reasonSelect.value === '') {
@@ -968,7 +890,6 @@ function validateReportForm(form) {
     }
     return true;
 }
-
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -996,7 +917,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('show') === 'auth') {
         document.getElementById('authModal').classList.remove('hidden');
-        // Qeydiyyat tabını da aça bilərsən, istəsən 'register' parametri ilə
     }
 });
 </script>
@@ -1004,7 +924,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </html>
 """
 
-# Digər bütün şablonlar əvvəlki kimi qalır, lakin profil şablonunu yeniləyirik.
 INDEX_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }} - Mi Digital Verse{% endblock %}
@@ -1029,7 +948,7 @@ INDEX_HTML = """
             {% for news in most_read %}
             <a href="/news/{{ news.id }}" class="block bg-gray-800 rounded-lg p-4 mb-4 card-glow">
                 <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(news, 'title') }}</h3>
-            <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
+                <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma:' if current_lang == 'az' else 'Views:' }} {{ news.views }}</p>
             </a>
             {% endfor %}
         </div>
@@ -1070,6 +989,8 @@ NEWS_DETAIL_HTML = """
     <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
     {% if news.image_url %}
     <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
+    {% else %}
+    <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
     {% endif %}
     <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
     {% for block in news.blocks %}
@@ -1108,7 +1029,10 @@ NEWS_DETAIL_HTML = """
 
     <div class="mt-6 flex gap-3">
         {% if current_user.is_authenticated %}
-        <form action="/like-news/{{ news.id }}" method="POST"><button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button></form>
+        <form action="/like-news/{{ news.id }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="px-4 py-2 bg-red-500 rounded">Bəyən ({{ news.likes }})</button>
+        </form>
         {% else %}
         <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
@@ -1120,6 +1044,7 @@ NEWS_DETAIL_HTML = """
 
         {% if current_user.is_authenticated %}
         <form action="/news/comment/{{ news.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex items-start gap-2">
                 <textarea id="mainCommentText" oninput="autoResizeComment(this)" name="content" required
                           class="flex-1 p-2 rounded bg-gray-700 text-white resize-none"
@@ -1169,8 +1094,20 @@ NEWS_DETAIL_HTML = """
                         {% endif %}
                     </div>
                 </div>
+                <!-- Bəyənmə/Dislike düymələri -->
+                <div class="flex items-center gap-3 mt-2">
+                    <form action="/like-comment/{{ comment.id }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-xs text-green-400">👍 {{ comment.reactions|selectattr('reaction','equalto','like')|list|length }}</button>
+                    </form>
+                    <form action="/dislike-comment/{{ comment.id }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="text-xs text-red-400">👎 {{ comment.reactions|selectattr('reaction','equalto','dislike')|list|length }}</button>
+                    </form>
+                </div>
                 <div id="replyForm{{ comment.id }}" class="hidden mt-3">
                     <form action="/news/comment/{{ news_id }}" method="POST" class="space-y-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="parent_id" value="{{ comment.id }}">
                         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
@@ -1204,7 +1141,6 @@ function autoResizeComment(el) {
         el.style.overflowY = 'hidden';
     }
 }
-
 function toggleReplyForm(commentId) {
     const form = document.getElementById('replyForm' + commentId);
     if (form) {
@@ -1242,6 +1178,11 @@ ARCHIVE_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for item in news_results %}
         <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
+            {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-cover rounded mb-3">
+            {% else %}
+            <div class="w-full h-40 bg-gray-700 rounded mb-3 flex items-center justify-center text-gray-400">📰</div>
+            {% endif %}
             <span class="chip chip-pulse mb-2">{{ item.category }}</span>
             <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
             <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
@@ -1314,6 +1255,7 @@ COMMUNITY_HTML = """
                 </div>
                 <div id="replyForm{{ post.id }}" class="hidden mt-3">
                     <form action="/post/{{ room_id }}" method="POST" class="space-y-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="parent_id" value="{{ post.id }}">
                         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
@@ -1339,6 +1281,7 @@ COMMUNITY_HTML = """
             {% if current_user.is_authenticated %}
             <div class="bg-gray-800 p-4 rounded">
                 <form action="/post/{{ room.id }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="chat-input-row">
                         <textarea id="chatTextarea" name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white chat-textarea" rows="1"></textarea>
                         <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
@@ -1372,15 +1315,10 @@ ROOM_HTML = """
 {% block title %}{{ room.name }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-4">
-        {% if room.name == 'Xəta Otağı' %}
-            {{ 'Xəta Otağı' if current_lang == 'az' else 'Error Room' }}
-        {% else %}
-            {{ room.name }}
-        {% endif %}
-    </h1>
+    <h1 class="text-2xl font-bold mb-4">{{ room.name }}</h1>
     {% if current_user.is_authenticated %}
     <form action="/post/{{ room.id }}" method="POST" class="mb-6 bg-gray-800 p-4 rounded">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <textarea name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="3"></textarea>
         <label class="flex items-center mt-2"><input type="checkbox" name="is_spoiler" value="1" class="mr-2"> {{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</label>
         <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
@@ -1390,18 +1328,18 @@ ROOM_HTML = """
     {% endif %}
     <div class="space-y-4">
         {% for post in posts %}
-<div class="bg-gray-800 rounded p-3">
-    <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time></p>
-    {% if current_user.is_authenticated and current_user.is_admin %}
-        <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure you want to delete this comment?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
-    {% endif %}
-    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
-    {% if post.is_spoiler %}
-        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
-    {% else %}
-        <p class="text-gray-300">{{ post.content }}</p>
-    {% endif %}
-</div>
+        <div class="bg-gray-800 rounded p-3">
+            <p class="text-sm text-gray-400"><strong>{{ post.user.username }}</strong> | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time></p>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+            <a href="/admin/delete-post/{{ post.id }}" class="text-red-400 text-xs" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Şərhi sil' if current_lang == 'az' else 'Delete comment' }}</a>
+            {% endif %}
+            <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+            {% if post.is_spoiler %}
+            <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
+            {% else %}
+            <p class="text-gray-300">{{ post.content }}</p>
+            {% endif %}
+        </div>
         {% endfor %}
     </div>
 </div>
@@ -1410,7 +1348,6 @@ ROOM_HTML = """
 
 PROFILE_HTML = """
 {% set achievement_names = {'İlk Addım': 'First Step', 'Xəbər Canavarı': 'News Beast', 'Bəyənmə Ustası': 'Like Master', 'Şərh Mütəxəssisi': 'Comment Expert', 'Otaq Qurucusu': 'Room Builder', 'Gündəlik Asılılıq': 'Daily Addiction', 'Səssiz Qəhrəman': 'Silent Hero', 'Əfsanəvi Kolleksiyaçı': 'Legendary Collector'} %}
-
 {% set achievement_descriptions = {'İlk xəbəri oxu': 'Read first news', '10 xəbər oxu': 'Read 10 news', '5 bəyənmə et': 'Give 5 likes', '5 şərh yaz': 'Write 5 comments', '3 müzakirə otağı yarat': 'Create 3 rooms', '7 gün ardıcıl giriş': '7-day login streak', '50 XP topla': 'Collect 50 XP', '100 XP topla': 'Collect 100 XP'} %}
 {% set quest_descriptions = {'1 xəbər oxu': 'Read 1 news', '1 bəyənmə et': 'Like 1 item', '1 şərh yaz': 'Write 1 comment', '5 xəbər oxu': 'Read 5 news', '5 bəyənmə et': 'Like 5 items', '1 müzakirə otağı yarat': 'Create 1 discussion room'} %}
 {% set quest_names = {'Gündəlik Oxucu': 'Daily Reader', 'Gündəlik Bəyənən': 'Daily Liker', 'Gündəlik Şərhçi': 'Daily Commenter', 'Həftəlik Məhsuldar': 'Weekly Producer', 'Həftəlik Bəyənən': 'Weekly Liker', 'Həftəlik Sosial': 'Weekly Social'} %}
@@ -1425,7 +1362,7 @@ PROFILE_HTML = """
         {% else %}
         <div class="w-24 h-24 rounded-full bg-gray-600 flex items-center justify-center text-4xl mb-4">{{ current_user.username[0].upper() }}</div>
         {% endif %}
-        <p>{{ 'Email' if current_lang == 'az' else 'Email' }}: {{ current_user.email }}</p>
+        <p>{{ 'Email' if current_lang == 'az' else 'Email' }}: {{ current_user.email or '—' }}</p>
         <p>{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ current_user.get_level() }}</p>
         <p>{{ 'XP' if current_lang == 'az' else 'XP' }}: {{ current_user.points }} / {{ current_user.get_next_level_xp() }}</p>
         <div class="w-full bg-gray-700 rounded-full h-3 mt-2">
@@ -1433,20 +1370,40 @@ PROFILE_HTML = """
         </div>
         <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
         {% if current_user.active_title %}
-        <p style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</p>
+        <p class="mt-2">{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</span></p>
         {% endif %}
+        <p>{{ 'Səviyyəli ünvan' if current_lang == 'az' else 'Level Title' }}: 
+            <span style="color: {{ current_user.level_title_color }};">
+                {% if current_user.level_title_color == 'white' %}{{ 'Ağ' if current_lang == 'az' else 'White' }}
+                {% elif current_user.level_title_color == 'green' %}{{ 'Yaşıl' if current_lang == 'az' else 'Green' }}
+                {% elif current_user.level_title_color == 'blue' %}{{ 'Mavi' if current_lang == 'az' else 'Blue' }}
+                {% elif current_user.level_title_color == 'purple' %}{{ 'Bənövşəyi' if current_lang == 'az' else 'Purple' }}
+                {% elif current_user.level_title_color == 'yellow' %}{{ 'Sarı' if current_lang == 'az' else 'Yellow' }}
+                {% elif current_user.level_title_color == 'red' %}{{ 'Admin' }}
+                {% else %}{{ current_user.level_title_color }}
+                {% endif %}
+            </span>
+        </p>
+
         {% if not claimed_today %}
-        <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
+        <form action="/claim-daily" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button>
+        </form>
         {% else %}
-	<p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else "You have already claimed today's reward." }}</p>
+        <p class="text-green-400 mt-2">{{ 'Bu gün ödülü almısınız.' if current_lang == 'az' else "You have already claimed today's reward." }}</p>
         {% endif %}
+
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Profil şəklini dəyiş' if current_lang == 'az' else 'Change profile picture' }}</h2>
         <form action="/upload-avatar" method="POST" enctype="multipart/form-data" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="file" name="avatar" accept="image/*" required class="w-full p-2 bg-gray-700 rounded">
             <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yüklə' if current_lang == 'az' else 'Upload' }}</button>
         </form>
+
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Bio və Sosial Keçidlər' if current_lang == 'az' else 'Bio and Social Links' }}</h2>
         <form action="/profile/update-bio" method="POST" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label class="text-sm text-gray-400">{{ 'Bio' if current_lang == 'az' else 'Bio' }}</label>
                 <textarea name="bio" class="w-full p-2 rounded bg-gray-700 text-white" rows="3">{{ current_user.bio or '' }}</textarea>
@@ -1465,8 +1422,10 @@ PROFILE_HTML = """
             </div>
             <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
         </form>
+
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Şifrəni dəyiş' if current_lang == 'az' else 'Change password' }}</h2>
         <form action="/profile/change-password" method="POST" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="password" name="current_password" placeholder="{{ 'Hazırkı şifrə' if current_lang == 'az' else 'Current password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
             <input type="password" name="new_password" placeholder="{{ 'Yeni şifrə (ən az 8 simvol)' if current_lang == 'az' else 'New password (at least 8 characters)' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
             <input type="password" name="confirm_password" placeholder="{{ 'Yeni şifrəni təkrar yaz' if current_lang == 'az' else 'Repeat new password' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
@@ -1474,41 +1433,57 @@ PROFILE_HTML = """
         </form>
     </div>
 
-<!-- Ünvanlar bölməsi -->
-<div class="bg-gray-800 rounded-lg p-6 mt-6">
-    <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {% for user_title in earned_titles %}
-        {% set color = user_title.title.color %}
-        <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
-            <span>{{ user_title.title.name }}</span>
-            <p class="text-xs text-gray-800">{{ user_title.title.description }}</p>
-            <form action="/profile/set-active-title/{{ user_title.title.id }}" method="POST" class="mt-2">
-                <button type="submit" class="text-xs bg-cyan-500 px-2 py-1 rounded">Aktiv et</button>
-            </form>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- Vitrin -->
-<div class="mt-6">
-    <h3 class="text-lg font-semibold">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }}</h3>
-    <div class="grid grid-cols-3 gap-3 mt-2">
-        {% for title in [profile_user.showcase1, profile_user.showcase2, profile_user.showcase3] %}
-            {% if title %}
-            {% set color = title.color %}
+    <!-- Ünvanlar bölməsi -->
+    <div class="bg-gray-800 rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {% for user_title in earned_titles %}
+            {% set color = user_title.title.color %}
             <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
-                <span>{{ title.name }}</span>
+                <span>{{ user_title.title.name }}</span>
+                <p class="text-xs text-gray-800">{{ user_title.title.description }}</p>
+                <form action="/profile/set-active-title/{{ user_title.title.id }}" method="POST" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="text-xs bg-cyan-500 px-2 py-1 rounded">Aktiv et</button>
+                </form>
             </div>
-            {% else %}
-            <div class="bg-gray-700 p-3 rounded text-center text-gray-500">
-                {{ 'Boş' if current_lang == 'az' else 'Empty' }}
-            </div>
-            {% endif %}
-        {% endfor %}
+            {% endfor %}
+        </div>
     </div>
-</div>
+
+    <!-- Vitrin -->
+    <div class="bg-gray-800 rounded-lg p-6 mt-6">
+        <h2 class="text-xl font-bold mb-4">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }}</h2>
+        <form action="/profile/set-showcase" method="POST" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {% for i in range(1, 4) %}
+                <div>
+                    <label class="text-sm">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }} {{ i }}</label>
+                    <select name="showcase{{ i }}" class="w-full p-2 rounded bg-gray-700 text-white">
+                        <option value="">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</option>
+                        {% for ut in earned_titles %}
+                        <option value="{{ ut.title.id }}" {% if (i==1 and current_user.showcase1_id == ut.title.id) or (i==2 and current_user.showcase2_id == ut.title.id) or (i==3 and current_user.showcase3_id == ut.title.id) %}selected{% endif %}>{{ ut.title.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="px-4 py-2 bg-purple-500 rounded">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
+        </form>
+        <div class="grid grid-cols-3 gap-3 mt-4">
+            {% for title in [current_user.showcase1, current_user.showcase2, current_user.showcase3] %}
+                {% if title %}
+                {% set color = title.color %}
+                <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
+                    <span>{{ title.name }}</span>
+                </div>
+                {% else %}
+                <div class="bg-gray-700 p-3 rounded text-center text-gray-500">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 
     <!-- Görəvlər və Nailiyyətlər -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
@@ -1575,6 +1550,7 @@ PROFILE_HTML = """
 </div>
 {% endblock %}
 """
+
 USER_PROFILE_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ profile_user.username }} - {{ 'Profil' if current_lang == 'az' else 'Profile' }}{% endblock %}
@@ -1589,11 +1565,25 @@ USER_PROFILE_HTML = """
             {% endif %}
             <div>
                 <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
-{% if profile_user.active_title %}
-<p style="color: {{ profile_user.active_title.color }};">{{ profile_user.active_title.name }}</p>
-{% endif %}
+                {% if profile_user.active_title %}
+                <p style="color: {{ profile_user.active_title.color }};">{{ profile_user.active_title.name }}</p>
+                {% endif %}
                 <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
                 <p class="text-gray-400">{{ 'İzləyicilər' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'İzlədikləri' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
+                {% if profile_user.level_title_color %}
+                <p class="text-gray-400">{{ 'Səviyyəli ünvan' if current_lang == 'az' else 'Level Title' }}: 
+                    <span style="color: {{ profile_user.level_title_color }};">
+                        {% if profile_user.level_title_color == 'white' %}{{ 'Ağ' if current_lang == 'az' else 'White' }}
+                        {% elif profile_user.level_title_color == 'green' %}{{ 'Yaşıl' if current_lang == 'az' else 'Green' }}
+                        {% elif profile_user.level_title_color == 'blue' %}{{ 'Mavi' if current_lang == 'az' else 'Blue' }}
+                        {% elif profile_user.level_title_color == 'purple' %}{{ 'Bənövşəyi' if current_lang == 'az' else 'Purple' }}
+                        {% elif profile_user.level_title_color == 'yellow' %}{{ 'Sarı' if current_lang == 'az' else 'Yellow' }}
+                        {% elif profile_user.level_title_color == 'red' %}{{ 'Admin' }}
+                        {% else %}{{ profile_user.level_title_color }}
+                        {% endif %}
+                    </span>
+                </p>
+                {% endif %}
             </div>
         </div>
 
@@ -1609,10 +1599,29 @@ USER_PROFILE_HTML = """
         </div>
         {% endif %}
 
+        <!-- Vitrin -->
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }}</h3>
+            <div class="grid grid-cols-3 gap-3 mt-2">
+                {% for title in [profile_user.showcase1, profile_user.showcase2, profile_user.showcase3] %}
+                    {% if title %}
+                    {% set color = title.color %}
+                    <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
+                        <span>{{ title.name }}</span>
+                    </div>
+                    {% else %}
+                    <div class="bg-gray-700 p-3 rounded text-center text-gray-500">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
         {% if current_user.is_authenticated and current_user.id != profile_user.id %}
-        <form action="/follow/{{ profile_user.id }}" method="POST" class="mt-6"><button type="submit" class="px-4 py-2 {% if is_following %}bg-gray-500{% else %}bg-cyan-500{% endif %} rounded">
-    {% if is_following %}{{ 'İzləməyi dayandır' if current_lang == 'az' else 'Unfollow' }}{% else %}{{ 'İzlə' if current_lang == 'az' else 'Follow' }}{% endif %}
-</button>
+        <form action="/follow/{{ profile_user.id }}" method="POST" class="mt-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="px-4 py-2 {% if is_following %}bg-gray-500{% else %}bg-cyan-500{% endif %} rounded">
+                {% if is_following %}{{ 'İzləməyi dayandır' if current_lang == 'az' else 'Unfollow' }}{% else %}{{ 'İzlə' if current_lang == 'az' else 'Follow' }}{% endif %}
+            </button>
         </form>
         {% endif %}
     </div>
@@ -1630,6 +1639,7 @@ ADMIN_HTML = """
     <div class="mb-6 bg-gray-800 p-4 rounded">
         <h2 class="text-xl font-bold mb-3">{{ 'Siyahı Məqaləsi Yarat' if current_lang == 'az' else 'Create List Article' }}</h2>
         <form action="/admin/generate-listicle" method="POST" class="space-y-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="text" name="topic" placeholder="{{ 'Məsələn:' if current_lang == 'az' else 'Example:' }} best 10 isekai anime 2026" required class="w-full p-2 rounded bg-gray-700 text-white">
             <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded">{{ 'Siyahı yarat' if current_lang == 'az' else 'Create list' }}</button>
         </form>
@@ -1643,6 +1653,7 @@ ADMIN_HTML = """
         <div class="bg-gray-800 p-4 rounded">
             <h2 class="text-xl font-bold mb-3">{{ 'Yeni Xəbər Əlavə Et' if current_lang == 'az' else 'Add New News' }}</h2>
             <form action="/admin/add-news" method="POST" enctype="multipart/form-data" class="space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="title_az" placeholder="{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}" required class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <textarea name="content_az" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
@@ -1651,7 +1662,6 @@ ADMIN_HTML = """
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
 
-                <!-- Dinamik bloklar -->
                 <h3 class="text-lg font-semibold mt-4">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h3>
                 <div id="blocksContainer"></div>
                 <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
@@ -1660,7 +1670,6 @@ ADMIN_HTML = """
                 <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Əlavə et' if current_lang == 'az' else 'Add' }}</button>
             </form>
         </div>
-        
     </div>
     
     <h2 class="text-2xl font-bold mt-8 mb-3">{{ 'Qaralamalar' if current_lang == 'az' else 'Drafts' }}</h2>
@@ -1798,60 +1807,47 @@ EDIT_NEWS_HTML = """
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">{{ 'Xəbəri Redaktə Et' if current_lang == 'az' else 'Edit News' }}</h1>
     <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
-        <!-- Dil seçimi (tab) -->
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="flex gap-3 mb-4">
             <button type="button" id="azTab" class="px-4 py-2 rounded bg-cyan-600 text-white" onclick="switchLang('az')">AZ</button>
             <button type="button" id="enTab" class="px-4 py-2 rounded bg-gray-600 text-white" onclick="switchLang('en')">EN</button>
         </div>
-
-        <!-- AZ məzmun -->
         <div id="azFields">
             <label class="text-sm text-gray-400">{{ 'Azərbaycanca Başlıq' if current_lang == 'az' else 'Azerbaijani Title' }}</label>
             <input type="text" name="title_az" value="{{ news.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
             <label class="text-sm text-gray-400">{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}</label>
             <textarea name="content_az" required class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content }}</textarea>
         </div>
-
-        <!-- EN məzmun -->
         <div id="enFields" class="hidden">
             <label class="text-sm text-gray-400">{{ 'İngilis Başlıq' if current_lang == 'az' else 'English Title' }}</label>
             <input type="text" name="title_en" value="{{ news.title_en or '' }}" class="w-full p-2 rounded bg-gray-700 text-white">
             <label class="text-sm text-gray-400">{{ 'İngilis Məzmun' if current_lang == 'az' else 'English Content' }}</label>
             <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         </div>
-
         <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
         <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
-
         <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <label class="text-sm text-gray-400">{{ 'Şəkil faylı yüklə' if current_lang == 'az' else 'Upload image file' }}</label>
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-
-        <!-- Dinamik Bloklar -->
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h2>
         <div id="blocksContainer"></div>
         <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
         <button type="button" onclick="addImageBlock()" class="px-4 py-2 bg-purple-500 rounded mt-2 ml-2">{{ '+ Şəkil Bloku' if current_lang == 'az' else '+ Image Block' }}</button>
-
         <button type="submit" class="px-4 py-2 bg-green-500 rounded mt-4">{{ 'Yadda saxla' if current_lang == 'az' else 'Save' }}</button>
     </form>
 </div>
 
 <script>
-let currentEditLang = '{{ current_lang }}'; // serverdən gələn cari dil
-
+let currentEditLang = '{{ current_lang }}';
 function switchLang(lang) {
     currentEditLang = lang;
-    // AZ/EN sahələrini göstər/gizlə
     document.getElementById('azFields').style.display = lang === 'az' ? 'block' : 'none';
     document.getElementById('enFields').style.display = lang === 'en' ? 'block' : 'none';
-    // Tab stilləri
     document.getElementById('azTab').classList.toggle('bg-cyan-600', lang === 'az');
     document.getElementById('azTab').classList.toggle('bg-gray-600', lang !== 'az');
     document.getElementById('enTab').classList.toggle('bg-cyan-600', lang === 'en');
     document.getElementById('enTab').classList.toggle('bg-gray-600', lang !== 'en');
-    // Blok konteynerində dilə uyğun sahələri göstər/gizlə
     document.querySelectorAll('#blocksContainer .block-az').forEach(el => {
         el.style.display = lang === 'az' ? 'block' : 'none';
     });
@@ -1859,7 +1855,6 @@ function switchLang(lang) {
         el.style.display = lang === 'en' ? 'block' : 'none';
     });
 }
-
 function addTextBlock() {
     const container = document.getElementById('blocksContainer');
     const div = document.createElement('div');
@@ -1889,7 +1884,6 @@ function addTextBlock() {
     `;
     container.appendChild(div);
 }
-
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
     const div = document.createElement('div');
@@ -1919,8 +1913,6 @@ function addImageBlock() {
     `;
     container.appendChild(div);
 }
-
-// Mövcud blokları yüklə
 window.onload = function() {
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
@@ -1979,38 +1971,9 @@ window.onload = function() {
             document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
         {% endif %}
     {% endfor %}
-    // Cari dilə uyğun sahələri göstər
     switchLang(currentEditLang);
 };
-
 </script>
-{% endblock %}
-"""
-
-EDIT_MANGA_HTML = """
-{% extends "base.html" %}
-{% block title %}Manqanı Redaktə Et - Mi Digital Verse{% endblock %}
-{% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Manqanı Redaktə Et</h1>
-    <form method="POST" enctype="multipart/form-data" class="bg-gray-800 p-4 rounded space-y-3">
-        <input type="text" name="title" value="{{ manga.title }}" required class="w-full p-2 rounded bg-gray-700 text-white">
-        <textarea name="description" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5">{{ manga.description }}</textarea>
-        <select name="type" class="w-full p-2 rounded bg-gray-700 text-white">
-            <option value="anime" {% if manga.type == 'anime' %}selected{% endif %}>Anime</option>
-            <option value="manga" {% if manga.type == 'manga' %}selected{% endif %}>Manga</option>
-            <option value="manhwa" {% if manga.type == 'manhwa' %}selected{% endif %}>Manhwa</option>
-            <option value="manhua" {% if manga.type == 'manhua' %}selected{% endif %}>Manhua</option>
-            <option value="webtoon" {% if manga.type == 'webtoon' %}selected{% endif %}>Webtoon</option>
-        </select>
-        <input type="text" name="cover_url" value="{{ manga.cover_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <input type="file" name="cover_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
-        <input type="number" step="0.1" name="rating" value="{{ manga.rating }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <input type="text" name="status" value="{{ manga.status }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <input type="number" name="chapters" value="{{ manga.chapters }}" class="w-full p-2 rounded bg-gray-700 text-white">
-        <button type="submit" class="px-4 py-2 bg-purple-500 rounded">Yadda saxla</button>
-    </form>
-</div>
 {% endblock %}
 """
 
@@ -2051,10 +2014,25 @@ SEARCH_HTML = """
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-2xl mb-4">{{ 'Axtarış:' if current_lang == 'az' else 'Search:' }} "{{ q }}"</h1>
+    {% if news_results %}
     <h2 class="text-xl mb-3">{{ 'Xəbərlər' if current_lang == 'az' else 'News' }}</h2>
     {% for n in news_results %}
     <div class="bg-gray-800 p-3 rounded mb-2"><a href="/news/{{ n.id }}" class="text-cyan-300">{{ n.title }}</a></div>
-    {% else %}<p>{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>{% endfor %}
+    {% endfor %}
+    {% else %}
+    <p>{{ 'Tapılmadı.' if current_lang == 'az' else 'Not found.' }}</p>
+    {% if suggested_news %}
+    <h3 class="text-lg font-semibold mt-6">{{ 'Bəlkə bunlar maraqlıdır' if current_lang == 'az' else 'Maybe these are interesting' }}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+        {% for s in suggested_news %}
+        <a href="/news/{{ s.id }}" class="block bg-gray-800 rounded-lg p-3 card-glow">
+            <h4 class="font-bold text-cyan-300">{{ s.title }}</h4>
+            <p class="text-sm text-gray-400">{{ s.category }}</p>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
 </div>
 {% endblock %}
 """
@@ -2183,7 +2161,6 @@ templates = {
     'user_profile.html': USER_PROFILE_HTML,
     'admin.html': ADMIN_HTML,
     'edit_news.html': EDIT_NEWS_HTML,
-    'edit_manga.html': EDIT_MANGA_HTML,
     'search.html': SEARCH_HTML,
     'archive.html': ARCHIVE_HTML,
     'notifications.html': NOTIFICATIONS_HTML,
@@ -2221,7 +2198,7 @@ def inject_unread_notifications():
 
 # ---------- ROUTELAR ----------
 @app.route('/set-language/<lang>')
-def set_language(lang):
+def set_language_route(lang):
     if lang in ['az', 'en']:
         session['lang'] = lang
     return redirect(request.referrer or url_for('index'))
@@ -2295,6 +2272,9 @@ def add_comment(news_id):
     db.session.commit()
     add_xp(current_user, 5)
     check_achievements(current_user)
+    # Bildiriş: yalnız xəbər müəllifinə? Yox, yalnız valideyn şərh sahibinə cavab verilirsə
+    if parent and parent.user_id != current_user.id:
+        add_notification(parent.user, f"{current_user.username} şərhinizə cavab yazdı.")
     return redirect(url_for('news_detail', news_id=news.id))
 
 @app.route('/admin/delete-comment/<int:comment_id>')
@@ -2308,6 +2288,37 @@ def delete_comment(comment_id):
     flash(_t('Şərh silindi.', 'Comment deleted.'))
     return redirect(url_for('news_detail', news_id=news_id))
 
+@app.route('/like-comment/<int:comment_id>', methods=['POST'])
+@login_required
+def like_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    existing = CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment.id, reaction='like').first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+    else:
+        # əvvəlki reaksiyanı sil
+        CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment.id).delete()
+        like = CommentLike(user_id=current_user.id, comment_id=comment.id, reaction='like')
+        db.session.add(like)
+        db.session.commit()
+    return redirect(request.referrer or url_for('news_detail', news_id=comment.news_id))
+
+@app.route('/dislike-comment/<int:comment_id>', methods=['POST'])
+@login_required
+def dislike_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    existing = CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment.id, reaction='dislike').first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+    else:
+        CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment.id).delete()
+        dislike = CommentLike(user_id=current_user.id, comment_id=comment.id, reaction='dislike')
+        db.session.add(dislike)
+        db.session.commit()
+    return redirect(request.referrer or url_for('news_detail', news_id=comment.news_id))
+
 @app.route('/category/<string:cat>')
 def category(cat):
     all_news = News.query.filter(News.status == 'published', News.category.ilike(f'%{cat}%')).order_by(News.published_at.desc()).all()
@@ -2317,9 +2328,13 @@ def category(cat):
 def search():
     q = request.args.get('q', '').strip()
     news_results = []
+    suggested_news = []
     if q:
         news_results = News.query.filter(News.status == 'published', News.title.contains(q) | News.content.contains(q)).all()
-    return render_template('search.html', q=q, news_results=news_results)
+    if not news_results:
+        # Təkliflər: son 3-5 xəbər
+        suggested_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).limit(4).all()
+    return render_template('search.html', q=q, news_results=news_results, suggested_news=suggested_news)
 
 @app.route('/about')
 def about():
@@ -2354,6 +2369,7 @@ def create_room():
         <div class="max-w-4xl mx-auto px-4 py-8">
             <h1 class="text-3xl font-bold mb-6">Yeni Müzakirə Otağı</h1>
             <form method="POST" class="bg-gray-800 p-4 rounded space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="room_name" placeholder="Otaq adı" required class="w-full p-2 rounded bg-gray-700 text-white">
                 <select name="news_id" class="w-full p-2 rounded bg-gray-700 text-white">
                     <option value="">Xəbər seç (istəyə bağlı)</option>
@@ -2377,7 +2393,6 @@ def create_room():
         db.session.commit()
         update_quest_progress(current_user, 'room_create', 1)
         check_achievements(current_user)
-        # Bildiriş: yalnız xəbər sahibinə (əgər xəbərə bağlıdırsa)
         if room.news_id:
             news = News.query.get(room.news_id)
             if news and news.author_id and news.author_id != current_user.id:
@@ -2389,7 +2404,7 @@ def create_room():
 @app.route('/room/<int:room_id>')
 def room(room_id):
     room = Room.query.get_or_404(room_id)
-    posts = Post.query.filter_by(room_id=room_id).order_by(Post.created_at.asc()).all()
+    posts = Post.query.filter_by(room_id=room_id).filter(Post.parent_id.is_(None)).order_by(Post.created_at.asc()).all()
     return render_template('room.html', room=room, posts=posts)
 
 @app.route('/post/<int:room_id>', methods=['POST'])
@@ -2410,10 +2425,14 @@ def add_post(room_id):
     update_quest_progress(current_user, 'post', 1)
     check_achievements(current_user)
 
-    if post.room.name == 'Xəta Bildirişi':
-        admin = User.query.filter_by(is_admin=True).first()
-        if admin:
-            add_notification(admin, f"Xəta Bildirişində yeni mesaj: {current_user.username} tərəfindən.")
+    # Yalnız cavab verilirsə, valideyn mesaj sahibinə bildiriş getməsin? Paketdə deyilir: icmada cavab bildirişi getməsin. Ona görə heç bir bildiriş göndərmirik.
+    # Yalnız xəta bildirişi tabında yeni mesaj yazılarsa adminə bildiriş gedir.
+    if not parent_id:
+        room_obj = Room.query.get(room_id)
+        if room_obj and room_obj.name == 'Xəta Bildirişi':
+            admin = User.query.filter_by(is_admin=True).first()
+            if admin:
+                add_notification(admin, f"Xəta Bildirişində yeni mesaj: {current_user.username} tərəfindən.")
 
     return redirect(request.referrer or url_for('community'))
 
@@ -2429,7 +2448,7 @@ def report_submit():
         if other_reason:
             reason = other_reason
 
-    if target_type not in ['post', 'room']:
+    if target_type not in ['post', 'room', 'comment']:
         flash(_t('Səhv şikayət növü.', 'Invalid report type.'))
         return redirect(request.referrer or url_for('index'))
 
@@ -2467,29 +2486,22 @@ def like_news(news_id):
     news = News.query.get_or_404(news_id)
     existing_like = NewsLike.query.filter_by(user_id=current_user.id, news_id=news.id).first()
     if existing_like:
-        # Bəyənməni geri al
         db.session.delete(existing_like)
         news.likes = max(0, news.likes - 1)
         db.session.commit()
         flash(_t('Bəyənmə geri alındı.', 'Like removed.'))
     else:
-        # Yeni bəyənmə
         like = NewsLike(user_id=current_user.id, news_id=news.id)
         db.session.add(like)
         news.likes += 1
         db.session.commit()
-        # XP və görəvlər
         add_xp(current_user, 1)
         update_quest_progress(current_user, 'like', 1)
         check_achievements(current_user)
-        # Bildiriş: yalnız xəbər sahibinə (əgər admin deyilsə və xəbərin müəllifi varsa)
         if news.author_id and news.author_id != current_user.id:
             author = User.query.get(news.author_id)
             if author:
                 add_notification(author, f"{current_user.username} sizin '{news.title}' xəbərinizi bəyəndi.")
-        else:
-            # Öz xəbərini bəyənəndə bildiriş getməsin
-            pass
     return redirect(url_for('news_detail', news_id=news.id))
 
 # ---------- AUTH ----------
@@ -2499,7 +2511,8 @@ def user_profile(user_id):
     is_following = False
     if current_user.is_authenticated and current_user.id != user.id:
         is_following = Follow.query.filter_by(follower_id=current_user.id, followed_id=user.id).first() is not None
-    return render_template('user_profile.html', profile_user=user, is_following=is_following)
+    total_comments = len(user.comments) + len(user.posts)
+    return render_template('user_profile.html', profile_user=user, is_following=is_following, total_comments=total_comments)
 
 @app.route('/follow/<int:user_id>', methods=['POST'])
 @login_required
@@ -2554,7 +2567,7 @@ def register():
             db.session.add(ut)
             db.session.commit()
         return redirect(url_for('index'))
-    # GET sorğusu üçün sadə səhifə (əgər birbaşa /register açılarsa)
+    # GET sorğusu üçün sadə səhifə
     return render_template_string('''
     <!DOCTYPE html>
     <html>
@@ -2562,6 +2575,7 @@ def register():
     <body>
         <h1>Qeydiyyat</h1>
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="text" name="username" placeholder="İstifadəçi adı" required><br>
             <input type="password" name="password" placeholder="Şifrə (ən az 8 simvol)" required><br>
             <button type="submit">Qeydiyyatdan keç</button>
@@ -2597,6 +2611,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+# ---------- PROFİL ----------
 @app.route('/profile')
 @login_required
 def profile():
@@ -2619,6 +2634,7 @@ def profile():
                            all_achievements=all_achievements,
                            earned_achievements=earned_achievements,
                            earned_titles=earned_titles)
+
 @app.route('/profile/update-bio', methods=['POST'])
 @login_required
 def update_bio():
@@ -2641,7 +2657,7 @@ def change_password():
     elif new_password != confirm_password:
         flash(_t('Yeni şifrələr uyğun gəlmir', 'New passwords do not match'))
     elif not is_strong_password(new_password):
-        flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and and numbers'))
+        flash(_t('Şifrə ən az 8 simvol, hərf və rəqəm olmalıdır', 'Password must be at least 8 characters long and contain letters and numbers'))
     else:
         current_user.password_hash = generate_password_hash(new_password)
         db.session.commit()
@@ -2666,6 +2682,16 @@ def set_showcase():
     s1 = request.form.get('showcase1', '')
     s2 = request.form.get('showcase2', '')
     s3 = request.form.get('showcase3', '')
+
+    # Dublikat yoxla
+    ids = []
+    for val in [s1, s2, s3]:
+        if val:
+            ids.append(int(val))
+    if len(ids) != len(set(ids)):
+        flash(_t('Eyni ünvanı birdən çox seçə bilməzsiniz.', 'You cannot select the same title more than once.'))
+        return redirect(url_for('profile'))
+
     current_user.showcase1_id = int(s1) if s1 else None
     current_user.showcase2_id = int(s2) if s2 else None
     current_user.showcase3_id = int(s3) if s3 else None
@@ -2704,7 +2730,7 @@ def upload_avatar():
         flash(_t('Profil şəkli yeniləndi', 'Profile picture updated'))
     return redirect(url_for('profile'))
 
-# ---------- NOTIFICATIONS ----------
+# ---------- BİLDİRİŞLƏR ----------
 @app.route('/notifications', methods=['GET', 'POST'])
 @login_required
 def notifications():
@@ -2747,6 +2773,10 @@ def admin():
             target = Room.query.get(report.target_id)
             content_snippet = target.name if target else 'Silinmiş'
             link = url_for('room', room_id=report.target_id) if target else '#'
+        elif report.target_type == 'comment':
+            target = Comment.query.get(report.target_id)
+            content_snippet = target.content[:100] if target else 'Silinmiş'
+            link = url_for('news_detail', news_id=target.news_id) if target else '#'
         else:
             content_snippet = ''
             link = '#'
@@ -2763,7 +2793,6 @@ def fetch_news():
         title = art.get('title', 'Xəbər')
         content = art.get('content', '')
         category = art.get('category', 'Ümumi')
-        source_url = art.get('source_url', '')
         image_keywords = art.get('image_search_keywords', title)
         image_url = art.get('image_url', '')
         if not image_url:
@@ -2847,7 +2876,6 @@ def add_news():
         db.session.add(news)
         db.session.commit()
 
-        # Blokları əlavə et
         process_blocks(request, news.id)
         db.session.commit()
 
@@ -2939,15 +2967,13 @@ def delete_report(report_id):
 def edit_news(news_id):
     news = News.query.get_or_404(news_id)
     if request.method == 'POST':
-        # Yeni əlavə edilmiş çoxdilli sahələr
         news.title = request.form.get('title_az', '').strip()
         news.content = request.form.get('content_az', '').strip()
         news.title_en = request.form.get('title_en', '').strip()
         news.content_en = request.form.get('content_en', '').strip()
-        
         news.category = request.form.get('category', 'Ümumi').strip()
         news.image_url = request.form.get('image_url', '').strip()
-        
+
         image_file = request.files.get('image_file')
         if image_file and image_file.filename != '':
             filename = process_image(image_file, 800, 500)
@@ -2960,11 +2986,9 @@ def edit_news(news_id):
         process_blocks(request, news.id)
         db.session.commit()
 
-                
-        db.session.commit()
         flash(_t('Xəbər yeniləndi', 'News updated'))
         return redirect(url_for('admin'))
-        
+
     return render_template('edit_news.html', news=news)
 
 @app.route('/admin/publish-news/<int:news_id>')
@@ -2982,9 +3006,7 @@ def publish_news(news_id):
 @admin_required
 def delete_news(news_id):
     news = News.query.get_or_404(news_id)
-    # Bu xəbərə bağlı otaqların news_id-sini NULL et
     Room.query.filter_by(news_id=news.id).update({'news_id': None})
-    # Xəbərə bağlı hesabatları sil (varsa)
     Report.query.filter_by(target_type='news', target_id=news.id).delete()
     db.session.delete(news)
     db.session.commit()
@@ -3010,12 +3032,12 @@ def admin_delete_post(post_id):
 @admin_required
 def admin_clear_room_messages(room_id):
     room = Room.query.get_or_404(room_id)
-    if room.name == 'Xəta Otağı':
+    if room.name == 'Xəta Bildirişi':
         Post.query.filter_by(room_id=room.id).delete()
         db.session.commit()
-        flash(_t('Xəta Otağındakı bütün mesajlar silindi.', 'All messages in the Error Room have been deleted.'))
+        flash(_t('Xəta Bildirişindəki bütün mesajlar silindi.', 'All messages in Bug Reports have been deleted.'))
     else:
-        flash(_t('Bu əməliyyat yalnız Xəta Otağı üçün keçərlidir.', 'This operation is only valid for the Error Room.'))
+        flash(_t('Bu əməliyyat yalnız Xəta Bildirişi üçün keçərlidir.', 'This operation is only valid for Bug Reports.'))
     return redirect(request.referrer or url_for('community'))
 
 @app.route('/admin/delete-room/<int:room_id>')
@@ -3023,7 +3045,7 @@ def admin_clear_room_messages(room_id):
 @admin_required
 def admin_delete_room(room_id):
     room = Room.query.get_or_404(room_id)
-    if room.name == 'Xəta Otağı' or room.name == 'Təkliflər Otağı':
+    if room.name in ['Ümumi Söhbət', 'Təkliflər', 'Xəta Bildirişi']:
         flash(_t('Bu otaq silinə bilməz.', 'This room cannot be deleted.'))
         return redirect(request.referrer or url_for('community'))
     creator = room.creator
@@ -3056,6 +3078,8 @@ def ensure_columns():
         cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
     except:
         pass
+
+    # user cədvəli
     try:
         cursor.execute("ALTER TABLE user ADD COLUMN active_title_id INTEGER DEFAULT NULL")
     except:
@@ -3079,7 +3103,7 @@ def ensure_columns():
     except:
         pass
 
-    # manga cədvəli
+    # news_block cədvəli
     try:
         cursor.execute("ALTER TABLE news_block ADD COLUMN title_az VARCHAR(200) DEFAULT ''")
     except:
@@ -3098,16 +3122,26 @@ def init_db():
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
         ensure_columns()
         db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', email='admin@midigitalverse.com', password_hash=generate_password_hash('MiriMID26&'), is_admin=True, points=100)
+
+        # Admin istifadəçi: Anuun / MiriMID26&
+        if not User.query.filter_by(username='Anuun').first():
+            admin = User(
+                username='Anuun',
+                email='anuun@midigitalverse.com',
+                password_hash=generate_password_hash('MiriMID26&'),
+                is_admin=True,
+                points=100
+            )
             db.session.add(admin)
             db.session.commit()
-            print("Admin istifadəçi yaradıldı: admin / MiriMID26&")
-        admin = User.query.filter_by(username='admin').first()
+            print("Admin istifadəçi yaradıldı: Anuun / MiriMID26&")
+
+        admin = User.query.filter_by(username='Anuun').first()
         admin_title = Title.query.filter_by(name="Admin").first()
         if admin_title:
-            admin.title_id = admin_title.id
+            admin.active_title_id = admin_title.id
             db.session.commit()
+
         if News.query.count() == 0:
             print("İlkin məzmun yaradılır...")
             news_items = generate_news_content()
@@ -3115,12 +3149,19 @@ def init_db():
                 image_url = item.get('image_url', '')
                 if not image_url:
                     image_url = get_image_url(item.get('title', ''))
-                news = News(title=item.get('title', 'Xəbər'), content=item.get('content', ''), category=item.get('category', 'Ümumi'), image_url=image_url)
+                news = News(
+                    title=item.get('title', 'Xəbər'),
+                    content=item.get('content', ''),
+                    category=item.get('category', 'Ümumi'),
+                    image_url=image_url
+                )
                 db.session.add(news)
             db.session.commit()
             print("İlkin məzmun bazaya yazıldı.")
+
         seed_titles()
         seed_quests_and_achievements()
+
         # Üç əsas otaq
         room_names = ["Ümumi Söhbət", "Təkliflər", "Xəta Bildirişi"]
         for name in room_names:
@@ -3130,7 +3171,7 @@ def init_db():
                 db.session.commit()
                 print(f"{name} otağı yaradıldı.")
 
-        # Köhnə adları dəyişdir
+        # Köhnə adları dəyişdir (əgər varsa)
         old_error = Room.query.filter_by(name="Xəta Otağı").first()
         if old_error:
             old_error.name = "Xəta Bildirişi"
@@ -3138,12 +3179,6 @@ def init_db():
         if old_suggestion:
             old_suggestion.name = "Təkliflər"
         db.session.commit()
-
-        if Room.query.filter_by(name="Təkliflər Otağı").first() is None:
-            suggestion_room = Room(name="Təkliflər Otağı", news_id=None, creator_id=admin.id)
-            db.session.add(suggestion_room)
-            db.session.commit()
-            print("Təkliflər Otağı yaradıldı.")
 
 if __name__ == '__main__':
     init_db()

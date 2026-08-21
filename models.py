@@ -72,6 +72,7 @@ class News(db.Model):
     rooms = db.relationship('Room', backref='news', lazy=True)
     blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan")
 
+
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -144,11 +145,13 @@ class Notification(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class NewsLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class Follow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -158,6 +161,7 @@ class Follow(db.Model):
 
     follower = db.relationship('User', foreign_keys=[follower_id], backref='following')
     followed = db.relationship('User', foreign_keys=[followed_id], backref='followers')
+
 
 class Quest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -219,3 +223,14 @@ class Comment(db.Model):
     user = db.relationship('User', backref='comments')
     news = db.relationship('News', backref='comments')
     replies = db.relationship('Comment', backref=db.backref('parent', remote_side=[id]), lazy=True)
+
+
+class CommentLike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=False)
+    reaction = db.Column(db.String(10), default='like')  # like / dislike
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='comment_reactions')
+    comment = db.relationship('Comment', backref='reactions')

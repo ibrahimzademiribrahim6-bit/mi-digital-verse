@@ -93,49 +93,6 @@ def generate_news_content():
         print(f"DeepSeek xəbər xətası: {e}")
         return []
 
-def generate_manga_content():
-    """Serper ilə populyar manhwa/manhua/anime tapıb, DeepSeek ilə 3 əsəri formatlaşdırır."""
-    query = "top manhwa manhua anime 2025"
-    raw = serper_search(query, search_type="search", num=5)
-
-    headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    prompt = f"""
-    Sənə aşağıda real axtarış nəticələri verilib. Bunlara əsasən 3 manhwa, manhua, anime və ya manga əsəri seç.
-    Hər biri üçün:
-    - Başlıq
-    - Açıqlama (2-3 cümlə)
-    - Növü (anime, manga, manhwa, manhua, webtoon)
-    - Reytinq (0-10 arası, onluq kəsr ola bilər)
-    - Status (Davam edir, Bitib)
-    - Bölüm sayı (tam ədəd)
-    - Şəkil URL (əgər axtarış nəticəsində varsa istifadə et, yoxsa boş qoy)
-    Axtarış nəticələri:
-    {json.dumps(raw[:5], ensure_ascii=False)}
-    Cavab yalnız JSON formatında olsun:
-    {{"manga": [{{"title": "...", "description": "...", "type": "manhwa", "cover_url": "...", "rating": 8.5, "status": "Davam edir", "chapters": 120}}]}}
-    """
-    data = {
-        "model": "deepseek-chat",
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3,
-        "max_tokens": 1200
-    }
-    try:
-        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=60)
-        resp.raise_for_status()
-        text = resp.json()['choices'][0]['message']['content']
-        start = text.find('{')
-        end = text.rfind('}') + 1
-        if start != -1 and end > start:
-            return json.loads(text[start:end]).get('manga', [])
-        return []
-    except Exception as e:
-        print(f"DeepSeek manqa xətası: {e}")
-        return []
-
 def fetch_and_generate_news():
     """
     Etibarlı anime/manqa xəbər saytlarından güncəl xəbərləri tapıb,
