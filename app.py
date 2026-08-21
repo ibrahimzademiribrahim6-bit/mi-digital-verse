@@ -2490,7 +2490,7 @@ def follow_user(user_id):
 def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
+        email = request.form.get('email', '').strip().lower() or None
         password = request.form.get('password', '')
         if not username or not password:
             flash(_t('İstifadəçi adı və şifrə məcburidir', 'Username and password are required'))
