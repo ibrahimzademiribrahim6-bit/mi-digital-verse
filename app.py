@@ -1219,18 +1219,18 @@ COMMUNITY_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ 'İcma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-4 md:py-8">
+<div class="max-w-7xl mx-auto px-4 py-2 md:py-4">
     <!-- Başlıq və Tablar eyni sətirdə (desktop), alt-alta (mobil) -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-2 md:mb-3">
         <h1 class="text-3xl font-bold mb-3 md:mb-0">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
         <div class="flex flex-wrap gap-2">
-            <a href="/community?tab=general" class="px-4 py-2 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            <a href="/community?tab=general" class="px-2 py-1 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
                 {{ 'Ümumi Söhbət' if current_lang == 'az' else 'General Chat' }}
             </a>
-            <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-green-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            <a href="/community?tab=suggestions" class="px-2 py-1 rounded {% if tab == 'suggestions' %}bg-green-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
                 {{ 'Təkliflər' if current_lang == 'az' else 'Suggestions' }}
             </a>
-            <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-red-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+            <a href="/community?tab=bugs" class="px-2 py-1 rounded {% if tab == 'bugs' %}bg-red-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
                 {{ 'Xəta Bildirişi' if current_lang == 'az' else 'Bug Reports' }}
             </a>
         </div>
