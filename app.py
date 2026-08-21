@@ -628,8 +628,63 @@ BASE_HTML = """
             background-color: #1f2937;
             color: #ffffff;
         }
+
+/* Chat görünüşü */
+.chat-messages {
+    max-height: 60vh;          /* mesaj sahəsi ekranın 60%-i */
+    overflow-y: auto;
+    padding: 0 0.75rem;
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;  /* Edge/IE */
+}
+.chat-messages::-webkit-scrollbar {
+    display: none;             /* Chrome/Safari/Opera */
+}
+.chat-message {
+    margin-bottom: 1rem;
+}
+.chat-input-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+.chat-textarea {
+    flex: 1;
+    resize: none;
+    overflow-y: auto;
+    max-height: 200px;
+}
+
     </style>
 </head>
+<script>
+// Chat mesajlarını aşağı sürüşdür
+function scrollChatToBottom() {
+    const chat = document.getElementById('chatMessages');
+    if (chat) {
+        chat.scrollTop = chat.scrollHeight;
+    }
+}
+
+// Mətn qutusunu avtomatik böyüt
+function autoResizeChat(el) {
+    el.style.height = 'auto';
+    el.style.height = (el.scrollHeight) + 'px';
+    if (el.scrollHeight > 200) {
+        el.style.height = '200px';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    scrollChatToBottom();
+    const chatTextarea = document.getElementById('chatTextarea');
+    if (chatTextarea) {
+        chatTextarea.addEventListener('input', function() {
+            autoResizeChat(this);
+        });
+    }
+});
+</script>
 <body>
 <div class="min-h-screen flex flex-col">
     <nav class="bg-gray-900 bg-opacity-90 backdrop-blur sticky top-0 z-50 border-b border-gray-700">
@@ -1171,9 +1226,9 @@ COMMUNITY_HTML = """
     </div>
 
     <!-- Mesajlar -->
-    <div class="space-y-4 mb-6">
+    <div id="chatMessages" class="chat-messages">
         {% for post in posts %}
-        <div class="bg-gray-800 rounded p-3">
+        <div class="chat-message bg-gray-800 rounded p-3">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-sm text-gray-400">
@@ -1232,14 +1287,18 @@ COMMUNITY_HTML = """
 
     <!-- Mesaj yazma forması (sabit aşağıda) -->
     {% if current_user.is_authenticated %}
-    <form action="/post/{{ room.id }}" method="POST" class="bg-gray-800 p-4 rounded sticky bottom-0">
-        <textarea name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2"></textarea>
-        <div class="flex items-center mt-2">
-            <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
-            <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
-        </div>
-        <button type="submit" class="mt-2 px-4 py-2 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
-    </form>
+    <div class="mt-4 bg-gray-800 p-4 rounded">
+        <form action="/post/{{ room.id }}" method="POST">
+            <div class="chat-input-row">
+                <textarea id="chatTextarea" name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white chat-textarea" rows="1"></textarea>
+                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+            </div>
+            <div class="flex items-center mt-2">
+                <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+                <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+            </div>
+        </form>
+    </div>
     {% else %}
     <p class="mb-4">{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
     {% endif %}
