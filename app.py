@@ -630,18 +630,28 @@ BASE_HTML = """
         }
 
 /* Chat görünüşü */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px); /* Təxmini: header+tabs+boşluqlar */
+    max-height: calc(100vh - 180px);
+    min-height: 0;
+}
 .chat-messages {
-    max-height: 60vh;          /* mesaj sahəsi ekranın 60%-i */
+    flex: 1;
     overflow-y: auto;
     padding: 0 0.75rem;
-    scrollbar-width: none;      /* Firefox */
-    -ms-overflow-style: none;  /* Edge/IE */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 .chat-messages::-webkit-scrollbar {
-    display: none;             /* Chrome/Safari/Opera */
+    display: none;
 }
 .chat-message {
     margin-bottom: 1rem;
+}
+.chat-input-area {
+    flex-shrink: 0;
 }
 .chat-input-row {
     display: flex;
@@ -1209,99 +1219,105 @@ COMMUNITY_HTML = """
 {% extends "base.html" %}
 {% block title %}{{ 'İcma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
-
-    <!-- Tabs -->
-    <div class="flex flex-wrap gap-2 mb-6">
-        <a href="/community?tab=general" class="px-4 py-2 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
-            {{ 'Ümumi Söhbət' if current_lang == 'az' else 'General Chat' }}
-        </a>
-        <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-green-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
-            {{ 'Təkliflər' if current_lang == 'az' else 'Suggestions' }}
-        </a>
-        <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-red-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
-            {{ 'Xəta Bildirişi' if current_lang == 'az' else 'Bug Reports' }}
-        </a>
+<div class="max-w-7xl mx-auto px-4 py-4 md:py-8">
+    <!-- Başlıq və Tablar eyni sətirdə (desktop), alt-alta (mobil) -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6">
+        <h1 class="text-3xl font-bold mb-3 md:mb-0">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
+        <div class="flex flex-wrap gap-2">
+            <a href="/community?tab=general" class="px-4 py-2 rounded {% if tab == 'general' %}bg-cyan-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+                {{ 'Ümumi Söhbət' if current_lang == 'az' else 'General Chat' }}
+            </a>
+            <a href="/community?tab=suggestions" class="px-4 py-2 rounded {% if tab == 'suggestions' %}bg-green-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+                {{ 'Təkliflər' if current_lang == 'az' else 'Suggestions' }}
+            </a>
+            <a href="/community?tab=bugs" class="px-4 py-2 rounded {% if tab == 'bugs' %}bg-red-600 text-white{% else %}bg-gray-700 text-gray-300{% endif %}">
+                {{ 'Xəta Bildirişi' if current_lang == 'az' else 'Bug Reports' }}
+            </a>
+        </div>
     </div>
 
-    <!-- Mesajlar -->
-    <div id="chatMessages" class="chat-messages">
-        {% for post in posts %}
-        <div class="chat-message bg-gray-800 rounded p-3">
-            <div class="flex items-start justify-between">
-                <div>
-                    <p class="text-sm text-gray-400">
-                        <strong>{{ post.user.username }}</strong>
-                        {% if post.user.title %}
-                            <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+    <!-- Çat konteyneri -->
+    <div class="chat-container">
+        <!-- Mesajlar -->
+        <div id="chatMessages" class="chat-messages">
+            {% for post in posts %}
+            <div class="chat-message bg-gray-800 rounded p-3">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm text-gray-400">
+                            <strong>{{ post.user.username }}</strong>
+                            {% if post.user.title %}
+                                <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+                            {% endif %}
+                            | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
+                        </p>
+                        {% if post.is_spoiler %}
+                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
+                        {% else %}
+                        <p class="text-gray-300 mt-1">{{ post.content }}</p>
                         {% endif %}
-                        | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
-                    </p>
-                    {% if post.is_spoiler %}
-                    <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
-                    {% else %}
-                    <p class="text-gray-300 mt-1">{{ post.content }}</p>
-                    {% endif %}
+                    </div>
+                    <div class="flex gap-2">
+                        {% if current_user.is_authenticated %}
+                        <button onclick="openReplyForm({{ post.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
+                        {% endif %}
+                        <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                        <a href="/admin/delete-post/{{ post.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    {% if current_user.is_authenticated %}
-                    <button onclick="openReplyForm({{ post.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
-                    {% endif %}
-                    <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
-                    {% if current_user.is_authenticated and current_user.is_admin %}
-                    <a href="/admin/delete-post/{{ post.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-                    {% endif %}
+                <div id="replyForm{{ post.id }}" class="hidden mt-3">
+                    <form action="/post/{{ room.id }}" method="POST" class="space-y-2">
+                        <input type="hidden" name="parent_id" value="{{ post.id }}">
+                        <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
+                        <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+                    </form>
                 </div>
+                {% if post.replies %}
+                <div class="ml-4 mt-2 space-y-2">
+                    {% for reply in post.replies %}
+                    <div class="bg-gray-700 rounded p-2">
+                        <p class="text-xs text-gray-400">
+                            <strong>{{ reply.user.username }}</strong>
+                            {% if reply.user.title %}
+                                <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
+                            {% endif %}
+                            | <time class="local-time" data-utc="{{ reply.created_at.isoformat() }}Z"></time>
+                        </p>
+                        {% if reply.is_spoiler %}
+                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
+                        {% else %}
+                        <p class="text-gray-300">{{ reply.content }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
-            <div id="replyForm{{ post.id }}" class="hidden mt-3">
-                <form action="/post/{{ room.id }}" method="POST" class="space-y-2">
-                    <input type="hidden" name="parent_id" value="{{ post.id }}">
-                    <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
-                    <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+            {% endfor %}
+        </div>
+
+        <!-- Mesaj yazma forması (sabit altda) -->
+        <div class="chat-input-area mt-3">
+            {% if current_user.is_authenticated %}
+            <div class="bg-gray-800 p-4 rounded">
+                <form action="/post/{{ room.id }}" method="POST">
+                    <div class="chat-input-row">
+                        <textarea id="chatTextarea" name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white chat-textarea" rows="1"></textarea>
+                        <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
+                    </div>
+                    <div class="flex items-center mt-2">
+                        <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
+                        <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
+                    </div>
                 </form>
             </div>
-            {% if post.replies %}
-            <div class="ml-4 mt-2 space-y-2">
-                {% for reply in post.replies %}
-                <div class="bg-gray-700 rounded p-2">
-                    <p class="text-xs text-gray-400">
-                        <strong>{{ reply.user.username }}</strong>
-                        {% if reply.user.title %}
-                            <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
-                        {% endif %}
-                        | <time class="local-time" data-utc="{{ reply.created_at.isoformat() }}Z"></time>
-                    </p>
-                    {% if reply.is_spoiler %}
-                    <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
-                    {% else %}
-                    <p class="text-gray-300">{{ reply.content }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
+            {% else %}
+            <p class="mb-4">{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
             {% endif %}
         </div>
-        {% endfor %}
     </div>
-
-    <!-- Mesaj yazma forması (sabit aşağıda) -->
-    {% if current_user.is_authenticated %}
-    <div class="mt-4 bg-gray-800 p-4 rounded">
-        <form action="/post/{{ room.id }}" method="POST">
-            <div class="chat-input-row">
-                <textarea id="chatTextarea" name="content" placeholder="{{ 'Mesajınız...' if current_lang == 'az' else 'Your message...' }}" required class="w-full p-2 rounded bg-gray-700 text-white chat-textarea" rows="1"></textarea>
-                <button type="submit" class="px-4 py-2 bg-cyan-500 rounded whitespace-nowrap">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
-            </div>
-            <div class="flex items-center mt-2">
-                <input type="checkbox" name="is_spoiler" value="1" class="mr-2">
-                <span class="text-sm">{{ 'Spoiler olaraq işarələ' if current_lang == 'az' else 'Mark as spoiler' }}</span>
-            </div>
-        </form>
-    </div>
-    {% else %}
-    <p class="mb-4">{{ 'Yazmaq üçün' if current_lang == 'az' else 'To write' }} <a href="#" onclick="openModal()" class="text-cyan-400">{{ 'giriş edin' if current_lang == 'az' else 'sign in' }}</a>.</p>
-    {% endif %}
 </div>
 
 <script>
