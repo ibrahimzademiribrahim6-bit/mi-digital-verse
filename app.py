@@ -217,8 +217,8 @@ def process_blocks(request, news_id):
 def get_bonus_percent(user):
     if user.is_admin:
         return 100
-    if user.title:
-        color = user.title.color
+    if user.active_title:
+        color = user.active_title.color
         if color == 'white':
             return 5
         elif color == 'green':
@@ -1148,8 +1148,8 @@ NEWS_DETAIL_HTML = """
                             <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ comment.user.username[0].upper() }}</div>
                             {% endif %}
                             <a href="/user/{{ comment.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ comment.user.username }}</strong></a>
-                            {% if comment.user.title %}
-                                <span style="color: {{ comment.user.title.color }};">({{ comment.user.title.name }})</span>
+                            {% if comment.user.active_title %}
+                                <span style="color: {{ comment.user.active_title.color }};">({{ comment.user.active_title.name }})</span>
                             {% endif %}
                             | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
                         </div>
@@ -1291,8 +1291,8 @@ COMMUNITY_HTML = """
                             <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ post.user.username[0].upper() }}</div>
                             {% endif %}
                             <a href="/user/{{ post.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ post.user.username }}</strong></a>
-                            {% if post.user.title %}
-                                <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+                            {% if post.user.active_title %}
+                                <span style="color: {{ post.user.active_title.color }};">({{ post.user.active_title.name }})</span>
                             {% endif %}
                             | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
                         </div>
@@ -1432,7 +1432,7 @@ PROFILE_HTML = """
             <div class="bg-cyan-500 h-3 rounded-full" style="width: {{ current_user.get_level_progress() }}%"></div>
         </div>
         <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
-        {% if current_user.title %}
+        {% if current_user.active_title %}
         <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</span></p>
         {% endif %}
         {% if not claimed_today %}
@@ -1590,8 +1590,8 @@ USER_PROFILE_HTML = """
             {% endif %}
             <div>
                 <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
-                {% if profile_user.title %}
-                <p style="color: {{ profile_user.title.color }};">{{ profile_user.title.name }}</p>
+                {% if profile_user.active_title %}
+                <p style="color: {{ profile_user.active_title.color }};">{{ profile_user.active_title.name }}</p>
                 {% endif %}
                 <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
                 <p class="text-gray-400">{{ 'İzləyicilər' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'İzlədikləri' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
@@ -2654,7 +2654,7 @@ def change_password():
 def set_active_title(title_id):
     title = Title.query.get_or_404(title_id)
     if UserTitle.query.filter_by(user_id=current_user.id, title_id=title.id).first():
-        current_user.title_id = title.id
+        current_user.active_title_id = title.id
         db.session.commit()
         flash(f"Aktiv ünvan: {title.name}")
     else:
