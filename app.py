@@ -1433,7 +1433,7 @@ PROFILE_HTML = """
         </div>
         <p>{{ 'Günlük giriş seriyası' if current_lang == 'az' else 'Daily login streak' }}: {{ current_user.streak }} {{ 'gün' if current_lang == 'az' else 'days' }}</p>
         {% if current_user.active_title %}
-        <p>{{ 'Aktiv Ünvan' if current_lang == 'az' else 'Active Title' }}: <span style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</span></p>
+        <p style="color: {{ current_user.active_title.color }};">{{ current_user.active_title.name }}</p>
         {% endif %}
         {% if not claimed_today %}
         <form action="/claim-daily" method="POST"><button class="px-4 py-2 bg-green-500 rounded mt-2">{{ 'Günlük ödülü al' if current_lang == 'az' else 'Claim daily reward' }}</button></form>
@@ -1590,7 +1590,7 @@ USER_PROFILE_HTML = """
             <div>
                 <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
 {% if profile_user.active_title %}
-<span class="inline-block px-2 py-1 rounded" style="background-color: {% if profile_user.active_title.color == 'white' %}#e5e7eb{% elif profile_user.active_title.color == 'green' %}#10b981{% elif profile_user.active_title.color == 'blue' %}#3b82f6{% elif profile_user.active_title.color == 'purple' %}#8b5cf6{% elif profile_user.active_title.color == 'yellow' %}#f59e0b{% elif profile_user.active_title.color == 'red' %}#ef4444{% else %}{{ profile_user.active_title.color }}{% endif %}; color: #111;">{{ profile_user.active_title.name }}</span>
+<p style="color: {{ profile_user.active_title.color }};">{{ profile_user.active_title.name }}</p>
 {% endif %}
                 <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
                 <p class="text-gray-400">{{ 'İzləyicilər' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'İzlədikləri' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
