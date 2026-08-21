@@ -1105,66 +1105,57 @@ NEWS_DETAIL_HTML = """
         {% endif %}
 
         <div class="space-y-4">
-            {% for comment in comments %}
+            {% macro render_comment(comment, news_id, depth=0) %}
             <div class="bg-gray-800 rounded p-3">
-<div class="flex items-center gap-2 text-sm text-gray-400">
-    {% if comment.user.avatar %}
-    <img src="{{ url_for('static', filename='uploads/' + comment.user.avatar) }}" class="w-8 h-8 rounded-full object-cover">
-    {% else %}
-    <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ comment.user.username[0].upper() }}</div>
-    {% endif %}
-    <a href="/user/{{ comment.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ comment.user.username }}</strong></a>
-    {% if comment.user.title %}
-        <span style="color: {{ comment.user.title.color }};">({{ comment.user.title.name }})</span>
-    {% endif %}
-    | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
-</div>
-                {% if comment.is_spoiler %}
-                <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ comment.content }}</span>
-                {% else %}
-                <p class="text-gray-300 mt-1">{{ comment.content }}</p>
-                {% endif %}
-                <div class="mt-2 flex gap-2">
-                    {% if current_user.is_authenticated %}
-                    <button onclick="toggleReplyForm({{ comment.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
-                    {% endif %}
-                    <button onclick="openReportModal('comment', {{ comment.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
-                    {% if current_user.is_authenticated and current_user.is_admin %}
-                        <a href="/admin/delete-comment/{{ comment.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
-                    {% endif %}
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            {% if comment.user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/' + comment.user.avatar) }}" class="w-8 h-8 rounded-full object-cover">
+                            {% else %}
+                            <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ comment.user.username[0].upper() }}</div>
+                            {% endif %}
+                            <a href="/user/{{ comment.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ comment.user.username }}</strong></a>
+                            {% if comment.user.title %}
+                                <span style="color: {{ comment.user.title.color }};">({{ comment.user.title.name }})</span>
+                            {% endif %}
+                            | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
+                        </div>
+                        {% if comment.is_spoiler %}
+                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ comment.content }}</span>
+                        {% else %}
+                        <p class="text-gray-300 mt-1">{{ comment.content }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-2">
+                        {% if current_user.is_authenticated %}
+                        <button onclick="toggleReplyForm({{ comment.id }})" class="text-xs text-cyan-400">{{ 'Cavabla' if current_lang == 'az' else 'Reply' }}</button>
+                        {% endif %}
+                        <button onclick="openReportModal('comment', {{ comment.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
+                        {% if current_user.is_authenticated and current_user.is_admin %}
+                            <a href="/admin/delete-comment/{{ comment.id }}" class="text-xs text-red-400" onclick="return confirm('{{ 'Bu şərhi silmək istədiyinizə əminsiniz?' if current_lang == 'az' else 'Are you sure?' }}')">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</a>
+                        {% endif %}
+                    </div>
                 </div>
                 <div id="replyForm{{ comment.id }}" class="hidden mt-3">
-                    <form action="/news/comment/{{ news.id }}" method="POST" class="space-y-2">
+                    <form action="/news/comment/{{ news_id }}" method="POST" class="space-y-2">
                         <input type="hidden" name="parent_id" value="{{ comment.id }}">
                         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
                     </form>
                 </div>
-                {% if comment.replies %}
-                <div class="ml-4 mt-2 space-y-2">
-                    {% for reply in comment.replies %}
-                    <div class="bg-gray-700 rounded p-2"><div class="flex items-center gap-2 text-xs text-gray-400">
-    {% if reply.user.avatar %}
-    <img src="{{ url_for('static', filename='uploads/' + reply.user.avatar) }}" class="w-6 h-6 rounded-full object-cover">
-    {% else %}
-    <div class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">{{ reply.user.username[0].upper() }}</div>
-    {% endif %}
-    <a href="/user/{{ reply.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ reply.user.username }}</strong></a>
-    {% if reply.user.title %}
-        <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
-    {% endif %}
-    | <time class="local-time" data-utc="{{ reply.created_at.isoformat() }}Z"></time>
-</div>
-                        {% if reply.is_spoiler %}
-                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
-                        {% else %}
-                        <p class="text-gray-300">{{ reply.content }}</p>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
             </div>
+            {% if depth < 10 and comment.replies %}
+            <div class="ml-4 mt-2 space-y-2">
+                {% for reply in comment.replies %}
+                    {{ render_comment(reply, news_id, depth+1) }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endmacro %}
+
+            {% for comment in comments %}
+                {{ render_comment(comment, news.id) }}
             {% endfor %}
         </div>
     </div>
@@ -1257,7 +1248,7 @@ COMMUNITY_HTML = """
     <div class="chat-container">
         <!-- Mesajlar -->
         <div id="chatMessages" class="chat-messages">
-            {% macro render_post(post, room_id) %}
+            {% macro render_post(post, room_id, depth=0) %}
             <div class="chat-message bg-gray-800 rounded p-3">
                 <div class="flex items-start justify-between">
                     <div>
@@ -1296,14 +1287,14 @@ COMMUNITY_HTML = """
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
                     </form>
                 </div>
-                {% if post.replies %}
-                <div class="ml-4 mt-2 space-y-2">
-                    {% for reply in post.replies %}
-                        {{ render_post(reply, room_id) }}
-                    {% endfor %}
-                </div>
-                {% endif %}
             </div>
+            {% if depth < 10 and post.replies %}
+            <div class="ml-4 mt-2 space-y-2">
+                {% for reply in post.replies %}
+                    {{ render_post(reply, room_id, depth+1) }}
+                {% endfor %}
+            </div>
+            {% endif %}
             {% endmacro %}
 
             {% for post in posts %}
