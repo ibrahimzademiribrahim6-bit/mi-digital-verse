@@ -6,3 +6,4 @@ output/
 site.db
 instance/
 static/uploads/".env" 
+".env" 
