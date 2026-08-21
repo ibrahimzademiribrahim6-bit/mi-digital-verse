@@ -1257,22 +1257,22 @@ COMMUNITY_HTML = """
     <div class="chat-container">
         <!-- Mesajlar -->
         <div id="chatMessages" class="chat-messages">
-            {% for post in posts %}
+            {% macro render_post(post, room_id) %}
             <div class="chat-message bg-gray-800 rounded p-3">
                 <div class="flex items-start justify-between">
                     <div>
-<div class="flex items-center gap-2 text-sm text-gray-400">
-    {% if post.user.avatar %}
-    <img src="{{ url_for('static', filename='uploads/' + post.user.avatar) }}" class="w-8 h-8 rounded-full object-cover">
-    {% else %}
-    <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ post.user.username[0].upper() }}</div>
-    {% endif %}
-    <a href="/user/{{ post.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ post.user.username }}</strong></a>
-    {% if post.user.title %}
-        <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
-    {% endif %}
-    | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
-</div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            {% if post.user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/' + post.user.avatar) }}" class="w-8 h-8 rounded-full object-cover">
+                            {% else %}
+                            <div class="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm">{{ post.user.username[0].upper() }}</div>
+                            {% endif %}
+                            <a href="/user/{{ post.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ post.user.username }}</strong></a>
+                            {% if post.user.title %}
+                                <span style="color: {{ post.user.title.color }};">({{ post.user.title.name }})</span>
+                            {% endif %}
+                            | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
+                        </div>
                         {% if post.is_spoiler %}
                         <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
                         {% else %}
@@ -1290,7 +1290,7 @@ COMMUNITY_HTML = """
                     </div>
                 </div>
                 <div id="replyForm{{ post.id }}" class="hidden mt-3">
-                    <form action="/post/{{ room.id }}" method="POST" class="space-y-2">
+                    <form action="/post/{{ room_id }}" method="POST" class="space-y-2">
                         <input type="hidden" name="parent_id" value="{{ post.id }}">
                         <textarea name="content" required class="w-full p-2 rounded bg-gray-700 text-white" rows="2" placeholder="{{ 'Cavabınız...' if current_lang == 'az' else 'Your reply...' }}"></textarea>
                         <button type="submit" class="px-3 py-1 bg-cyan-500 rounded">{{ 'Göndər' if current_lang == 'az' else 'Send' }}</button>
@@ -1299,29 +1299,15 @@ COMMUNITY_HTML = """
                 {% if post.replies %}
                 <div class="ml-4 mt-2 space-y-2">
                     {% for reply in post.replies %}
-                    <div class="bg-gray-700 rounded p-2">
-<div class="flex items-center gap-2 text-xs text-gray-400">
-    {% if reply.user.avatar %}
-    <img src="{{ url_for('static', filename='uploads/' + reply.user.avatar) }}" class="w-6 h-6 rounded-full object-cover">
-    {% else %}
-    <div class="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-xs">{{ reply.user.username[0].upper() }}</div>
-    {% endif %}
-    <a href="/user/{{ reply.user.id }}" class="text-cyan-400 hover:text-cyan-300"><strong>{{ reply.user.username }}</strong></a>
-    {% if reply.user.title %}
-        <span style="color: {{ reply.user.title.color }};">({{ reply.user.title.name }})</span>
-    {% endif %}
-    | <time class="local-time" data-utc="{{ reply.created_at.isoformat() }}Z"></time>
-</div>
-                        {% if reply.is_spoiler %}
-                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ reply.content }}</span>
-                        {% else %}
-                        <p class="text-gray-300">{{ reply.content }}</p>
-                        {% endif %}
-                    </div>
+                        {{ render_post(reply, room_id) }}
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
+            {% endmacro %}
+
+            {% for post in posts %}
+                {{ render_post(post, room.id) }}
             {% endfor %}
         </div>
 
@@ -2261,7 +2247,7 @@ def news_detail(news_id):
             add_xp(current_user, 2)
             update_quest_progress(current_user, 'news_read', 1)
             check_achievements(current_user)
-    comments = Comment.query.filter_by(news_id=news.id).order_by(Comment.created_at.asc()).all()
+    comments = Comment.query.filter_by(news_id=news.id).filter(Comment.parent_id.is_(None)).order_by(Comment.created_at.asc()).all()
     return render_template('news_detail.html', news=news, comments=comments)
 
 @app.route('/news/comment/<int:news_id>', methods=['POST'])
