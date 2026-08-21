@@ -1474,42 +1474,41 @@ PROFILE_HTML = """
         </form>
     </div>
 
-    <!-- Ünvanlar bölməsi -->
-    <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {% for user_title in earned_titles %}
-            <div class="bg-gray-700 p-3 rounded text-center">
-                <span style="color: {{ user_title.title.color }};">{{ user_title.title.name }}</span>
-                <p class="text-xs text-gray-400">{{ user_title.title.description }}</p>
-                <form action="/profile/set-active-title/{{ user_title.title.id }}" method="POST" class="mt-2">
-                    <button type="submit" class="text-xs bg-cyan-500 px-2 py-1 rounded">Aktiv et</button>
-                </form>
-            </div>
-            {% endfor %}
+<!-- Ünvanlar bölməsi -->
+<div class="bg-gray-800 rounded-lg p-6 mt-6">
+    <h2 class="text-xl font-bold mb-4">{{ 'Qazandığın Ünvanlar' if current_lang == 'az' else 'Earned Titles' }}</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {% for user_title in earned_titles %}
+        {% set color = user_title.title.color %}
+        <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
+            <span>{{ user_title.title.name }}</span>
+            <p class="text-xs text-gray-800">{{ user_title.title.description }}</p>
+            <form action="/profile/set-active-title/{{ user_title.title.id }}" method="POST" class="mt-2">
+                <button type="submit" class="text-xs bg-cyan-500 px-2 py-1 rounded">Aktiv et</button>
+            </form>
         </div>
+        {% endfor %}
     </div>
+</div>
 
-    <!-- Vitrin bölməsi -->
-    <div class="bg-gray-800 rounded-lg p-6 mt-6">
-        <h2 class="text-xl font-bold mb-4">{{ 'Vitrin (3 seçim)' if current_lang == 'az' else 'Showcase (3 choices)' }}</h2>
-        <form action="/profile/set-showcase" method="POST" class="space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {% for i in range(1, 4) %}
-                <div>
-                    <label class="text-sm">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }} {{ i }}</label>
-                    <select name="showcase{{ i }}" class="w-full p-2 rounded bg-gray-700 text-white">
-                        <option value="">{{ 'Boş' if current_lang == 'az' else 'Empty' }}</option>
-                        {% for ut in earned_titles %}
-                        <option value="{{ ut.title.id }}" {% if (i==1 and current_user.showcase1_id == ut.title.id) or (i==2 and current_user.showcase2_id == ut.title.id) or (i==3 and current_user.showcase3_id == ut.title.id) %}selected{% endif %}>{{ ut.title.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endfor %}
+<!-- Vitrin -->
+<div class="mt-6">
+    <h3 class="text-lg font-semibold">{{ 'Vitrin' if current_lang == 'az' else 'Showcase' }}</h3>
+    <div class="grid grid-cols-3 gap-3 mt-2">
+        {% for title in [profile_user.showcase1, profile_user.showcase2, profile_user.showcase3] %}
+            {% if title %}
+            {% set color = title.color %}
+            <div class="p-3 rounded text-center" style="background-color: {% if color == 'white' %}#e5e7eb{% elif color == 'green' %}#10b981{% elif color == 'blue' %}#3b82f6{% elif color == 'purple' %}#8b5cf6{% elif color == 'yellow' %}#f59e0b{% elif color == 'red' %}#ef4444{% else %}{{ color }}{% endif %}; color: #111;">
+                <span>{{ title.name }}</span>
             </div>
-            <button type="submit" class="px-4 py-2 bg-purple-500 rounded mt-3">{{ 'Vitrinini yadda saxla' if current_lang == 'az' else 'Save showcase' }}</button>
-        </form>
+            {% else %}
+            <div class="bg-gray-700 p-3 rounded text-center text-gray-500">
+                {{ 'Boş' if current_lang == 'az' else 'Empty' }}
+            </div>
+            {% endif %}
+        {% endfor %}
     </div>
+</div>
 
     <!-- Görəvlər və Nailiyyətlər -->
     <div class="bg-gray-800 rounded-lg p-6 mt-6">
@@ -1590,9 +1589,9 @@ USER_PROFILE_HTML = """
             {% endif %}
             <div>
                 <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
-                {% if profile_user.active_title %}
-                <p style="color: {{ profile_user.active_title.color }};">{{ profile_user.active_title.name }}</p>
-                {% endif %}
+{% if profile_user.active_title %}
+<span class="inline-block px-2 py-1 rounded" style="background-color: {% if profile_user.active_title.color == 'white' %}#e5e7eb{% elif profile_user.active_title.color == 'green' %}#10b981{% elif profile_user.active_title.color == 'blue' %}#3b82f6{% elif profile_user.active_title.color == 'purple' %}#8b5cf6{% elif profile_user.active_title.color == 'yellow' %}#f59e0b{% elif profile_user.active_title.color == 'red' %}#ef4444{% else %}{{ profile_user.active_title.color }}{% endif %}; color: #111;">{{ profile_user.active_title.name }}</span>
+{% endif %}
                 <p class="text-gray-400">{{ 'Səviyyə' if current_lang == 'az' else 'Level' }}: {{ profile_user.get_level() }} | XP: {{ profile_user.points }}</p>
                 <p class="text-gray-400">{{ 'İzləyicilər' if current_lang == 'az' else 'Followers' }}: {{ profile_user.followers|length }} | {{ 'İzlədikləri' if current_lang == 'az' else 'Following' }}: {{ profile_user.following|length }}</p>
             </div>
