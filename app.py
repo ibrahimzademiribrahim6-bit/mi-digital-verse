@@ -1743,7 +1743,15 @@ ADMIN_HTML = """
                 <input type="text" name="title_en" placeholder="{{ 'İngilis Başlıq (optional)' if current_lang == 'az' else 'English Title (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <textarea name="content_az" placeholder="{{ 'Azərbaycanca Məzmun' if current_lang == 'az' else 'Azerbaijani Content' }}" required class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
                 <textarea name="content_en" placeholder="{{ 'İngilis Məzmun (optional)' if current_lang == 'az' else 'English Content (optional)' }}" class="w-full p-2 rounded bg-gray-700 text-white" rows="5"></textarea>
-                <input type="text" name="category" placeholder="{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }} (Anime, Manga, Webtoon, Oyun, Ümumi)" value="Anime" class="w-full p-2 rounded bg-gray-700 text-white">
+                <select name="category" class="w-full p-2 rounded bg-gray-700 text-white">
+                    <option value="Anime">Anime</option>
+                    <option value="Manga">Manga</option>
+                    <option value="Manhwa">Manhwa</option>
+                    <option value="Manhua">Manhua</option>
+                    <option value="Webtoon">Webtoon</option>
+                    <option value="Oyun">Oyun</option>
+                    <option value="Ümumi">Ümumi</option>
+                </select>
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
 
@@ -1909,7 +1917,15 @@ EDIT_NEWS_HTML = """
             <textarea name="content_en" class="w-full p-2 rounded bg-gray-700 text-white" rows="8">{{ news.content_en or '' }}</textarea>
         </div>
         <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
-        <input type="text" name="category" value="{{ news.category }}" class="w-full p-2 rounded bg-gray-700 text-white">
+        <select name="category" class="w-full p-2 rounded bg-gray-700 text-white">
+    <option value="Anime" {% if news.category == 'Anime' %}selected{% endif %}>Anime</option>
+    <option value="Manga" {% if news.category == 'Manga' %}selected{% endif %}>Manga</option>
+    <option value="Manhwa" {% if news.category == 'Manhwa' %}selected{% endif %}>Manhwa</option>
+    <option value="Manhua" {% if news.category == 'Manhua' %}selected{% endif %}>Manhua</option>
+    <option value="Webtoon" {% if news.category == 'Webtoon' %}selected{% endif %}>Webtoon</option>
+    <option value="Oyun" {% if news.category == 'Oyun' %}selected{% endif %}>Oyun</option>
+    <option value="Ümumi" {% if news.category == 'Ümumi' %}selected{% endif %}>Ümumi</option>
+</select>
         <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <label class="text-sm text-gray-400">{{ 'Şəkil faylı yüklə' if current_lang == 'az' else 'Upload image file' }}</label>
