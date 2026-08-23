@@ -74,11 +74,12 @@ def youtube_embed(text):
     if not text:
         return Markup('')
 
-    youtube_re = re.compile(r'(https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11}))')
+    # YouTube linklərini tapır, ?si= kimi əlavə parametrləri də nəzərə alır
+    youtube_re = re.compile(r'https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})')
 
     matches = []
     def repl(m):
-        matches.append(m.group(2))
+        matches.append(m.group(1))
         return f'{{{{YT_{len(matches)-1}}}}}'
 
     text_with_placeholders = youtube_re.sub(repl, text)
