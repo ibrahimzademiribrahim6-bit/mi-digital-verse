@@ -75,7 +75,7 @@ def youtube_embed(text):
         return Markup('')
 
     # YouTube linklərini tapır, ?si= kimi əlavə parametrləri də nəzərə alır
-    youtube_re = re.compile(r'https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})')
+    youtube_re = re.compile(r'https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:[?&#]\S*)?')
 
     matches = []
     def repl(m):
