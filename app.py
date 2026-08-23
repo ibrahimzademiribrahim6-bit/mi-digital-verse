@@ -59,7 +59,7 @@ def render_markup(text):
     # Spoiler
     escaped = re.sub(
         r'\[spoiler\](.*?)\[/spoiler\]',
-        r'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">\1</span>',
+        r'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')"><span class="spoiler-content">\1</span></span>',
         escaped
     )
 
@@ -681,8 +681,45 @@ BASE_HTML = """
         .font-display { font-family: 'Orbitron', sans-serif; }
         .neon-text { text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff; }
         .card-glow:hover { box-shadow: 0 0 20px rgba(0,240,255,0.5); transform: translateY(-5px); transition: all 0.3s; }
-        .spoiler { background: #111; color: #111; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
-        .spoiler.revealed { background: transparent; color: inherit; }
+        .spoiler {
+            position: relative;
+            display: block;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            background: #1f2937;
+            color: #e5e7eb;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .spoiler-content {
+            display: block;
+            padding: 0.75rem;
+            filter: blur(6px);
+            opacity: 0.65;
+            transition: filter 0.2s, opacity 0.2s;
+        }
+        .spoiler::after {
+            content: "SPOILER";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fbbf24;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .spoiler.revealed .spoiler-content {
+            filter: none;
+            opacity: 1;
+        }
+        .spoiler.revealed::after {
+            display: none;
+        }
 
         html.light body {
             background: #f4f6f9;
@@ -1278,7 +1315,7 @@ NEWS_DETAIL_HTML = """
                             | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
                         </div>
 {% if comment.is_spoiler %}
-<span class="spoiler" onclick="this.classList.toggle('revealed')">{{ render_markup(comment.content) }}</span>
+<span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(comment.content) }}</span></span>
 {% else %}
 <p class="text-gray-300 mt-1">{{ render_markup(comment.content) }}</p>
 {% endif %}
@@ -1442,7 +1479,7 @@ COMMUNITY_HTML = """
                             | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
                         </div>
 {% if post.is_spoiler %}
-<span class="spoiler" onclick="this.classList.toggle('revealed')">{{ render_markup(post.content) }}</span>
+<span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
 {% else %}
 <p class="text-gray-300 mt-1">{{ render_markup(post.content) }}</p>
 {% endif %}
@@ -1539,9 +1576,9 @@ ROOM_HTML = """
             {% endif %}
             <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
             {% if post.is_spoiler %}
-            <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
+            <span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
             {% else %}
-            <p class="text-gray-300">{{ post.content }}</p>
+            <p class="text-gray-300">{{ render_markup(post.content) }}</p>
             {% endif %}
         </div>
         {% endfor %}
