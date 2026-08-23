@@ -3,7 +3,5 @@ __pycache__/
 *.pyc
 venv/
 output/
-site.db
-instance/
-static/uploads/".env" 
-".env" 
+instance/site.db
+static/uploads/
