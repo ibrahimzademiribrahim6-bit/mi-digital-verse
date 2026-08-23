@@ -18,11 +18,24 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
-
 from models import db, User, News, Comment, CommentLike, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
 from content_generator import generate_news_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
+
+def get_youtube_embed_url(url):
+    if not url:
+        return None
+    patterns = [
+        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/shorts/)([\w-]{11})',
+        r'youtube\.com/watch\?.*v=([\w-]{11})'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            video_id = match.group(1)
+            return f"https://www.youtube.com/embed/{video_id}"
+    return None
 
 app = Flask(__name__)
 app.jinja_env.globals['get_youtube_embed_url'] = get_youtube_embed_url
