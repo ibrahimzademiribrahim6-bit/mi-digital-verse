@@ -67,14 +67,9 @@ def _t(az_text, en_text):
     return az_text if lang == 'az' else en_text
 
 def youtube_embed(text):
-    """
-    Mətndəki YouTube linklərini tapıb iframe pleyerinə çevirir.
-    Qalan mətn təhlükəsiz olaraq göstərilir.
-    """
     if not text:
         return Markup('')
 
-    # YouTube linklərini tapır, ?si= kimi əlavə parametrləri də nəzərə alır
     youtube_re = re.compile(r'https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:[?&#]\S*)?')
 
     matches = []
