@@ -37,8 +37,37 @@ def get_youtube_embed_url(url):
             return f"https://www.youtube.com/embed/{video_id}"
     return None
 
+def render_markup(text):
+    """
+    İstifadəçi markerlərini təhlükəsiz HTML-ə çevirir.
+    Qalın: **mətn**, Rəng: [red]mətn[/red], Spoiler: [spoiler]mətn[/spoiler]
+    """
+    if not text:
+        return Markup('')
+
+    # Əvvəlcə HTML-i təhlükəsizləşdir
+    escaped = Markup.escape(text)
+
+    # Qalın
+    escaped = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', escaped)
+
+    # Rənglər
+    escaped = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped)
+    escaped = re.sub(r'\[green\](.*?)\[/green\]', r'<span style="color: #10b981;">\1</span>', escaped)
+    escaped = re.sub(r'\[blue\](.*?)\[/blue\]', r'<span style="color: #3b82f6;">\1</span>', escaped)
+
+    # Spoiler
+    escaped = re.sub(
+        r'\[spoiler\](.*?)\[/spoiler\]',
+        r'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">\1</span>',
+        escaped
+    )
+
+    return Markup(escaped)
+
 app = Flask(__name__)
 app.jinja_env.globals['get_youtube_embed_url'] = get_youtube_embed_url
+app.jinja_env.globals['render_markup'] = render_markup
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'gizli-acar-12345')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -1156,20 +1185,20 @@ NEWS_DETAIL_HTML = """
     <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
     {% endif %}
 
-    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
+    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ render_markup(get_lang_field(news, 'content')) }}</p>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
                     <div class="flex-1">
 <p class="text-lg" style="white-space: pre-line;">
-    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+    {% if current_lang == 'az' %}{{ render_markup(block.text_content_az) }}{% else %}{{ render_markup(block.text_content_en) }}{% endif %}
 </p>
                     </div>
                 </div>
             {% else %}
 <p class="text-lg my-4" style="white-space: pre-line;">
-    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+    {% if current_lang == 'az' %}{{ render_markup(block.text_content_az) }}{% else %}{{ render_markup(block.text_content_en) }}{% endif %}
 </p>
             {% endif %}
         {% elif block.block_type == 'image' %}
@@ -1248,11 +1277,11 @@ NEWS_DETAIL_HTML = """
                             {% endif %}
                             | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
                         </div>
-                        {% if comment.is_spoiler %}
-                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ comment.content }}</span>
-                        {% else %}
-                        <p class="text-gray-300 mt-1">{{ comment.content }}</p>
-                        {% endif %}
+{% if comment.is_spoiler %}
+<span class="spoiler" onclick="this.classList.toggle('revealed')">{{ render_markup(comment.content) }}</span>
+{% else %}
+<p class="text-gray-300 mt-1">{{ render_markup(comment.content) }}</p>
+{% endif %}
                     </div>
                     <div class="flex gap-2">
                         {% if current_user.is_authenticated %}
@@ -1412,11 +1441,11 @@ COMMUNITY_HTML = """
                             {% endif %}
                             | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
                         </div>
-                        {% if post.is_spoiler %}
-                        <span class="spoiler" onclick="this.classList.toggle('revealed')">{{ post.content }}</span>
-                        {% else %}
-                        <p class="text-gray-300 mt-1">{{ post.content }}</p>
-                        {% endif %}
+{% if post.is_spoiler %}
+<span class="spoiler" onclick="this.classList.toggle('revealed')">{{ render_markup(post.content) }}</span>
+{% else %}
+<p class="text-gray-300 mt-1">{{ render_markup(post.content) }}</p>
+{% endif %}
                     </div>
                     <div class="flex gap-2">
                         {% if current_user.is_authenticated %}
