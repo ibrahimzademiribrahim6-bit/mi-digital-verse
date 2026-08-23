@@ -25,6 +25,7 @@ from content_generator import generate_news_content, get_image_url, fetch_and_ge
 load_dotenv()
 
 app = Flask(__name__)
+app.jinja_env.globals['get_youtube_embed_url'] = get_youtube_embed_url
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'gizli-acar-12345')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -65,6 +66,20 @@ def load_user(user_id):
 def _t(az_text, en_text):
     lang = session.get('lang', 'az')
     return az_text if lang == 'az' else en_text
+
+def get_youtube_embed_url(url):
+    if not url:
+        return None
+    patterns = [
+        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/shorts/)([\w-]{11})',
+        r'youtube\.com/watch\?.*v=([\w-]{11})'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            video_id = match.group(1)
+            return f"https://www.youtube.com/embed/{video_id}"
+    return None
 
 def youtube_embed(text):
     if not text:
@@ -1115,51 +1130,54 @@ NEWS_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
-    {% if news.image_url %}
-        {% if 'youtube.com' in news.image_url or 'youtu.be' in news.image_url %}
-            {{ youtube_embed(news.image_url) }}
+    <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>    {% if news.image_url %}
+        {% set yt_embed = get_youtube_embed_url(news.image_url) %}
+        {% if yt_embed %}
+        <div class="my-4">
+            <iframe width="100%" height="400" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
         {% else %}
-            <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
+        <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
         {% endif %}
+    {% else %}
+    <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
     {% endif %}
-    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ youtube_embed(get_lang_field(news, 'content')) }}</p>
+
+    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
                     <div class="flex-1">
-                        <p class="text-lg" style="white-space: pre-line;">
-                            {% if current_lang == 'az' %}{{ youtube_embed(block.text_content_az) }}{% else %}{{ youtube_embed(block.text_content_en) }}{% endif %}
-                        </p>
+<p class="text-lg" style="white-space: pre-line;">
+    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+</p>
                     </div>
                 </div>
             {% else %}
-                <p class="text-lg my-4" style="white-space: pre-line;">
-                    {% if current_lang == 'az' %}{{ youtube_embed(block.text_content_az) }}{% else %}{{ youtube_embed(block.text_content_en) }}{% endif %}
-                </p>
+<p class="text-lg my-4" style="white-space: pre-line;">
+    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+</p>
             {% endif %}
         {% elif block.block_type == 'image' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
                     <div class="flex-1">
-                        {% if block.image_url %}
-                            {% if 'youtube.com' in block.image_url or 'youtu.be' in block.image_url %}
-                                {{ youtube_embed(block.image_url) }}
-                            {% else %}
-                                <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
-                            {% endif %}
+                        {% set yt_embed = get_youtube_embed_url(block.image_url) %}
+                        {% if yt_embed %}
+                            <iframe width="100%" height="300" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        {% elif block.image_url %}
+                            <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <div class="my-4">
-                    {% if block.image_url %}
-                        {% if 'youtube.com' in block.image_url or 'youtu.be' in block.image_url %}
-                            {{ youtube_embed(block.image_url) }}
-                        {% else %}
-                            <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
-                        {% endif %}
+                    {% set yt_embed = get_youtube_embed_url(block.image_url) %}
+                    {% if yt_embed %}
+                        <iframe width="100%" height="300" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    {% elif block.image_url %}
+                        <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
                     {% endif %}
                 </div>
             {% endif %}
@@ -1317,7 +1335,12 @@ ARCHIVE_HTML = """
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for item in news_results %}
         <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
-            {% if item.image_url %}
+            {% set yt_embed = get_youtube_embed_url(item.image_url) %}
+            {% if yt_embed %}
+            <div class="w-full h-40 mb-3">
+                <iframe width="100%" height="160" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            {% elif item.image_url %}
             <img src="{{ item.image_url }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-cover rounded mb-3">
             {% else %}
             <div class="w-full h-40 bg-gray-700 rounded mb-3 flex items-center justify-center text-gray-400">📰</div>
