@@ -55,11 +55,10 @@ def render_markup(text):
     escaped = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped)
     escaped = re.sub(r'\[green\](.*?)\[/green\]', r'<span style="color: #10b981;">\1</span>', escaped)
     escaped = re.sub(r'\[blue\](.*?)\[/blue\]', r'<span style="color: #3b82f6;">\1</span>', escaped)
-
     # Spoiler
     escaped = re.sub(
         r'\[spoiler\](.*?)\[/spoiler\]',
-        r'<span class="spoiler" onclick="this.classList.toggle(\'revealed\')"><span class="spoiler-content">\1</span></span>',
+        r'<span class="spoiler"><span class="spoiler-content">\1</span></span>',
         escaped
     )
 
@@ -1112,12 +1111,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('authModal').classList.remove('hidden');
     }
 });
+</script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('show') === 'auth') {
-        document.getElementById('authModal').classList.remove('hidden');
+document.addEventListener('click', function(e) {
+    const spoiler = e.target.closest('.spoiler');
+    if (spoiler) {
+        spoiler.classList.toggle('revealed');
     }
 });
 </script>
@@ -1317,7 +1317,7 @@ NEWS_DETAIL_HTML = """
                             | <time class="local-time" data-utc="{{ comment.created_at.isoformat() }}Z"></time>
                         </div>
 {% if comment.is_spoiler %}
-<span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(comment.content) }}</span></span>
+<span class="spoiler"><span class="spoiler-content">{{ render_markup(comment.content) }}</span></span>
 {% else %}
 <p class="text-gray-300 mt-1">{{ render_markup(comment.content) }}</p>
 {% endif %}
@@ -1481,7 +1481,7 @@ COMMUNITY_HTML = """
                             | <time class="local-time" data-utc="{{ post.created_at.isoformat() }}Z"></time>
                         </div>
 {% if post.is_spoiler %}
-<span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
+<span class="spoiler"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
 {% else %}
 <p class="text-gray-300 mt-1">{{ render_markup(post.content) }}</p>
 {% endif %}
@@ -1578,7 +1578,7 @@ ROOM_HTML = """
             {% endif %}
             <button onclick="openReportModal('post', {{ post.id }})" class="text-xs text-gray-500 hover:text-red-400">{{ 'Şikayət et' if current_lang == 'az' else 'Report' }}</button>
             {% if post.is_spoiler %}
-            <span class="spoiler" onclick="this.classList.toggle('revealed')"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
+            <span class="spoiler"><span class="spoiler-content">{{ render_markup(post.content) }}</span></span>
             {% else %}
             <p class="text-gray-300">{{ render_markup(post.content) }}</p>
             {% endif %}
