@@ -1121,9 +1121,11 @@ NEWS_DETAIL_HTML = """
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
     <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>
     {% if news.image_url %}
-    <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
-    {% else %}
-    <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
+        {% if 'youtube.com' in news.image_url or 'youtu.be' in news.image_url %}
+            {{ youtube_embed(news.image_url) }}
+        {% else %}
+            <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
+        {% endif %}
     {% endif %}
     <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ youtube_embed(get_lang_field(news, 'content')) }}</p>
     {% for block in news.blocks %}
@@ -1146,14 +1148,22 @@ NEWS_DETAIL_HTML = """
                 <div class="flex flex-col md:flex-row gap-4 my-4 items-start">
                     <div class="flex-1">
                         {% if block.image_url %}
-                            <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
+                            {% if 'youtube.com' in block.image_url or 'youtu.be' in block.image_url %}
+                                {{ youtube_embed(block.image_url) }}
+                            {% else %}
+                                <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
             {% else %}
                 <div class="my-4">
                     {% if block.image_url %}
-                        <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
+                        {% if 'youtube.com' in block.image_url or 'youtu.be' in block.image_url %}
+                            {{ youtube_embed(block.image_url) }}
+                        {% else %}
+                            <img src="{{ block.image_url }}" alt="{% if current_lang == 'az' %}{{ block.title_az }}{% else %}{{ block.title_en }}{% endif %}" class="w-full max-h-96 object-contain rounded-lg">
+                        {% endif %}
                     {% endif %}
                 </div>
             {% endif %}
