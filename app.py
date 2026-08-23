@@ -681,23 +681,25 @@ BASE_HTML = """
         .font-display { font-family: 'Orbitron', sans-serif; }
         .neon-text { text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff; }
         .card-glow:hover { box-shadow: 0 0 20px rgba(0,240,255,0.5); transform: translateY(-5px); transition: all 0.3s; }
-        .spoiler {
-            position: relative;
-            display: block;
-            margin: 0.5rem 0;
-            border-radius: 8px;
-            background: #1f2937;
-            color: #e5e7eb;
-            cursor: pointer;
-            overflow: hidden;
-        }
-        .spoiler-content {
-            display: block;
-            padding: 0.75rem;
-            filter: blur(6px);
-            opacity: 0.65;
-            transition: filter 0.2s, opacity 0.2s;
-        }
+.spoiler {
+    position: relative;
+    display: inline-block;
+    margin: 0 2px;
+    border-radius: 8px;
+    background: #1f2937;
+    color: #e5e7eb;
+    cursor: pointer;
+    overflow: hidden;
+    vertical-align: middle;
+}
+.spoiler-content {
+    display: block;
+    padding: 0.75rem;
+    white-space: pre-line;
+    filter: blur(6px);
+    opacity: 0.65;
+    transition: filter 0.2s, opacity 0.2s;
+}
         .spoiler::after {
             content: "SPOILER";
             position: absolute;
