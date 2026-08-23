@@ -7,6 +7,7 @@ from datetime import datetime, date, timedelta, timezone
 from functools import wraps
 
 from flask import Flask, render_template, render_template_string, request, redirect, url_for, flash, abort, jsonify, session
+from markupsafe import Markup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -64,6 +65,35 @@ def load_user(user_id):
 def _t(az_text, en_text):
     lang = session.get('lang', 'az')
     return az_text if lang == 'az' else en_text
+
+def youtube_embed(text):
+    """
+    Mətndəki YouTube linklərini tapıb iframe pleyerinə çevirir.
+    Qalan mətn təhlükəsiz olaraq göstərilir.
+    """
+    if not text:
+        return Markup('')
+
+    youtube_re = re.compile(r'(https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11}))')
+
+    matches = []
+    def repl(m):
+        matches.append(m.group(2))
+        return f'{{{{YT_{len(matches)-1}}}}}'
+
+    text_with_placeholders = youtube_re.sub(repl, text)
+    escaped = Markup.escape(text_with_placeholders)
+
+    for idx, video_id in enumerate(matches):
+        iframe = (
+            f'<div class="youtube-embed my-4">'
+            f'<iframe src="https://www.youtube.com/embed/{video_id}" '
+            f'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+            f'allowfullscreen></iframe></div>'
+        )
+        escaped = escaped.replace(f'{{{{YT_{idx}}}}}', iframe)
+
+    return Markup(escaped)
 
 @app.before_request
 def check_banned_user():
@@ -692,12 +722,30 @@ BASE_HTML = """
             align-items: flex-start;
             gap: 0.75rem;
         }
-        .chat-textarea {
-            flex: 1;
-            resize: none;
-            overflow-y: auto;
-            max-height: 200px;
-        }
+.chat-textarea {
+    flex: 1;
+    resize: none;
+    overflow-y: auto;
+    max-height: 200px;
+}
+
+/* YouTube embed */
+.youtube-embed {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 nisbəti */
+    height: 0;
+    overflow: hidden;
+    margin: 1rem 0;
+    border-radius: 8px;
+}
+.youtube-embed iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
     </style>
     <script>
         function scrollChatToBottom() {
@@ -1077,20 +1125,20 @@ NEWS_DETAIL_HTML = """
     {% else %}
     <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
     {% endif %}
-    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ get_lang_field(news, 'content') }}</p>
+    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ youtube_embed(get_lang_field(news, 'content')) }}</p>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
                 <div class="flex flex-col md:flex-row gap-4 my-4">
                     <div class="flex-1">
                         <p class="text-lg" style="white-space: pre-line;">
-                            {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+                            {% if current_lang == 'az' %}{{ youtube_embed(block.text_content_az) }}{% else %}{{ youtube_embed(block.text_content_en) }}{% endif %}
                         </p>
                     </div>
                 </div>
             {% else %}
                 <p class="text-lg my-4" style="white-space: pre-line;">
-                    {% if current_lang == 'az' %}{{ block.text_content_az }}{% else %}{{ block.text_content_en }}{% endif %}
+                    {% if current_lang == 'az' %}{{ youtube_embed(block.text_content_az) }}{% else %}{{ youtube_embed(block.text_content_en) }}{% endif %}
                 </p>
             {% endif %}
         {% elif block.block_type == 'image' %}
@@ -2287,7 +2335,11 @@ def inject_lang():
             if value:
                 return value
         return getattr(obj, field_prefix, '')
-    return {'get_lang_field': get_lang_field, 'current_lang': session.get('lang', 'az')}
+    return {
+        'get_lang_field': get_lang_field,
+        'current_lang': session.get('lang', 'az'),
+        'youtube_embed': youtube_embed
+    }
 
 @app.context_processor
 def inject_unread_notifications():
