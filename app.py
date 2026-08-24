@@ -1460,12 +1460,12 @@ ARCHIVE_HTML = """
                 <option value="webtoon" {% if category_filter == 'webtoon' %}selected{% endif %}>Webtoon</option>
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
             </select>
-            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %}>
-                <option value="">{{ 'Teq seçin' if current_lang == 'az' else 'Select tag' }}</option>
-                {% for tag in available_tags %}
-                <option value="{{ tag.name }}" {% if tag_filter == tag.name %}selected{% endif %}>{{ tag.name }}</option>
-                {% endfor %}
-            </select>
+<select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %}>
+    <option value="">{{ 'Teq seçin' if current_lang == 'az' else 'Select tag' }}</option>
+    {% for tag in all_tags %}
+    <option value="{{ tag.name }}" data-category="{{ tag.category }}" {% if tag_filter == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+    {% endfor %}
+</select>
             <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
         </div>
         {% if not category_filter %}
@@ -1475,20 +1475,27 @@ ARCHIVE_HTML = """
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for item in news_results %}
-        <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">
-            {% set yt_embed = get_youtube_embed_url(item.image_url) %}
+        <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">            {% set ns = namespace(display_image=item.image_url) %}
+            {% if not ns.display_image %}
+                {% for block in item.blocks %}
+                    {% if block.block_type == 'image' and block.image_url %}
+                        {% set ns.display_image = block.image_url %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% set yt_embed = get_youtube_embed_url(ns.display_image) %}
             {% if yt_embed %}
             <div class="w-full h-40 mb-3">
                 <iframe width="100%" height="160" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
-            {% elif item.image_url %}
-            <img src="{{ item.image_url }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-cover rounded mb-3">
+            {% elif ns.display_image %}
+            <img src="{{ ns.display_image }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-cover rounded mb-3">
             {% else %}
             <div class="w-full h-40 bg-gray-700 rounded mb-3 flex items-center justify-center text-gray-400">📰</div>
             {% endif %}
             <span class="chip chip-pulse mb-2">{{ item.category }}</span>
             <h3 class="text-xl font-bold text-cyan-300">{{ get_lang_field(item, 'title') }}</h3>
-            <p class="text-gray-400 text-sm">{{ get_lang_field(item, 'content')[:100] }}...</p>
             <p class="text-gray-500 text-xs mt-2"><time class="local-time" data-utc="{{ item.published_at.isoformat() }}Z"></time> | {{ item.views }} {{ 'oxunma' if current_lang == 'az' else 'views' }}</p>
         </a>
         {% else %}
@@ -1521,6 +1528,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     updateTagState();
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const catSelect = document.querySelector('select[name="category"]');
+    const tagSelect = document.querySelector('select[name="tag"]');
+
+    function updateTagOptions() {
+        if (!catSelect || !tagSelect) return;
+
+        const selectedCategory = catSelect.value;
+        const allOptions = tagSelect.querySelectorAll('option');
+
+        if (!selectedCategory) {
+            // Kateqoriya seçilməyib: teq filtirini bağla
+            tagSelect.disabled = true;
+            tagSelect.value = '';
+            allOptions.forEach(opt => {
+                if (opt.value !== '') opt.style.display = 'block';
+            });
+            return;
+        }
+
+        // Kateqoriya seçilib: teq filtirini aktivləşdir
+        tagSelect.disabled = false;
+
+        allOptions.forEach(opt => {
+            if (opt.value === '') {
+                opt.style.display = 'block';
+                return;
+            }
+            const tagCategory = opt.getAttribute('data-category');
+            if (tagCategory === selectedCategory) {
+                opt.style.display = 'block';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        // Köhnə seçimi sıfırla
+        tagSelect.value = '';
+    }
+
+    if (catSelect) {
+        catSelect.addEventListener('change', function() {
+            updateTagOptions();
+        });
+    }
+
+    updateTagOptions();
 });
 </script>
 {% endblock %}
@@ -2609,12 +2666,16 @@ def archive():
             tag_query = tag_query.filter(News.category.ilike(f'%{category_filter}%'))
         available_tags = tag_query.distinct().order_by(Tag.name).all()
 
+    # Aktiv teqləri və onların kateqoriyalarını topla
+    all_tags_query = db.session.query(Tag.name, News.category).join(NewsTag).join(News).filter(News.status == 'published').distinct()
+    all_tags = [{'name': name, 'category': category.lower()} for name, category in all_tags_query]
+
     return render_template('archive.html',
                            q=q,
                            category_filter=category_filter,
                            tag_filter=tag_filter,
                            news_results=news_results,
-                           available_tags=available_tags)
+                           all_tags=all_tags)
 
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
