@@ -3400,6 +3400,7 @@ def delete_news(news_id):
     news = News.query.get_or_404(news_id)
     Room.query.filter_by(news_id=news.id).update({'news_id': None})
     Report.query.filter_by(target_type='news', target_id=news.id).delete()
+    NewsTag.query.filter_by(news_id=news.id).delete()
     db.session.delete(news)
     db.session.commit()
     flash(_t('Xəbər silindi.', 'News deleted.'))

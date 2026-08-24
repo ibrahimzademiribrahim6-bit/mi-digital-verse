@@ -71,7 +71,6 @@ class News(db.Model):
     author = db.relationship('User', backref='news_authored')
     rooms = db.relationship('Room', backref='news', lazy=True)
     blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan")
-    news_tags = db.relationship('NewsTag', backref='news_obj', lazy=True, cascade="all, delete-orphan")
 
 
 class Room(db.Model):
