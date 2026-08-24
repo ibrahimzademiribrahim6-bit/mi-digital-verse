@@ -288,10 +288,7 @@ def process_image(file, max_width, max_height):
         img = Image.open(file)
         if img.mode in ('RGBA', 'P'):
             img = img.convert('RGB')
-        # Yalnız thumbnail istifadə et, nisbəti qoruyur və kiçik ölçüyə salır
         img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-        # Mərkəzdən kəsmə üçün (əgər lazımdırsa) ayrıca məntiq, amma indi sadəcə thumbnail
-        # Kəsmə etmək istəyiriksə, thumbnail-dən sonra crop edək
         width, height = img.size
         if width / height > max_width / max_height:
             new_width = int(height * max_width / max_height)
@@ -303,7 +300,7 @@ def process_image(file, max_width, max_height):
             img = img.crop((0, top, width, top + new_height))
         filename = f"upload_{datetime.utcnow().timestamp()}_{random.randint(1000,9999)}.jpg"
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        img.save(save_path, "JPEG", quality=90)  # keyfiyyəti artırdıq
+        img.save(save_path, "JPEG", quality=90)
         return filename
     except Exception as e:
         print(f"Şəkil emalı xətası: {e}")
@@ -357,7 +354,8 @@ def process_blocks(request, news_id):
                     fname = process_image(file, 800, 500)
                     if fname:
                         image_url = fname
-            is_cover = request.form.get(f'block_is_cover_{image_idx}') == '1'
+            # Düzəliş: i (ümumi blok indeksi) istifadə edilir
+            is_cover = request.form.get(f'block_is_cover_{i}') == '1'
             image_idx += 1
 
         block = NewsBlock(
@@ -735,66 +733,16 @@ BASE_HTML = """
         .font-display { font-family: 'Orbitron', sans-serif; }
         .neon-text { text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff; }
         .card-glow:hover { box-shadow: 0 0 20px rgba(0,240,255,0.5); transform: translateY(-5px); transition: all 0.3s; }
-.spoiler {
-    position: relative;
-    display: inline-block;
-    margin: 0 2px;
-    border-radius: 8px;
-    background: #1f2937;
-    color: #e5e7eb;
-    cursor: pointer;
-    overflow: hidden;
-    vertical-align: middle;
-}
-.spoiler-content {
-    display: block;
-    padding: 0.75rem;
-    white-space: pre-line;
-    filter: blur(6px);
-    opacity: 0.65;
-    transition: filter 0.2s, opacity 0.2s;
-}
-        .spoiler::after {
-            content: "SPOILER";
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #fbbf24;
-            background: rgba(0, 0, 0, 0.45);
-            border-radius: 8px;
-            pointer-events: none;
-            z-index: 1;
-        }
-        .spoiler.revealed .spoiler-content {
-            filter: none;
-            opacity: 1;
-        }
-        .spoiler.revealed::after {
-            display: none;
-        }
+        .spoiler { position: relative; display: inline-block; margin: 0 2px; border-radius: 8px; background: #1f2937; color: #e5e7eb; cursor: pointer; overflow: hidden; vertical-align: middle; }
+        .spoiler-content { display: block; padding: 0.75rem; white-space: pre-line; filter: blur(6px); opacity: 0.65; transition: filter 0.2s, opacity 0.2s; }
+        .spoiler::after { content: "SPOILER"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; letter-spacing: 2px; color: #fbbf24; background: rgba(0, 0, 0, 0.45); border-radius: 8px; pointer-events: none; z-index: 1; }
+        .spoiler.revealed .spoiler-content { filter: none; opacity: 1; }
+        .spoiler.revealed::after { display: none; }
 
-        html.light body {
-            background: #f4f6f9;
-            color: #111827;
-        }
-        html.light .bg-gray-900 {
-            background-color: #ffffff;
-            border-color: #e5e7eb;
-            color: #111827;
-        }
-        html.light .bg-gray-800 {
-            background-color: #1f2937;
-            color: #ffffff;
-            border: 1px solid #374151;
-        }
-        html.light .bg-gray-700 {
-            background-color: #e5e7eb;
-            color: #111827;
-        }
+        html.light body { background: #f4f6f9; color: #111827; }
+        html.light .bg-gray-900 { background-color: #ffffff; border-color: #e5e7eb; color: #111827; }
+        html.light .bg-gray-800 { background-color: #1f2937; color: #ffffff; border: 1px solid #374151; }
+        html.light .bg-gray-700 { background-color: #e5e7eb; color: #111827; }
         html.light .text-gray-300 { color: #374151; }
         html.light .text-gray-400 { color: #4b5563; }
         html.light .text-gray-500 { color: #6b7280; }
@@ -805,93 +753,23 @@ BASE_HTML = """
         html.light .text-yellow-400 { color: #ca8a04; }
         html.light .text-red-400 { color: #dc2626; }
         html.light .text-red-500 { color: #b91c1c; }
-        html.light input, html.light textarea, html.light select {
-            background-color: #ffffff;
-            color: #111827;
-            border: 1px solid #d1d5db;
-        }
-        html.light nav, html.light footer {
-            background-color: #ffffff;
-            border-color: #e5e7eb;
-        }
-        html.light .hero-section {
-            background: linear-gradient(135deg, #e0f2fe, #bae6fd, #7dd3fc);
-        }
-        html.light .hero-section h1 {
-            color: #0c4a6e;
-            text-shadow: 0 0 5px #7dd3fc;
-        }
-        html.light .hero-section p {
-            color: #1e293b;
-        }
-        html.light #mobileMenu {
-            background-color: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        html.light #mobileMenu a,
-        html.light #mobileMenu button {
-            color: #111827;
-        }
-        html.light #themeToggle,
-        html.light #themeToggleMobile,
-        html.light #langToggle,
-        html.light #langToggleMobile,
-        html.light #mobileMenuBtn {
-            background-color: #1f2937;
-            color: #ffffff;
-        }
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 180px);
-            max-height: calc(100vh - 180px);
-            min-height: 0;
-        }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 0.75rem;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .chat-messages::-webkit-scrollbar {
-            display: none;
-        }
-        .chat-message {
-            margin-bottom: 1rem;
-        }
-        .chat-input-area {
-            flex-shrink: 0;
-        }
-        .chat-input-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-.chat-textarea {
-    flex: 1;
-    resize: none;
-    overflow-y: auto;
-    max-height: 200px;
-}
-
-/* YouTube embed */
-.youtube-embed {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 nisbəti */
-    height: 0;
-    overflow: hidden;
-    margin: 1rem 0;
-    border-radius: 8px;
-}
-.youtube-embed iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-}
+        html.light input, html.light textarea, html.light select { background-color: #ffffff; color: #111827; border: 1px solid #d1d5db; }
+        html.light nav, html.light footer { background-color: #ffffff; border-color: #e5e7eb; }
+        html.light .hero-section { background: linear-gradient(135deg, #e0f2fe, #bae6fd, #7dd3fc); }
+        html.light .hero-section h1 { color: #0c4a6e; text-shadow: 0 0 5px #7dd3fc; }
+        html.light .hero-section p { color: #1e293b; }
+        html.light #mobileMenu { background-color: #ffffff; border-bottom: 1px solid #e5e7eb; }
+        html.light #mobileMenu a, html.light #mobileMenu button { color: #111827; }
+        html.light #themeToggle, html.light #themeToggleMobile, html.light #langToggle, html.light #langToggleMobile, html.light #mobileMenuBtn { background-color: #1f2937; color: #ffffff; }
+        .chat-container { display: flex; flex-direction: column; height: calc(100vh - 180px); max-height: calc(100vh - 180px); min-height: 0; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 0 0.75rem; scrollbar-width: none; -ms-overflow-style: none; }
+        .chat-messages::-webkit-scrollbar { display: none; }
+        .chat-message { margin-bottom: 1rem; }
+        .chat-input-area { flex-shrink: 0; }
+        .chat-input-row { display: flex; align-items: flex-start; gap: 0.75rem; }
+        .chat-textarea { flex: 1; resize: none; overflow-y: auto; max-height: 200px; }
+        .youtube-embed { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin: 1rem 0; border-radius: 8px; }
+        .youtube-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
     </style>
     <script>
         function scrollChatToBottom() {
@@ -1530,7 +1408,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (catSelect) {
         catSelect.addEventListener('change', function() {
             updateTagState();
-            // Teq seçimini sıfırla, çünki yeni kateqoriyaya uyğun teqlər serverdən gələcək
             if (tagSelect) tagSelect.value = '';
         });
     }
@@ -1550,7 +1427,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const allOptions = tagSelect.querySelectorAll('option');
 
         if (!selectedCategory) {
-            // Kateqoriya seçilməyib: teq filtirini bağla
             tagSelect.disabled = true;
             tagSelect.value = '';
             allOptions.forEach(opt => {
@@ -1559,7 +1435,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Kateqoriya seçilib: teq filtirini aktivləşdir
         tagSelect.disabled = false;
 
         allOptions.forEach(opt => {
@@ -1575,7 +1450,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Köhnə seçimi sıfırla
         tagSelect.value = '';
     }
 
@@ -1596,7 +1470,6 @@ COMMUNITY_HTML = """
 {% block title %}{{ 'İcma' if current_lang == 'az' else 'Community' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-2 md:py-4">
-    <!-- Başlıq və Tablar eyni sətirdə (desktop), alt-alta (mobil) -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-2 md:mb-3">
         <h1 class="text-3xl font-bold mb-3 md:mb-0">{{ 'İcma Müzakirələri' if current_lang == 'az' else 'Community Discussions' }}</h1>
         <div class="flex flex-wrap gap-2">
@@ -1612,9 +1485,7 @@ COMMUNITY_HTML = """
         </div>
     </div>
 
-    <!-- Çat konteyneri -->
     <div class="chat-container">
-        <!-- Mesajlar -->
         <div id="chatMessages" class="chat-messages">
             {% macro render_post(post, room_id, depth=0) %}
             <div class="chat-message bg-gray-800 rounded p-3">
@@ -1671,7 +1542,6 @@ COMMUNITY_HTML = """
             {% endfor %}
         </div>
 
-        <!-- Mesaj yazma forması (sabit altda) -->
         <div class="chat-input-area mt-3">
             {% if current_user.is_authenticated %}
             <div class="bg-gray-800 p-4 rounded">
@@ -2173,7 +2043,7 @@ function addTextBlock() {
 
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
-    const index = container.children.length; // blok indeksi
+    const index = container.children.length; // ümumi blok indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
@@ -2182,11 +2052,11 @@ function addImageBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
-        <div class="block-az">
+        <div class="block-az" style="display:${currentLang === 'az' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
             <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
-        <div class="block-en">
+        <div class="block-en" style="display:${currentLang === 'en' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
             <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
@@ -2260,9 +2130,9 @@ EDIT_NEWS_HTML = """
 </div>
 
 <script>
-let currentEditLang = '{{ current_lang }}';
+let currentLang = '{{ current_lang }}';  // 'az' və ya 'en'
 function switchLang(lang) {
-    currentEditLang = lang;
+    currentLang = lang;
     document.getElementById('azFields').style.display = lang === 'az' ? 'block' : 'none';
     document.getElementById('enFields').style.display = lang === 'en' ? 'block' : 'none';
     document.getElementById('azTab').classList.toggle('bg-cyan-600', lang === 'az');
@@ -2286,13 +2156,13 @@ function addTextBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
         </div>
         <input type="hidden" name="block_type" value="text">
-        <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
+        <div class="block-az" style="display:${currentLang === 'az' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">Başlıq (AZ)</label>
             <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white">
             <label class="text-xs text-gray-400">Mətn (AZ)</label>
             <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white" rows="4"></textarea>
         </div>
-        <div class="block-en" style="display:${currentEditLang === 'en' ? 'block' : 'none'};">
+        <div class="block-en" style="display:${currentLang === 'en' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">Title (EN)</label>
             <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white">
             <label class="text-xs text-gray-400">Text (EN)</label>
@@ -2307,7 +2177,7 @@ function addTextBlock() {
 }
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
-    const index = container.children.length; // blok indeksi
+    const index = container.children.length; // ümumi blok indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
@@ -2316,11 +2186,11 @@ function addImageBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
-        <div class="block-az">
+        <div class="block-az" style="display:${currentLang === 'az' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
             <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
-        <div class="block-en">
+        <div class="block-en" style="display:${currentLang === 'en' ? 'block' : 'none'};">
             <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
             <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
@@ -2339,74 +2209,75 @@ function addImageBlock() {
     `;
     container.appendChild(div);
 }
-window.onload = function() {
-    {% for block in news.blocks %}
-        {% if block.block_type == 'text' %}
-            const textDiv{{ block.id }} = document.createElement('div');
-            textDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
-            textDiv{{ block.id }}.innerHTML = `
+
+document.addEventListener('DOMContentLoaded', function() {
+    const blocks = {{ news.blocks|tojson }};
+    const container = document.getElementById('blocksContainer');
+
+    blocks.forEach(function(block, index) {
+        if (block.block_type === 'text') {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-700 p-3 rounded mt-3';
+            div.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold">Mətn Bloku</span>
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="text">
-                <div class="block-az">
+                <div class="block-az" style="display:${currentLang === 'az' ? 'block' : 'none'};">
                     <label class="text-xs text-gray-400">Başlıq (AZ)</label>
-                    <input type="text" name="block_title_az" value="{{ block.title_az }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="text" name="block_title_az" value="${block.title_az || ''}" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
                     <label class="text-xs text-gray-400">Mətn (AZ)</label>
-                    <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white" rows="4">{{ block.text_content_az }}</textarea>
+                    <textarea name="block_text_az" class="w-full p-2 rounded bg-gray-800 text-white mb-3" rows="4">${block.text_content_az || ''}</textarea>
                 </div>
-                <div class="block-en">
+                <div class="block-en" style="display:${currentLang === 'en' ? 'block' : 'none'};">
                     <label class="text-xs text-gray-400">Title (EN)</label>
-                    <input type="text" name="block_title_en" value="{{ block.title_en }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="text" name="block_title_en" value="${block.title_en || ''}" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
                     <label class="text-xs text-gray-400">Text (EN)</label>
-                    <textarea name="block_text_en" class="w-full p-2 rounded bg-gray-800 text-white" rows="4">{{ block.text_content_en }}</textarea>
+                    <textarea name="block_text_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2" rows="4">${block.text_content_en || ''}</textarea>
                 </div>
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
-                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                    <option value="stack" ${block.layout === 'stack' ? 'selected' : ''}>Alt-alta</option>
+                    <option value="side" ${block.layout === 'side' ? 'selected' : ''}>Yan-yana</option>
                 </select>
             `;
-            document.getElementById('blocksContainer').appendChild(textDiv{{ block.id }});
-        {% else %}
-            const imgDiv{{ block.id }} = document.createElement('div');
-            imgDiv{{ block.id }}.className = 'bg-gray-700 p-3 rounded mt-3';
-            imgDiv{{ block.id }}.innerHTML = `
+            container.appendChild(div);
+        } else if (block.block_type === 'image') {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-700 p-3 rounded mt-3';
+            div.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold">Şəkil Bloku</span>
                     <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
                 </div>
                 <input type="hidden" name="block_type" value="image">
-                <div class="block-az">
+                <div class="block-az" style="display:${currentLang === 'az' ? 'block' : 'none'};">
                     <label class="text-xs text-gray-400">Başlıq (AZ)</label>
-                    <input type="text" name="block_title_az" value="{{ block.title_az }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="text" name="block_title_az" value="${block.title_az || ''}" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
                 </div>
-                <div class="block-en">
+                <div class="block-en" style="display:${currentLang === 'en' ? 'block' : 'none'};">
                     <label class="text-xs text-gray-400">Title (EN)</label>
-                    <input type="text" name="block_title_en" value="{{ block.title_en }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                    <input type="text" name="block_title_en" value="${block.title_en || ''}" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
                 </div>
                 <label class="text-xs text-gray-400">Şəkil URL</label>
-                <input type="text" name="block_image_url" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
+                <input type="text" name="block_image_url" value="${block.image_url || ''}" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
                 <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
-                <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
+                <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mb-2">
                 <label class="flex items-center mt-1 text-xs">
-                    <input type="checkbox" name="block_is_cover_{{ loop.index0 }}" value="1" class="mr-2" {% if block.is_cover %}checked{% endif %}>
-                    {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
-                </label>        
-        <label class="flex items-center mt-1 text-xs">
-            <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2">
-            {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
-        </label>
+                    <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2" ${block.is_cover ? 'checked' : ''}>
+                    Xəbər kartında görünsün
+                </label>
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-                    <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
-                    <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
+                    <option value="stack" ${block.layout === 'stack' ? 'selected' : ''}>Alt-alta</option>
+                    <option value="side" ${block.layout === 'side' ? 'selected' : ''}>Yan-yana</option>
                 </select>
             `;
-            document.getElementById('blocksContainer').appendChild(imgDiv{{ block.id }});
-        {% endif %}
-    {% endfor %}
-    switchLang(currentEditLang);
-};
+            container.appendChild(div);
+        }
+    });
+
+    switchLang(currentLang);
+});
 </script>
 {% endblock %}
 """
@@ -2607,7 +2478,6 @@ app.jinja_loader = DictLoader(templates)
 
 @app.context_processor
 def inject_now():
-    # Bakı vaxtı (UTC+4)
     baku_tz = timezone(timedelta(hours=4))
     now = datetime.now(baku_tz)
     return {'now': now}
@@ -2671,13 +2541,11 @@ def archive():
         else:
             news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
 
-    # Teq filtri yalnız kateqoriya seçildikdə aktivdir
     if category_filter and tag_filter:
         news_query = news_query.join(NewsTag).join(Tag).filter(Tag.name == tag_filter)
 
     news_results = news_query.order_by(News.published_at.desc()).all()
 
-    # Kateqoriya seçilibsə, aktiv teqləri çıxar
     available_tags = []
     if category_filter:
         tag_query = db.session.query(Tag).join(NewsTag).join(News).filter(
@@ -2691,7 +2559,6 @@ def archive():
             tag_query = tag_query.filter(News.category.ilike(f'%{category_filter}%'))
         available_tags = tag_query.distinct().order_by(Tag.name).all()
 
-    # Aktiv teqləri və onların kateqoriyalarını topla
     all_tags_query = (
         db.session.query(Tag.name, News.category)
         .select_from(NewsTag)
@@ -2746,7 +2613,6 @@ def add_comment(news_id):
     db.session.commit()
     add_xp(current_user, 5)
     check_achievements(current_user)
-    # Bildiriş: yalnız xəbər müəllifinə? Yox, yalnız valideyn şərh sahibinə cavab verilirsə
     if parent and parent.user_id != current_user.id:
         add_notification(parent.user, f"{current_user.username} şərhinizə cavab yazdı.")
     return redirect(url_for('news_detail', news_id=news.id))
@@ -2771,7 +2637,6 @@ def like_comment(comment_id):
         db.session.delete(existing)
         db.session.commit()
     else:
-        # əvvəlki reaksiyanı sil
         CommentLike.query.filter_by(user_id=current_user.id, comment_id=comment.id).delete()
         like = CommentLike(user_id=current_user.id, comment_id=comment.id, reaction='like')
         db.session.add(like)
@@ -2806,7 +2671,6 @@ def search():
     if q:
         news_results = News.query.filter(News.status == 'published', News.title.contains(q) | News.content.contains(q)).all()
     if not news_results:
-        # Təkliflər: son 3-5 xəbər
         suggested_news = News.query.filter_by(status='published').order_by(News.published_at.desc()).limit(4).all()
     return render_template('search.html', q=q, news_results=news_results, suggested_news=suggested_news)
 
@@ -2899,8 +2763,6 @@ def add_post(room_id):
     update_quest_progress(current_user, 'post', 1)
     check_achievements(current_user)
 
-    # Yalnız cavab verilirsə, valideyn mesaj sahibinə bildiriş getməsin? Paketdə deyilir: icmada cavab bildirişi getməsin. Ona görə heç bir bildiriş göndərmirik.
-    # Yalnız xəta bildirişi tabında yeni mesaj yazılarsa adminə bildiriş gedir.
     if not parent_id:
         room_obj = Room.query.get(room_id)
         if room_obj and room_obj.name == 'Xəta Bildirişi':
@@ -3015,7 +2877,7 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        email = None  # email artıq qeydiyyatda yoxdur
+        email = None
 
         if not username or not password:
             flash(_t('İstifadəçi adı və şifrə məcburidir', 'Username and password are required'))
@@ -3043,7 +2905,6 @@ def register():
             db.session.add(ut)
             db.session.commit()
         return redirect(url_for('index'))
-    # GET sorğusu üçün sadə səhifə
     return render_template_string('''
     <!DOCTYPE html>
     <html>
@@ -3178,7 +3039,6 @@ def set_showcase():
     s2 = request.form.get('showcase2', '')
     s3 = request.form.get('showcase3', '')
 
-    # Dublikat yoxla
     ids = []
     for val in [s1, s2, s3]:
         if val:
@@ -3487,9 +3347,7 @@ def edit_news(news_id):
             if filename:
                 news.image_url = filename
 
-        # Mövcud blokları sil
         NewsBlock.query.filter_by(news_id=news.id).delete()
-        # Yeni blokları əlavə et
         process_blocks(request, news.id)
         tags_string = request.form.get('tags', '')
         set_news_tags(news, tags_string)
@@ -3583,13 +3441,11 @@ def ensure_columns():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # title cədvəli
     try:
         cursor.execute("ALTER TABLE title ADD COLUMN required_xp INTEGER DEFAULT 0")
     except:
         pass
 
-    # user cədvəli
     try:
         cursor.execute("ALTER TABLE user ADD COLUMN active_title_id INTEGER DEFAULT NULL")
     except:
@@ -3599,7 +3455,6 @@ def ensure_columns():
     except:
         pass
 
-    # news cədvəli
     try:
         cursor.execute("ALTER TABLE news ADD COLUMN status VARCHAR(20) DEFAULT 'draft'")
     except:
@@ -3613,8 +3468,6 @@ def ensure_columns():
     except:
         pass
 
-    # news_block cədvəli
-    # news_block cədvəli
     try:
         cursor.execute("ALTER TABLE news_block ADD COLUMN title_az VARCHAR(200) DEFAULT ''")
     except:
@@ -3638,7 +3491,6 @@ def init_db():
         ensure_columns()
         db.create_all()
 
-        # Admin istifadəçi: Anuun / MiriMID26&
         if not User.query.filter_by(username='Anuun').first():
             admin = User(
                 username='Anuun',
@@ -3679,7 +3531,6 @@ def init_db():
         seed_quests_and_achievements()
         seed_tags()
 
-        # Üç əsas otaq
         room_names = ["Ümumi Söhbət", "Təkliflər", "Xəta Bildirişi"]
         for name in room_names:
             if Room.query.filter_by(name=name).first() is None:
@@ -3688,7 +3539,6 @@ def init_db():
                 db.session.commit()
                 print(f"{name} otağı yaradıldı.")
 
-        # Köhnə adları dəyişdir (əgər varsa)
         old_error = Room.query.filter_by(name="Xəta Otağı").first()
         if old_error:
             old_error.name = "Xəta Bildirişi"
