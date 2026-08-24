@@ -1453,7 +1453,7 @@ ARCHIVE_HTML = """
     <form action="/archive" method="GET" class="mb-6 bg-gray-800 p-4 rounded space-y-3">
         <div class="flex flex-col md:flex-row gap-3">
             <input type="text" name="q" value="{{ q }}" placeholder="{{ 'Axtar...' if current_lang == 'az' else 'Search...' }}" class="flex-1 p-2 rounded bg-gray-700 text-white">
-            <select name="category" class="p-2 rounded bg-gray-700 text-white">
+            <select name="category" class="p-2 rounded bg-gray-700 text-white" onchange="this.form.submit()">
                 <option value="">{{ 'Bütün kateqoriyalar' if current_lang == 'az' else 'All categories' }}</option>
                 <option value="anime" {% if category_filter == 'anime' %}selected{% endif %}>Anime</option>
                 <option value="manga" {% if category_filter == 'manga' %}selected{% endif %}>Manga</option>
@@ -1463,7 +1463,7 @@ ARCHIVE_HTML = """
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
                 <option value="umumi" {% if category_filter == 'umumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
             </select>
-            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %}>
+            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %} onchange="this.form.submit()">
                 <option value="">{{ 'Teq seçin' if current_lang == 'az' else 'Select tag' }}</option>
                 {% for tag in available_tags %}
                 <option value="{{ tag.name }}" {% if tag_filter == tag.name %}selected{% endif %}>{{ tag.name }}</option>
