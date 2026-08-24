@@ -19,7 +19,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 from models import db, User, News, Comment, CommentLike, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike, Tag, NewsTag
-from content_generator import generate_news_content, get_image_url, fetch_and_generate_news, generate_listicle
+from content_generator import generate_news_content, get_image_url, fetch_and_generate_news, generate_listicle, fetch_combined_news
 
 load_dotenv()
 
@@ -3170,6 +3170,39 @@ def fetch_news():
         db.session.rollback()
         print(f"fetch_news xətası: {e}")
         flash(_t('Xəbərlər çəkilərkən xəta baş verdi, yenidən cəhd edin.', 'An error occurred while fetching news, please try again.'))
+    return redirect(url_for('admin'))
+
+@app.route('/admin/fetch-combined-news')
+@login_required
+@admin_required
+def fetch_combined_news_route():
+    article = fetch_combined_news()
+    if not article:
+        flash(_t('Xəbər əldə edilə bilmədi, agent boş nəticə qaytardı.', 'Could not fetch news, agent returned empty result.'))
+        return redirect(url_for('admin'))
+
+    title = article.get('title', 'Xəbər')
+    content = article.get('content', '')
+    category = article.get('category', 'Ümumi')
+    image_keywords = article.get('image_search_keywords', title)
+    image_url = get_image_url(image_keywords)
+    tags_string = article.get('tags', '')
+
+    news = News(
+        title=title,
+        content=content,
+        category=category,
+        image_url=image_url,
+        author_id=current_user.id,
+        status='draft'
+    )
+    db.session.add(news)
+    db.session.commit()
+
+    set_news_tags(news, tags_string)
+    db.session.commit()
+
+    flash(_t('Qaralama yaradıldı. Yoxla və yayımla.', 'Draft created. Review and publish.'))
     return redirect(url_for('admin'))
 
 @app.route('/admin/generate-listicle', methods=['POST'])

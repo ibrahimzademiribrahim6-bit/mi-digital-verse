@@ -273,3 +273,81 @@ Return JSON with fields:
     except Exception as e:
         print(f"generate_listicle error: {e}")
         return None
+
+def fetch_combined_news(topic=None):
+    """
+    Serper ilə 3-5 xəbər mənbəyi tapır, DeepSeek-ə göndərir və
+    unikal, markerli Azərbaycanca xəbər yazdırır.
+    """
+    from datetime import datetime
+    current_date = datetime.now().strftime("%Y-%m-%d")
+
+    if not topic:
+        query = "anime manga manhwa news 2026"
+    else:
+        query = topic
+
+    raw = serper_search(query, search_type="search", num=6)
+
+    if not raw:
+        print("fetch_combined_news: heç bir axtarış nəticəsi tapılmadı")
+        return None
+
+    # Unikallaşdır
+    unique = {}
+    for item in raw:
+        link = item.get('link', '')
+        if link and link not in unique:
+            unique[link] = item
+    raw_list = list(unique.values())[:5]
+
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    prompt = f"""
+Sən anime, manqva (webtoon), manhua, manqa və video oyunlar sahəsində ixtisaslaşmış, gənc nəslin (Gen-Z) dilini bilən Baş Redaktorsan.
+Bugünkü tarix: {current_date}
+
+Sənə aşağıda bir neçə xəbər mənbəyi verilir. Bu mənbələrdən bir xəbər məqaləsi yaz.
+Qaydalar:
+- Mətn Azərbaycanca olsun.
+- TL;DR bölməsi "⚡ Qısaca nə oldu?" ilə başlasın.
+- Vacib ad, tarix, platforma adlarını **qalın** yaz (məs. **2 oktyabr 2026**).
+- Mətnə xüsusi markerlər əlavə et:
+    - Qalın: **mətn**
+    - Qırmızı: [red]mətn[/red]
+    - Mavi: [blue]mətn[/blue]
+    - Yaşıl: [green]mətn[/green]
+    - Spoiler: [spoiler]gizli mətn[/spoiler]
+- Şəkil / video yerlərini mətndə belə göstər: [BURAYA ŞƏKİL] və ya [BURAYA VİDEO].
+- Mətnin sonunda oxucuya sual ver və 2 bənzər məsləhət yaz.
+- Yalnız JSON çıxar.
+
+JSON formatı:
+{{"title": "...", "content": "...", "category": "Anime", "tags": "tag1, tag2, tag3", "image_search_keywords": "the apothecary diaries season 3 official poster"}}
+
+Xəbər mənbələri:
+{json.dumps(raw_list, ensure_ascii=False)}
+"""
+    data = {
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 3000
+    }
+
+    try:
+        resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=120)
+        resp.raise_for_status()
+        text = resp.json()['choices'][0]['message']['content']
+        start = text.find('{')
+        end = text.rfind('}') + 1
+        if start != -1 and end > start:
+            article = json.loads(text[start:end])
+            return article
+        return None
+    except Exception as e:
+        print(f"fetch_combined_news xətası: {e}")
+        return None
