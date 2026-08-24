@@ -37,6 +37,46 @@ def get_youtube_embed_url(url):
             return f"https://www.youtube.com/embed/{video_id}"
     return None
 
+def seed_tags():
+    """tags.txt faylından teqləri oxuyub bazaya əlavə edir"""
+    tags_file = os.path.join(app.root_path, 'tags.txt')
+    if not os.path.exists(tags_file):
+        return
+    with open(tags_file, 'r', encoding='utf-8') as f:
+        raw = f.read()
+    # vergül və yeni sətir ilə parçala
+    tag_names = re.split(r'[,\n]+', raw)
+    existing = {tag.name for tag in Tag.query.all()}
+    added = 0
+    for name in tag_names:
+        name = name.strip().lower()
+        if not name:
+            continue
+        if name not in existing:
+            db.session.add(Tag(name=name))
+            existing.add(name)
+            added += 1
+    if added:
+        db.session.commit()
+        print(f"{added} teq əlavə edildi.")
+
+
+def set_news_tags(news, tags_string):
+    """Xəbərə teqləri təyin edir. Giriş: vergüllə ayrılmış string."""
+    # Köhnə əlaqələri sil
+    NewsTag.query.filter_by(news_id=news.id).delete()
+    if not tags_string:
+        return
+    tag_names = [t.strip().lower() for t in tags_string.split(',') if t.strip()]
+    for name in tag_names:
+        tag = Tag.query.filter_by(name=name).first()
+        if not tag:
+            tag = Tag(name=name)
+            db.session.add(tag)
+            db.session.flush()  # id almaq üçün
+        nt = NewsTag(news_id=news.id, tag_id=tag.id)
+        db.session.add(nt)
+
 def render_markup(text):
     """
     İstifadəçi markerlərini təhlükəsiz HTML-ə çevirir.
@@ -1211,7 +1251,9 @@ NEWS_DETAIL_HTML = """
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-4">{{ get_lang_field(news, 'title') }}</h1>
-    <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>    {% if news.image_url %}
+    <p class="text-gray-400">{{ news.category }} | <time class="local-time" data-utc="{{ news.published_at.isoformat() }}Z"></time> | {{ 'Oxunma' if current_lang == 'az' else 'Views' }}: {{ news.views }}</p>    
+    
+    {% if news.image_url %}
         {% set yt_embed = get_youtube_embed_url(news.image_url) %}
         {% if yt_embed %}
         <div class="my-4">
@@ -1275,6 +1317,14 @@ NEWS_DETAIL_HTML = """
         <span class="px-4 py-2 bg-gray-700 rounded">Bəyənmə: {{ news.likes }}</span>
         {% endif %}
     </div>
+
+    {% if news.news_tags %}
+    <div class="flex flex-wrap gap-2 mt-4">
+        {% for nt in news.news_tags %}
+        <a href="{{ url_for('archive', category=news.category, tag=nt.tag.name) }}" class="px-2 py-1 bg-gray-700 rounded-full text-xs text-gray-300 hover:bg-cyan-600 hover:text-white">{{ nt.tag.name }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Şərh bölməsi -->
     <div class="mt-8">
@@ -1391,6 +1441,10 @@ function toggleReplyForm(commentId) {
 
 ARCHIVE_HTML = """
 {% extends "base.html" %}
+{% set is_filtered = q or category_filter or tag_filter %}
+{% if is_filtered %}
+<meta name="robots" content="noindex, follow">
+{% endif %}
 {% block title %}{{ 'Arxiv' if current_lang == 'az' else 'Archive' }} - Mi Digital Verse{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
@@ -1409,8 +1463,17 @@ ARCHIVE_HTML = """
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
                 <option value="umumi" {% if category_filter == 'umumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
             </select>
+            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %}>
+                <option value="">{{ 'Teq seçin' if current_lang == 'az' else 'Select tag' }}</option>
+                {% for tag in available_tags %}
+                <option value="{{ tag.name }}" {% if tag_filter == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+                {% endfor %}
+            </select>
             <button type="submit" class="px-4 py-2 bg-cyan-500 rounded">{{ 'Axtar' if current_lang == 'az' else 'Search' }}</button>
         </div>
+        {% if not category_filter %}
+        <p class="text-xs text-gray-500">{{ 'Əvvəlcə kateqoriya seçin, sonra teq filtri aktivləşəcək' if current_lang == 'az' else 'Select a category first to enable tag filter' }}</p>
+        {% endif %}
     </form>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1913,6 +1976,9 @@ ADMIN_HTML = """
                 <input type="text" name="image_url" placeholder="{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}" class="w-full p-2 rounded bg-gray-700 text-white">
                 <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
 
+                <label class="text-sm text-gray-400">{{ 'Teqlər (vergüllə ayırın)' if current_lang == 'az' else 'Tags (comma separated)' }}</label>
+                <input type="text" name="tags" class="w-full p-2 rounded bg-gray-700 text-white" placeholder="məs. naruto, shonen, mappa">
+
                 <h3 class="text-lg font-semibold mt-4">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h3>
                 <div id="blocksContainer"></div>
                 <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
@@ -2076,18 +2142,22 @@ EDIT_NEWS_HTML = """
         </div>
         <label class="text-sm text-gray-400">{{ 'Kateqoriya' if current_lang == 'az' else 'Category' }}</label>
         <select name="category" class="w-full p-2 rounded bg-gray-700 text-white">
-    <option value="Anime" {% if news.category == 'Anime' %}selected{% endif %}>Anime</option>
-    <option value="Manga" {% if news.category == 'Manga' %}selected{% endif %}>Manga</option>
-    <option value="Manhwa" {% if news.category == 'Manhwa' %}selected{% endif %}>Manhwa</option>
-    <option value="Manhua" {% if news.category == 'Manhua' %}selected{% endif %}>Manhua</option>
-    <option value="Webtoon" {% if news.category == 'Webtoon' %}selected{% endif %}>Webtoon</option>
-    <option value="Oyun" {% if news.category == 'Oyun' %}selected{% endif %}>Oyun</option>
-    <option value="Ümumi" {% if news.category == 'Ümumi' %}selected{% endif %}>Ümumi</option>
-</select>
+            <option value="Anime" {% if news.category == 'Anime' %}selected{% endif %}>Anime</option>
+            <option value="Manga" {% if news.category == 'Manga' %}selected{% endif %}>Manga</option>
+            <option value="Manhwa" {% if news.category == 'Manhwa' %}selected{% endif %}>Manhwa</option>
+            <option value="Manhua" {% if news.category == 'Manhua' %}selected{% endif %}>Manhua</option>
+            <option value="Webtoon" {% if news.category == 'Webtoon' %}selected{% endif %}>Webtoon</option>
+            <option value="Oyun" {% if news.category == 'Oyun' %}selected{% endif %}>Oyun</option>
+            <option value="Ümumi" {% if news.category == 'Ümumi' %}selected{% endif %}>Ümumi</option>
+        </select>
         <label class="text-sm text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="image_url" value="{{ news.image_url }}" class="w-full p-2 rounded bg-gray-700 text-white">
         <label class="text-sm text-gray-400">{{ 'Şəkil faylı yüklə' if current_lang == 'az' else 'Upload image file' }}</label>
         <input type="file" name="image_file" accept="image/*" class="w-full p-2 bg-gray-700 rounded text-white">
+
+        <label class="text-sm text-gray-400">{{ 'Teqlər (vergüllə ayırın)' if current_lang == 'az' else 'Tags (comma separated)' }}</label>
+        <input type="text" name="tags" value="{{ news.news_tags|map(attribute='tag.name')|join(', ') }}" class="w-full p-2 rounded bg-gray-700 text-white">
+
         <h2 class="text-xl font-bold mt-6 mb-3">{{ 'Əlavə Bloklar' if current_lang == 'az' else 'Additional Blocks' }}</h2>
         <div id="blocksContainer"></div>
         <button type="button" onclick="addTextBlock()" class="px-4 py-2 bg-cyan-500 rounded mt-2">{{ '+ Mətn Bloku' if current_lang == 'az' else '+ Text Block' }}</button>
@@ -2480,6 +2550,7 @@ def news_list():
 def archive():
     q = request.args.get('q', '').strip()
     category_filter = request.args.get('category', '')
+    tag_filter = request.args.get('tag', '')
 
     news_query = News.query.filter_by(status='published')
 
@@ -2487,15 +2558,39 @@ def archive():
         news_query = news_query.filter(News.title.contains(q) | News.content.contains(q))
 
     if category_filter:
-        if category_filter in ['anime', 'manga', 'manhwa', 'manhua', 'webtoon']:
-            news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
-        elif category_filter == 'oyun':
+        if category_filter == 'oyun':
             news_query = news_query.filter(News.category.ilike('%oyun%'))
         elif category_filter == 'umumi':
             news_query = news_query.filter(News.category.ilike('%ümumi%'))
+        else:
+            news_query = news_query.filter(News.category.ilike(f'%{category_filter}%'))
+
+    # Teq filtri yalnız kateqoriya seçildikdə aktivdir
+    if category_filter and tag_filter:
+        news_query = news_query.join(NewsTag).join(Tag).filter(Tag.name == tag_filter)
 
     news_results = news_query.order_by(News.published_at.desc()).all()
-    return render_template('archive.html', q=q, category_filter=category_filter, news_results=news_results)
+
+    # Kateqoriya seçilibsə, aktiv teqləri çıxar
+    available_tags = []
+    if category_filter:
+        tag_query = db.session.query(Tag).join(NewsTag).join(News).filter(
+            News.status == 'published'
+        )
+        if category_filter == 'oyun':
+            tag_query = tag_query.filter(News.category.ilike('%oyun%'))
+        elif category_filter == 'umumi':
+            tag_query = tag_query.filter(News.category.ilike('%ümumi%'))
+        else:
+            tag_query = tag_query.filter(News.category.ilike(f'%{category_filter}%'))
+        available_tags = tag_query.distinct().order_by(Tag.name).all()
+
+    return render_template('archive.html',
+                           q=q,
+                           category_filter=category_filter,
+                           tag_filter=tag_filter,
+                           news_results=news_results,
+                           available_tags=available_tags)
 
 @app.route('/news/<int:news_id>')
 def news_detail(news_id):
@@ -3170,6 +3265,8 @@ def add_news():
         db.session.commit()
 
         process_blocks(request, news.id)
+        tags_string = request.form.get('tags', '')
+        set_news_tags(news, tags_string)
         db.session.commit()
 
     return redirect(url_for('admin'))
@@ -3277,6 +3374,8 @@ def edit_news(news_id):
         NewsBlock.query.filter_by(news_id=news.id).delete()
         # Yeni blokları əlavə et
         process_blocks(request, news.id)
+        tags_string = request.form.get('tags', '')
+        set_news_tags(news, tags_string)
         db.session.commit()
 
         flash(_t('Xəbər yeniləndi', 'News updated'))
@@ -3455,6 +3554,7 @@ def init_db():
 
         seed_titles()
         seed_quests_and_achievements()
+        seed_tags()
 
         # Üç əsas otaq
         room_names = ["Ümumi Söhbət", "Təkliflər", "Xəta Bildirişi"]

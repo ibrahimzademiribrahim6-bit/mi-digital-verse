@@ -71,6 +71,7 @@ class News(db.Model):
     author = db.relationship('User', backref='news_authored')
     rooms = db.relationship('Room', backref='news', lazy=True)
     blocks = db.relationship('NewsBlock', backref='news', lazy=True, cascade="all, delete-orphan")
+    news_tags = db.relationship('NewsTag', backref='news_obj', lazy=True, cascade="all, delete-orphan")
 
 
 class Room(db.Model):
@@ -234,3 +235,17 @@ class CommentLike(db.Model):
 
     user = db.relationship('User', backref='comment_reactions')
     comment = db.relationship('Comment', backref='reactions')
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+    news_items = db.relationship('NewsTag', backref='tag', lazy=True)
+
+
+class NewsTag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    news_id = db.Column(db.Integer, db.ForeignKey('news.id'), nullable=False)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'), nullable=False)
+
+    news = db.relationship('News', backref='news_tags')
