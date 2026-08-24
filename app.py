@@ -2667,7 +2667,14 @@ def archive():
         available_tags = tag_query.distinct().order_by(Tag.name).all()
 
     # Aktiv teqləri və onların kateqoriyalarını topla
-    all_tags_query = db.session.query(Tag.name, News.category).join(NewsTag).join(News).filter(News.status == 'published').distinct()
+    all_tags_query = (
+        db.session.query(Tag.name, News.category)
+        .select_from(NewsTag)
+        .join(Tag, NewsTag.tag_id == Tag.id)
+        .join(News, NewsTag.news_id == News.id)
+        .filter(News.status == 'published')
+        .distinct()
+    )
     all_tags = [{'name': name, 'category': category.lower()} for name, category in all_tags_query]
 
     return render_template('archive.html',
