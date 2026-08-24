@@ -805,7 +805,7 @@ BASE_HTML = """
                     <a href="/" class="font-display text-2xl font-bold text-cyan-400 neon-text">Mi Digital Verse</a>
                 </div>
                 <div class="hidden md:flex space-x-4">
-                    <a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+                    <a href="/" class="text-gray-300 hover:text-cyan-400">{{ 'Əsas' if current_lang == 'az' else 'Home' }}</a>
                     <a href="/archive" class="text-gray-300 hover:text-cyan-400">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
                     <a href="/community" class="text-gray-300 hover:text-cyan-400">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
                     <a href="/about" class="text-gray-300 hover:text-cyan-400">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
@@ -816,7 +816,7 @@ BASE_HTML = """
                     {% endif %}
                     <a href="/logout" class="text-red-400 hover:text-red-300">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
                     {% else %}
-                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
+                    <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="text-cyan-400 hover:text-cyan-300">{{ 'Giriş' if current_lang == 'az' else 'Sign In' }}</button>
                     {% endif %}
                 </div>
                 <div class="flex items-center space-x-3">
@@ -833,7 +833,7 @@ BASE_HTML = """
             </div>
         </div>
         <div id="mobileMenu" class="hidden md:hidden bg-gray-900 px-4 pb-4 flex flex-col">
-            <a href="/" class="block py-2 text-gray-300">{{ 'Ana Səhifə' if current_lang == 'az' else 'Home' }}</a>
+            <a href="/" class="block py-2 text-gray-300">{{ 'Əsas' if current_lang == 'az' else 'Home' }}</a>
             <a href="/archive" class="block py-2 text-gray-300">{{ 'Arxiv' if current_lang == 'az' else 'Archive' }}</a>
             <a href="/community" class="block py-2 text-gray-300">{{ 'İcma' if current_lang == 'az' else 'Community' }}</a>
             <a href="/about" class="block py-2 text-gray-300">{{ 'Haqqımızda' if current_lang == 'az' else 'About' }}</a>
@@ -841,7 +841,7 @@ BASE_HTML = """
                 <a href="/profile" class="block py-2 text-gray-300">{{ 'Profil' if current_lang == 'az' else 'Profile' }}</a>
                 <a href="/logout" class="block py-2 text-red-400">{{ 'Çıxış' if current_lang == 'az' else 'Logout' }}</a>
             {% else %}
-                <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'Giriş / Qeydiyyat' if current_lang == 'az' else 'Sign In / Join' }}</button>
+                <button onclick="document.getElementById('authModal').classList.remove('hidden')" class="block py-2 text-cyan-400 w-full text-left">{{ 'Giriş' if current_lang == 'az' else 'Sign In' }}</button>
             {% endif %}
         </div>
     </nav>
@@ -951,10 +951,10 @@ BASE_HTML = """
         document.getElementById('loginTabBtn').classList.add('text-gray-400', 'border-transparent');
         document.getElementById('loginTabBtn').classList.remove('text-cyan-400', 'border-cyan-400');
     }
-    const translations = {
-        az: { home: "Ana Səhifə", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş / Qeydiyyat" },
-        en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In / Join" }
-    };
+const translations = {
+    az: { home: "Əsas", news: "Xəbərlər", library: "Kitabxana ▾", community: "İcma", about: "Haqqımızda", profile: "Profil", quests: "Görəvlər", achievements: "Nailiyyətlər", admin: "Admin", logout: "Çıxış", login: "Giriş" },
+    en: { home: "Home", news: "News", library: "Library ▾", community: "Community", about: "About", profile: "Profile", quests: "Quests", achievements: "Achievements", admin: "Admin", logout: "Logout", login: "Sign In" }
+};
     let currentLang = localStorage.getItem('lang') || '{{ current_lang }}' || 'az';
     applyLanguage(currentLang);
     function applyLanguage(lang) {
