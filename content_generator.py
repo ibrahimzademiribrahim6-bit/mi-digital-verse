@@ -290,7 +290,7 @@ def fetch_combined_news(topic=None):
     raw = serper_search(query, search_type="search", num=6)
 
     if not raw:
-        print("fetch_combined_news: heç bir axtarış nəticəsi tapılmadı")
+        print("fetch_combined_news: Serper heç bir nəticə qaytarmadı")
         return None
 
     # Unikallaşdır
@@ -323,7 +323,7 @@ Qaydalar:
     - Spoiler: [spoiler]gizli mətn[/spoiler]
 - Şəkil / video yerlərini mətndə belə göstər: [BURAYA ŞƏKİL] və ya [BURAYA VİDEO].
 - Mətnin sonunda oxucuya sual ver və 2 bənzər məsləhət yaz.
-- Yalnız JSON çıxar.
+- Yalnız etibarlı JSON obyekti qaytar, heç bir əlavə mətn yazma.
 
 JSON formatı:
 {{"title": "...", "content": "...", "category": "Anime", "tags": "tag1, tag2, tag3", "image_search_keywords": "the apothecary diaries season 3 official poster"}}
@@ -335,18 +335,21 @@ Xəbər mənbələri:
         "model": "deepseek-chat",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
-        "max_tokens": 3000
+        "max_tokens": 3000,
+        "response_format": {"type": "json_object"}
     }
 
     try:
         resp = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=data, timeout=120)
         resp.raise_for_status()
         text = resp.json()['choices'][0]['message']['content']
+        print(f"DeepSeek cavabı (ilk 500 simvol): {text[:500]}")
         start = text.find('{')
         end = text.rfind('}') + 1
         if start != -1 and end > start:
             article = json.loads(text[start:end])
             return article
+        print("fetch_combined_news: JSON tapılmadı")
         return None
     except Exception as e:
         print(f"fetch_combined_news xətası: {e}")
