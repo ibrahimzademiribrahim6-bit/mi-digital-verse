@@ -1912,6 +1912,7 @@ ADMIN_HTML = """
     
     <div class="mb-6">
         <a href="/admin/fetch-news" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded">{{ 'Son xəbərləri avtomatik çək' if current_lang == 'az' else 'Auto-fetch latest news' }}</a>
+<a href="/admin/fetch-combined-news" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded ml-2">{{ 'Birləşdirilmiş xəbər çək' if current_lang == 'az' else 'Fetch combined news' }}</a>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
