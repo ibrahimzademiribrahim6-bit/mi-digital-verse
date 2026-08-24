@@ -2211,7 +2211,7 @@ function addImageBlock() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const blocks = {{ news.blocks|tojson }};
+    const blocks = {{ blocks|tojson }};
     const container = document.getElementById('blocksContainer');
 
     blocks.forEach(function(block, index) {
@@ -3356,7 +3356,21 @@ def edit_news(news_id):
         flash(_t('Xəbər yeniləndi', 'News updated'))
         return redirect(url_for('admin'))
 
-    return render_template('edit_news.html', news=news)
+    blocks_serialized = []
+    for block in news.blocks:
+        blocks_serialized.append({
+            'id': block.id,
+            'block_type': block.block_type,
+            'title_az': block.title_az or '',
+            'title_en': block.title_en or '',
+            'text_content_az': block.text_content_az or '',
+            'text_content_en': block.text_content_en or '',
+            'image_url': block.image_url or '',
+            'layout': block.layout or 'stack',
+            'order': block.order,
+            'is_cover': block.is_cover
+        })
+    return render_template('edit_news.html', news=news, blocks=blocks_serialized)
 
 @app.route('/admin/publish-news/<int:news_id>')
 @login_required
