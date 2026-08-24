@@ -319,8 +319,8 @@ def process_blocks(request, news_id):
     block_image_files = request.files.getlist('block_image_file')
     block_layouts = request.form.getlist('block_layout')
 
-    text_idx = 0   # mətn sahələri üçün ayrıca sayğac
-    image_idx = 0  # şəkil URL/fayl üçün ayrıca sayğac
+    text_idx = 0
+    image_idx = 0
 
     for i in range(len(block_types)):
         btype = block_types[i]
@@ -331,6 +331,7 @@ def process_blocks(request, news_id):
         text_az = ''
         text_en = ''
         image_url = ''
+        is_cover = False
 
         if btype == 'text':
             if text_idx < len(block_titles_az):
@@ -356,10 +357,9 @@ def process_blocks(request, news_id):
                     fname = process_image(file, 800, 500)
                     if fname:
                         image_url = fname
-            is_cover = request.form.get(f'block_is_cover_{i}') == '1'
+            is_cover = request.form.get(f'block_is_cover_{image_idx}') == '1'
             image_idx += 1
 
-        # Bloku yarat
         block = NewsBlock(
             news_id=news_id,
             block_type=btype,
@@ -2173,7 +2173,7 @@ function addTextBlock() {
 
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
-    const index = container.children.length; // yeni blokun indeksi
+    const index = container.children.length; // blok indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
@@ -2182,16 +2182,18 @@ function addImageBlock() {
             <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
-        
-        <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
-        <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
-
-        <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
-        <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-3">
-
+        <div class="block-az">
+            <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
+            <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
+        </div>
+        <div class="block-en">
+            <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
+            <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
+        </div>
         <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
-        
+        <label class="text-xs text-gray-400">{{ 'Və ya fayl yüklə' if current_lang == 'az' else 'Or upload file' }}</label>
+        <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mb-2">
         <label class="flex items-center mt-1 text-xs">
             <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2">
             {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
@@ -2305,30 +2307,34 @@ function addTextBlock() {
 }
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
-    const index = container.children.length; // yeni blokun indeksi
+    const index = container.children.length; // blok indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
         <div class="flex justify-between items-center mb-2">
             <span class="font-bold">{{ 'Şəkil Bloku' if current_lang == 'az' else 'Image Block' }}</span>
-            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">Sil</button>
+            <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400">{{ 'Sil' if current_lang == 'az' else 'Delete' }}</button>
         </div>
         <input type="hidden" name="block_type" value="image">
-        <div class="block-az" style="display:${currentEditLang === 'az' ? 'block' : 'none'};">
-            <label class="text-xs text-gray-400">Başlıq (AZ)</label>
-            <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white">
+        <div class="block-az">
+            <label class="text-xs text-gray-400">{{ 'Başlıq (AZ)' if current_lang == 'az' else 'Title (AZ)' }}</label>
+            <input type="text" name="block_title_az" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
-        <div class="block-en" style="display:${currentEditLang === 'en' ? 'block' : 'none'};">
-            <label class="text-xs text-gray-400">Title (EN)</label>
-            <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white">
+        <div class="block-en">
+            <label class="text-xs text-gray-400">{{ 'Başlıq (EN)' if current_lang == 'az' else 'Title (EN)' }}</label>
+            <input type="text" name="block_title_en" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         </div>
-        <label class="text-xs text-gray-400">Şəkil URL</label>
-        <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white">
-        <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
-        <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
+        <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
+        <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
+        <label class="text-xs text-gray-400">{{ 'Və ya fayl yüklə' if current_lang == 'az' else 'Or upload file' }}</label>
+        <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mb-2">
+        <label class="flex items-center mt-1 text-xs">
+            <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2">
+            {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
+        </label>
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
-            <option value="stack">Alt-alta</option>
-            <option value="side">Yan-yana</option>
+            <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
+            <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side-by-side' }}</option>
         </select>
     `;
     container.appendChild(div);
