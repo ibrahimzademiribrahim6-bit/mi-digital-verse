@@ -18,7 +18,7 @@ from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
-from models import db, User, News, Comment, CommentLike, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike
+from models import db, User, News, Comment, CommentLike, Follow, Room, Post, Title, UserTitle, Achievement, UserAchievement, Notification, Quest, UserQuest, Report, NewsBlock, NewsLike, Tag, NewsTag
 from content_generator import generate_news_content, get_image_url, fetch_and_generate_news, generate_listicle
 
 load_dotenv()
