@@ -1262,8 +1262,6 @@ NEWS_DETAIL_HTML = """
         {% else %}
         <img src="{{ news.image_url }}" alt="{{ get_lang_field(news, 'title') }}" class="w-full max-h-96 object-contain rounded-lg my-4">
         {% endif %}
-    {% else %}
-    <div class="w-full h-64 bg-gray-700 rounded-lg my-4 flex items-center justify-center text-gray-400 text-xl">📰</div>
     {% endif %}
 
     <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ render_markup(get_lang_field(news, 'content')) }}</p>
@@ -1321,7 +1319,7 @@ NEWS_DETAIL_HTML = """
     {% if news.news_tags %}
     <div class="flex flex-wrap gap-2 mt-4">
         {% for nt in news.news_tags %}
-        <a href="{{ url_for('archive', category=news.category, tag=nt.tag.name) }}" class="px-2 py-1 bg-gray-700 rounded-full text-xs text-gray-300 hover:bg-cyan-600 hover:text-white">{{ nt.tag.name }}</a>
+        <a href="{{ url_for('archive', category=news.category|lower, tag=nt.tag.name) }}" class="px-2 py-1 bg-gray-700 rounded-full text-xs text-gray-300 hover:bg-cyan-600 hover:text-white">{{ nt.tag.name }}</a>
         {% endfor %}
     </div>
     {% endif %}
@@ -1453,7 +1451,7 @@ ARCHIVE_HTML = """
     <form action="/archive" method="GET" class="mb-6 bg-gray-800 p-4 rounded space-y-3">
         <div class="flex flex-col md:flex-row gap-3">
             <input type="text" name="q" value="{{ q }}" placeholder="{{ 'Axtar...' if current_lang == 'az' else 'Search...' }}" class="flex-1 p-2 rounded bg-gray-700 text-white">
-            <select name="category" class="p-2 rounded bg-gray-700 text-white" onchange="this.form.submit()">
+            <select name="category" class="p-2 rounded bg-gray-700 text-white">
                 <option value="">{{ 'Bütün kateqoriyalar' if current_lang == 'az' else 'All categories' }}</option>
                 <option value="anime" {% if category_filter == 'anime' %}selected{% endif %}>Anime</option>
                 <option value="manga" {% if category_filter == 'manga' %}selected{% endif %}>Manga</option>
@@ -1461,9 +1459,8 @@ ARCHIVE_HTML = """
                 <option value="manhua" {% if category_filter == 'manhua' %}selected{% endif %}>Manhua</option>
                 <option value="webtoon" {% if category_filter == 'webtoon' %}selected{% endif %}>Webtoon</option>
                 <option value="oyun" {% if category_filter == 'oyun' %}selected{% endif %}>{{ 'Oyun' if current_lang == 'az' else 'Game' }}</option>
-                <option value="umumi" {% if category_filter == 'umumi' %}selected{% endif %}>{{ 'Ümumi' if current_lang == 'az' else 'General' }}</option>
             </select>
-            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %} onchange="this.form.submit()">
+            <select name="tag" class="p-2 rounded bg-gray-700 text-white" {% if not category_filter %}disabled{% endif %}>
                 <option value="">{{ 'Teq seçin' if current_lang == 'az' else 'Select tag' }}</option>
                 {% for tag in available_tags %}
                 <option value="{{ tag.name }}" {% if tag_filter == tag.name %}selected{% endif %}>{{ tag.name }}</option>
@@ -1499,6 +1496,33 @@ ARCHIVE_HTML = """
         {% endfor %}
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const catSelect = document.querySelector('select[name="category"]');
+    const tagSelect = document.querySelector('select[name="tag"]');
+
+    function updateTagState() {
+        if (catSelect && tagSelect) {
+            if (catSelect.value) {
+                tagSelect.disabled = false;
+            } else {
+                tagSelect.disabled = true;
+                tagSelect.value = '';
+            }
+        }
+    }
+
+    if (catSelect) {
+        catSelect.addEventListener('change', function() {
+            updateTagState();
+            // Teq seçimini sıfırla, çünki yeni kateqoriyaya uyğun teqlər serverdən gələcək
+            if (tagSelect) tagSelect.value = '';
+        });
+    }
+
+    updateTagState();
+});
+</script>
 {% endblock %}
 """
 
