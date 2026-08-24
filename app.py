@@ -318,7 +318,6 @@ def process_blocks(request, news_id):
     block_image_urls = request.form.getlist('block_image_url')
     block_image_files = request.files.getlist('block_image_file')
     block_layouts = request.form.getlist('block_layout')
-    block_is_covers = request.form.getlist('block_is_cover')
 
     text_idx = 0   # mətn sahələri üçün ayrıca sayğac
     image_idx = 0  # şəkil URL/fayl üçün ayrıca sayğac
@@ -357,9 +356,7 @@ def process_blocks(request, news_id):
                     fname = process_image(file, 800, 500)
                     if fname:
                         image_url = fname
-            is_cover = False
-            if image_idx < len(block_is_covers):
-                is_cover = block_is_covers[image_idx] in ['1', 'true', 'on']
+            is_cover = request.form.get(f'block_is_cover_{i}') == '1'
             image_idx += 1
 
         # Bloku yarat
@@ -2176,6 +2173,7 @@ function addTextBlock() {
 
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
+    const index = container.children.length; // yeni blokun indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
@@ -2195,10 +2193,9 @@ function addImageBlock() {
         <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         
         <label class="flex items-center mt-1 text-xs">
-            <input type="checkbox" name="block_is_cover" value="1" class="mr-2">
+            <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2">
             {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
         </label>
-
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
             <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
             <option value="side">{{ 'Yan-yana' if current_lang == 'az' else 'Side-by-side' }}</option>
@@ -2308,6 +2305,7 @@ function addTextBlock() {
 }
 function addImageBlock() {
     const container = document.getElementById('blocksContainer');
+    const index = container.children.length; // yeni blokun indeksi
     const div = document.createElement('div');
     div.className = 'bg-gray-700 p-3 rounded mt-3';
     div.innerHTML = `
@@ -2386,9 +2384,13 @@ window.onload = function() {
                 <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
                 <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
                 <label class="flex items-center mt-1 text-xs">
-                    <input type="checkbox" name="block_is_cover" value="1" class="mr-2" {% if block.is_cover %}checked{% endif %}>
+                    <input type="checkbox" name="block_is_cover_{{ loop.index0 }}" value="1" class="mr-2" {% if block.is_cover %}checked{% endif %}>
                     {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
-                </label>
+                </label>        
+        <label class="flex items-center mt-1 text-xs">
+            <input type="checkbox" name="block_is_cover_${index}" value="1" class="mr-2">
+            {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
+        </label>
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
                     <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
                     <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
