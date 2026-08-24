@@ -209,6 +209,7 @@ class NewsBlock(db.Model):
     image_url = db.Column(db.String(500), default='')
     layout = db.Column(db.String(20), default='stack')
     order = db.Column(db.Integer, default=0)
+    is_cover = db.Column(db.Boolean, default=False)
 
 
 class Comment(db.Model):

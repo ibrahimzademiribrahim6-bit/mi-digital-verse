@@ -77,6 +77,18 @@ def set_news_tags(news, tags_string):
         nt = NewsTag(news_id=news.id, tag_id=tag.id)
         db.session.add(nt)
 
+def get_cover_image(news):
+    """Xəbər kartı üçün üz şəklini qaytarır."""
+    if news.image_url:
+        return news.image_url
+    for block in news.blocks:
+        if block.block_type == 'image' and block.image_url and block.is_cover:
+            return block.image_url
+    for block in news.blocks:
+        if block.block_type == 'image' and block.image_url:
+            return block.image_url
+    return ''
+
 def render_markup(text):
     """
     İstifadəçi markerlərini təhlükəsiz HTML-ə çevirir.
@@ -107,6 +119,7 @@ def render_markup(text):
 app = Flask(__name__)
 app.jinja_env.globals['get_youtube_embed_url'] = get_youtube_embed_url
 app.jinja_env.globals['render_markup'] = render_markup
+app.jinja_env.globals['get_cover_image'] = get_cover_image
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'gizli-acar-12345')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -305,6 +318,7 @@ def process_blocks(request, news_id):
     block_image_urls = request.form.getlist('block_image_url')
     block_image_files = request.files.getlist('block_image_file')
     block_layouts = request.form.getlist('block_layout')
+    block_is_covers = request.form.getlist('block_is_cover')
 
     text_idx = 0   # mətn sahələri üçün ayrıca sayğac
     image_idx = 0  # şəkil URL/fayl üçün ayrıca sayğac
@@ -343,6 +357,9 @@ def process_blocks(request, news_id):
                     fname = process_image(file, 800, 500)
                     if fname:
                         image_url = fname
+            is_cover = False
+            if image_idx < len(block_is_covers):
+                is_cover = block_is_covers[image_idx] in ['1', 'true', 'on']
             image_idx += 1
 
         # Bloku yarat
@@ -355,7 +372,8 @@ def process_blocks(request, news_id):
             text_content_en=text_en,
             image_url=image_url,
             layout=layout,
-            order=i
+            order=i,
+            is_cover=is_cover
         )
         db.session.add(block)
 
@@ -1475,22 +1493,15 @@ ARCHIVE_HTML = """
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for item in news_results %}
-        <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">            {% set ns = namespace(display_image=item.image_url) %}
-            {% if not ns.display_image %}
-                {% for block in item.blocks %}
-                    {% if block.block_type == 'image' and block.image_url %}
-                        {% set ns.display_image = block.image_url %}
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-
-            {% set yt_embed = get_youtube_embed_url(ns.display_image) %}
+        <a href="/news/{{ item.id }}" class="block bg-gray-800 rounded-lg p-4 card-glow">            
+            {% set display_image = get_cover_image(item) %}
+            {% set yt_embed = get_youtube_embed_url(display_image) %}
             {% if yt_embed %}
             <div class="w-full h-40 mb-3">
                 <iframe width="100%" height="160" src="{{ yt_embed }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
-            {% elif ns.display_image %}
-            <img src="{{ ns.display_image }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-cover rounded mb-3">
+            {% elif display_image %}
+            <img src="{{ display_image }}" alt="{{ get_lang_field(item, 'title') }}" class="w-full h-40 object-contain bg-gray-900 rounded mb-3">
             {% else %}
             <div class="w-full h-40 bg-gray-700 rounded mb-3 flex items-center justify-center text-gray-400">📰</div>
             {% endif %}
@@ -2183,8 +2194,10 @@ function addImageBlock() {
         <label class="text-xs text-gray-400">{{ 'Şəkil URL' if current_lang == 'az' else 'Image URL' }}</label>
         <input type="text" name="block_image_url" class="w-full p-2 rounded bg-gray-800 text-white mb-2">
         
-        <label class="text-xs text-gray-400">{{ 'Və ya fayl yüklə' if current_lang == 'az' else 'Or upload file' }}</label>
-        <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white mb-2">
+        <label class="flex items-center mt-1 text-xs">
+            <input type="checkbox" name="block_is_cover" value="1" class="mr-2">
+            {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
+        </label>
 
         <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
             <option value="stack">{{ 'Alt-alta' if current_lang == 'az' else 'Stacked' }}</option>
@@ -2372,6 +2385,10 @@ window.onload = function() {
                 <input type="text" name="block_image_url" value="{{ block.image_url }}" class="w-full p-2 rounded bg-gray-800 text-white">
                 <label class="text-xs text-gray-400">Və ya fayl yüklə</label>
                 <input type="file" name="block_image_file" accept="image/*" class="w-full p-2 bg-gray-800 rounded text-white">
+                <label class="flex items-center mt-1 text-xs">
+                    <input type="checkbox" name="block_is_cover" value="1" class="mr-2" {% if block.is_cover %}checked{% endif %}>
+                    {{ 'Xəbər kartında görünsün' if current_lang == 'az' else 'Show in news card' }}
+                </label>
                 <select name="block_layout" class="w-full p-2 rounded bg-gray-800 text-white mt-2">
                     <option value="stack" {% if block.layout == 'stack' %}selected{% endif %}>Alt-alta</option>
                     <option value="side" {% if block.layout == 'side' %}selected{% endif %}>Yan-yana</option>
@@ -3589,12 +3606,17 @@ def ensure_columns():
         pass
 
     # news_block cədvəli
+    # news_block cədvəli
     try:
         cursor.execute("ALTER TABLE news_block ADD COLUMN title_az VARCHAR(200) DEFAULT ''")
     except:
         pass
     try:
         cursor.execute("ALTER TABLE news_block ADD COLUMN title_en VARCHAR(200) DEFAULT ''")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE news_block ADD COLUMN is_cover BOOLEAN DEFAULT 0")
     except:
         pass
 
