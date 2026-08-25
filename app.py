@@ -113,7 +113,8 @@ def render_markup(text):
     for line in lines:
         stripped = line.strip()
         if not stripped:
-            result.append('<br>')
+            # Abzas boşluğu
+            result.append('<div class="h-4"></div>')
             continue
 
         # YouTube linki?
@@ -135,7 +136,7 @@ def render_markup(text):
             result.append(f'<img src="{img_url}" class="w-full max-h-96 object-contain rounded-lg my-4" alt="Şəkil">')
             continue
 
-        # Normal mətn: markerləri tətbiq et
+        # Normal mətn: markerləri tətbiq et və <div> ilə əhatə et
         escaped_line = Markup.escape(stripped)
         escaped_line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', escaped_line)
         escaped_line = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped_line)
@@ -146,7 +147,7 @@ def render_markup(text):
             r'<span class="spoiler"><span class="spoiler-content">\1</span></span>',
             escaped_line
         )
-        result.append(escaped_line)
+        result.append(f'<div>{escaped_line}</div>')
 
     return Markup(''.join(result))
 
@@ -1191,7 +1192,7 @@ NEWS_DETAIL_HTML = """
         {% endif %}
     {% endif %}
 
-    <div class="text-lg leading-relaxed" style="white-space: pre-line;">{{ render_markup(get_lang_field(news, 'content')) }}</div>
+    <div class="text-lg leading-relaxed">{{ render_markup(get_lang_field(news, 'content')) }}</div>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
