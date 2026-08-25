@@ -91,14 +91,45 @@ def get_cover_image(news):
 
 def render_markup(text):
     """
-    İstifadəçi markerlərini təhlükəsiz HTML-ə çevirir.
-    Qalın: **mətn**, Rəng: [red]mətn[/red], Spoiler: [spoiler]mətn[/spoiler]
+    Mətndəki markerləri (qalın, rəng, spoiler) və linkləri (YouTube, şəkil)
+    təhlükəsiz HTML-ə çevirir.
     """
     if not text:
         return Markup('')
 
-    # Əvvəlcə HTML-i təhlükəsizləşdir
-    escaped = Markup.escape(text)
+    # YouTube linklərini tapıb iframe ilə əvəz et
+    youtube_re = re.compile(r'(https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:[?&#]\S*)?)')
+    yt_matches = []
+    def yt_repl(m):
+        yt_matches.append(m.group(2))
+        return f'{{{{YT_{len(yt_matches)-1}}}}}'
+    text_with_yt = youtube_re.sub(yt_repl, text)
+
+    # Şəkil linklərini tapıb img etiketi ilə əvəz et
+    image_re = re.compile(r'(https?://[^\s]+?\.(?:jpg|jpeg|png|gif|webp))')
+    img_matches = []
+    def img_repl(m):
+        img_matches.append(m.group(1))
+        return f'{{{{IMG_{len(img_matches)-1}}}}}'
+    text_with_imgs = image_re.sub(img_repl, text_with_yt)
+
+    # Qalan mətni HTML təhlükəsizləşdir
+    escaped = Markup.escape(text_with_imgs)
+
+    # YouTube placeholderlərini iframe ilə əvəz et
+    for idx, video_id in enumerate(yt_matches):
+        iframe = (
+            f'<div class="youtube-embed my-4">'
+            f'<iframe src="https://www.youtube.com/embed/{video_id}" '
+            f'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+            f'allowfullscreen></iframe></div>'
+        )
+        escaped = escaped.replace(f'{{{{YT_{idx}}}}}', iframe)
+
+    # Şəkil placeholderlərini img etiketi ilə əvəz et
+    for idx, image_url in enumerate(img_matches):
+        img_tag = f'<img src="{image_url}" class="w-full max-h-96 object-contain rounded-lg my-4" alt="Şəkil">'
+        escaped = escaped.replace(f'{{{{IMG_{idx}}}}}', img_tag)
 
     # Qalın
     escaped = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', escaped)
@@ -107,6 +138,7 @@ def render_markup(text):
     escaped = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped)
     escaped = re.sub(r'\[green\](.*?)\[/green\]', r'<span style="color: #10b981;">\1</span>', escaped)
     escaped = re.sub(r'\[blue\](.*?)\[/blue\]', r'<span style="color: #3b82f6;">\1</span>', escaped)
+
     # Spoiler
     escaped = re.sub(
         r'\[spoiler\](.*?)\[/spoiler\]',
@@ -1157,7 +1189,7 @@ NEWS_DETAIL_HTML = """
         {% endif %}
     {% endif %}
 
-    <p class="text-lg leading-relaxed" style="white-space: pre-line;">{{ render_markup(get_lang_field(news, 'content')) }}</p>
+    <div class="text-lg leading-relaxed" style="white-space: pre-line;">{{ render_markup(get_lang_field(news, 'content')) }}</div>
     {% for block in news.blocks %}
         {% if block.block_type == 'text' %}
             {% if block.layout == 'side' %}
