@@ -89,64 +89,54 @@ def get_cover_image(news):
             return block.image_url
     return ''
 
+from urllib.parse import urlparse
+
 def render_markup(text):
-    """
-    Mətndəki markerləri (qalın, rəng, spoiler) və linkləri (YouTube, şəkil)
-    təhlükəsiz HTML-ə çevirir.
-    """
     if not text:
         return Markup('')
 
-    # YouTube linklərini tapıb iframe ilə əvəz et
-    youtube_re = re.compile(r'(https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:[?&#]\S*)?)')
-    yt_matches = []
-    def yt_repl(m):
-        yt_matches.append(m.group(2))
-        return f'{{{{YT_{len(yt_matches)-1}}}}}'
-    text_with_yt = youtube_re.sub(yt_repl, text)
+    lines = text.split('\n')
+    result = []
 
-    # Şəkil linklərini tapıb img etiketi ilə əvəz et
-    image_re = re.compile(r'(https?://[^\s]+?\.(?:jpg|jpeg|png|gif|webp))')
-    img_matches = []
-    def img_repl(m):
-        img_matches.append(m.group(1))
-        return f'{{{{IMG_{len(img_matches)-1}}}}}'
-    text_with_imgs = image_re.sub(img_repl, text_with_yt)
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            result.append('<br>')
+            continue
 
-    # Qalan mətni HTML təhlükəsizləşdir
-    escaped = Markup.escape(text_with_imgs)
+        # YouTube linki?
+        yt_match = re.match(r'(https?://(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11}))', stripped)
+        if yt_match:
+            video_id = yt_match.group(2)
+            result.append(
+                f'<div class="youtube-embed my-4">'
+                f'<iframe src="https://www.youtube.com/embed/{video_id}" '
+                f'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
+                f'allowfullscreen></iframe></div>'
+            )
+            continue
 
-    # YouTube placeholderlərini iframe ilə əvəz et
-    for idx, video_id in enumerate(yt_matches):
-        iframe = (
-            f'<div class="youtube-embed my-4">'
-            f'<iframe src="https://www.youtube.com/embed/{video_id}" '
-            f'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" '
-            f'allowfullscreen></iframe></div>'
+        # Şəkil linki?
+        img_match = re.match(r'(https?://[^\s]+?\.(?:jpg|jpeg|png|gif|webp))', stripped)
+        if img_match:
+            img_url = img_match.group(1)
+            result.append(f'<img src="{img_url}" class="w-full max-h-96 object-contain rounded-lg my-4" alt="Şəkil">')
+            continue
+
+        # Normal mətn: markerləri tətbiq et
+        escaped_line = Markup.escape(stripped)
+        escaped_line = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', escaped_line)
+        escaped_line = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped_line)
+        escaped_line = re.sub(r'\[green\](.*?)\[/green\]', r'<span style="color: #10b981;">\1</span>', escaped_line)
+        escaped_line = re.sub(r'\[blue\](.*?)\[/blue\]', r'<span style="color: #3b82f6;">\1</span>', escaped_line)
+        escaped_line = re.sub(
+            r'\[spoiler\](.*?)\[/spoiler\]',
+            r'<span class="spoiler"><span class="spoiler-content">\1</span></span>',
+            escaped_line
         )
-        escaped = escaped.replace(f'{{{{YT_{idx}}}}}', iframe)
+        result.append(escaped_line)
 
-    # Şəkil placeholderlərini img etiketi ilə əvəz et
-    for idx, image_url in enumerate(img_matches):
-        img_tag = f'<img src="{image_url}" class="w-full max-h-96 object-contain rounded-lg my-4" alt="Şəkil">'
-        escaped = escaped.replace(f'{{{{IMG_{idx}}}}}', img_tag)
-
-    # Qalın
-    escaped = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', escaped)
-
-    # Rənglər
-    escaped = re.sub(r'\[red\](.*?)\[/red\]', r'<span style="color: #ef4444;">\1</span>', escaped)
-    escaped = re.sub(r'\[green\](.*?)\[/green\]', r'<span style="color: #10b981;">\1</span>', escaped)
-    escaped = re.sub(r'\[blue\](.*?)\[/blue\]', r'<span style="color: #3b82f6;">\1</span>', escaped)
-
-    # Spoiler
-    escaped = re.sub(
-        r'\[spoiler\](.*?)\[/spoiler\]',
-        r'<span class="spoiler"><span class="spoiler-content">\1</span></span>',
-        escaped
-    )
-
-    return Markup(escaped)
+    return Markup(''.join(result))
 
 app = Flask(__name__)
 app.jinja_env.globals['get_youtube_embed_url'] = get_youtube_embed_url
