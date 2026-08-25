@@ -79,14 +79,26 @@ def set_news_tags(news, tags_string):
 
 def get_cover_image(news):
     """Xəbər kartı üçün üz şəklini qaytarır."""
+    # 1. Admin tərəfindən ayrıca təyin olunmuş əsas şəkil
     if news.image_url:
         return news.image_url
+
+    # 2. Məzmunun içərisindəki ilk şəkil linkini tap
+    if news.content:
+        match = re.search(r'(https?://[^\s]+?\.(?:jpg|jpeg|png|gif|webp))', news.content)
+        if match:
+            return match.group(1)
+
+    # 3. Bloklardakı üz şəkli (is_cover=True)
     for block in news.blocks:
         if block.block_type == 'image' and block.image_url and block.is_cover:
             return block.image_url
+
+    # 4. İlk şəkil bloku
     for block in news.blocks:
         if block.block_type == 'image' and block.image_url:
             return block.image_url
+
     return ''
 
 from urllib.parse import urlparse
